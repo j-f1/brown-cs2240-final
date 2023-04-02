@@ -11,6 +11,9 @@
 		8503425129DA05A700928641 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8503425029DA05A700928641 /* ContentView.swift */; };
 		8503425329DA05A800928641 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8503425229DA05A800928641 /* Assets.xcassets */; };
 		8503425729DA05A800928641 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8503425629DA05A800928641 /* Preview Assets.xcassets */; };
+		8503426E29DA19F200928641 /* Shaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 8503426B29DA19F200928641 /* Shaders.metal */; };
+		8503426F29DA19F200928641 /* Renderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8503426D29DA19F200928641 /* Renderer.swift */; };
+		8503427329DA1A9500928641 /* MetalViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8503427229DA1A9500928641 /* MetalViewRepresentable.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -20,6 +23,10 @@
 		8503425229DA05A800928641 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		8503425429DA05A800928641 /* Phone_ton.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Phone_ton.entitlements; sourceTree = "<group>"; };
 		8503425629DA05A800928641 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		8503426B29DA19F200928641 /* Shaders.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = Shaders.metal; sourceTree = "<group>"; };
+		8503426C29DA19F200928641 /* ShaderTypes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ShaderTypes.h; sourceTree = "<group>"; };
+		8503426D29DA19F200928641 /* Renderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Renderer.swift; sourceTree = "<group>"; };
+		8503427229DA1A9500928641 /* MetalViewRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalViewRepresentable.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -54,8 +61,12 @@
 			children = (
 				8503424E29DA05A700928641 /* Phone_tonApp.swift */,
 				8503425029DA05A700928641 /* ContentView.swift */,
+				8503427229DA1A9500928641 /* MetalViewRepresentable.swift */,
 				8503425229DA05A800928641 /* Assets.xcassets */,
 				8503425429DA05A800928641 /* Phone_ton.entitlements */,
+				8503426D29DA19F200928641 /* Renderer.swift */,
+				8503426B29DA19F200928641 /* Shaders.metal */,
+				8503426C29DA19F200928641 /* ShaderTypes.h */,
 				8503425529DA05A800928641 /* Preview Content */,
 			);
 			path = "Phone-ton";
@@ -139,6 +150,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8503426F29DA19F200928641 /* Renderer.swift in Sources */,
+				8503426E29DA19F200928641 /* Shaders.metal in Sources */,
+				8503427329DA1A9500928641 /* MetalViewRepresentable.swift in Sources */,
 				8503425129DA05A700928641 /* ContentView.swift in Sources */,
 				8503424F29DA05A700928641 /* Phone_tonApp.swift in Sources */,
 			);
@@ -289,6 +303,7 @@
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "Phone-ton/ShaderTypes.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -327,6 +342,7 @@
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "Phone-ton/ShaderTypes.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};

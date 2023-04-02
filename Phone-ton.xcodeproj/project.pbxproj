@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		8503424F29DA05A700928641 /* Phone_tonApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8503424E29DA05A700928641 /* Phone_tonApp.swift */; };
+		8503424F29DA05A700928641 /* PhoneTonApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8503424E29DA05A700928641 /* PhoneTonApp.swift */; };
 		8503425129DA05A700928641 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8503425029DA05A700928641 /* ContentView.swift */; };
 		8503425329DA05A800928641 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8503425229DA05A800928641 /* Assets.xcassets */; };
 		8503425729DA05A800928641 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8503425629DA05A800928641 /* Preview Assets.xcassets */; };
@@ -18,10 +18,10 @@
 
 /* Begin PBXFileReference section */
 		8503424B29DA05A700928641 /* Phone-ton.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Phone-ton.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		8503424E29DA05A700928641 /* Phone_tonApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Phone_tonApp.swift; sourceTree = "<group>"; };
+		8503424E29DA05A700928641 /* PhoneTonApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneTonApp.swift; sourceTree = "<group>"; };
 		8503425029DA05A700928641 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		8503425229DA05A800928641 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		8503425429DA05A800928641 /* Phone_ton.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Phone_ton.entitlements; sourceTree = "<group>"; };
+		8503425429DA05A800928641 /* PhoneTon.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PhoneTon.entitlements; sourceTree = "<group>"; };
 		8503425629DA05A800928641 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		8503426B29DA19F200928641 /* Shaders.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = Shaders.metal; sourceTree = "<group>"; };
 		8503426C29DA19F200928641 /* ShaderTypes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ShaderTypes.h; sourceTree = "<group>"; };
@@ -43,7 +43,15 @@
 		8503424229DA05A700928641 = {
 			isa = PBXGroup;
 			children = (
-				8503424D29DA05A700928641 /* Phone-ton */,
+				8503424E29DA05A700928641 /* PhoneTonApp.swift */,
+				8503425029DA05A700928641 /* ContentView.swift */,
+				8503427229DA1A9500928641 /* MetalViewRepresentable.swift */,
+				8503425229DA05A800928641 /* Assets.xcassets */,
+				8503425429DA05A800928641 /* PhoneTon.entitlements */,
+				8503426D29DA19F200928641 /* Renderer.swift */,
+				8503426B29DA19F200928641 /* Shaders.metal */,
+				8503426C29DA19F200928641 /* ShaderTypes.h */,
+				8503425529DA05A800928641 /* Preview Content */,
 				8503424C29DA05A700928641 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -54,22 +62,6 @@
 				8503424B29DA05A700928641 /* Phone-ton.app */,
 			);
 			name = Products;
-			sourceTree = "<group>";
-		};
-		8503424D29DA05A700928641 /* Phone-ton */ = {
-			isa = PBXGroup;
-			children = (
-				8503424E29DA05A700928641 /* Phone_tonApp.swift */,
-				8503425029DA05A700928641 /* ContentView.swift */,
-				8503427229DA1A9500928641 /* MetalViewRepresentable.swift */,
-				8503425229DA05A800928641 /* Assets.xcassets */,
-				8503425429DA05A800928641 /* Phone_ton.entitlements */,
-				8503426D29DA19F200928641 /* Renderer.swift */,
-				8503426B29DA19F200928641 /* Shaders.metal */,
-				8503426C29DA19F200928641 /* ShaderTypes.h */,
-				8503425529DA05A800928641 /* Preview Content */,
-			);
-			path = "Phone-ton";
 			sourceTree = "<group>";
 		};
 		8503425529DA05A800928641 /* Preview Content */ = {
@@ -154,7 +146,7 @@
 				8503426E29DA19F200928641 /* Shaders.metal in Sources */,
 				8503427329DA1A9500928641 /* MetalViewRepresentable.swift in Sources */,
 				8503425129DA05A700928641 /* ContentView.swift in Sources */,
-				8503424F29DA05A700928641 /* Phone_tonApp.swift in Sources */,
+				8503424F29DA05A700928641 /* PhoneTonApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -275,7 +267,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = "Phone-ton/Phone_ton.entitlements";
+				CODE_SIGN_ENTITLEMENTS = PhoneTon.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Phone-ton/Preview Content\"";
@@ -314,7 +306,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = "Phone-ton/Phone_ton.entitlements";
+				CODE_SIGN_ENTITLEMENTS = PhoneTon.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Phone-ton/Preview Content\"";

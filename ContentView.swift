@@ -1,10 +1,3 @@
-//
-//  ContentView.swift
-//  Phone-ton
-//
-//  Created by Jed Fox on 2023-04-02.
-//
-
 import SwiftUI
 
 struct ContentView: View {

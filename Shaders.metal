@@ -1,10 +1,3 @@
-//
-//  Shaders.metal
-//  Phone-ton
-//
-//  Created by Jed Fox on 2023-04-02.
-//
-
 // File for Metal kernel and shader functions
 
 #include <metal_stdlib>

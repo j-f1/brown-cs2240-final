@@ -1,10 +1,3 @@
-//
-//  MetalViewRepresentable.swift
-//  Phone-ton
-//
-//  Created by Jed Fox on 2023-04-02.
-//
-
 import MetalKit
 import SwiftUI
 

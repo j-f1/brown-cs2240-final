@@ -1,11 +1,4 @@
-//
-//  Renderer.swift
-//  Phone-ton
-//
-//  Created by Jed Fox on 2023-04-02.
-//
-
-// Our platform independent renderer class
+// “Our” platform independent renderer class
 
 import Metal
 import MetalKit

@@ -10,6 +10,11 @@ struct ContentView: View {
             MetalView()
         }
         .padding()
+        .onAppear {
+            if let mesh = Mesh(contentsOf: Bundle.main.url(forResource: "cow", withExtension: "obj", subdirectory: "meshes")) {
+                print(mesh.vertices)
+            }
+        }
     }
 }
 

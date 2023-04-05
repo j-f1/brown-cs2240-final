@@ -13,8 +13,6 @@
 		8503426E29DA19F200928641 /* Shaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 8503426B29DA19F200928641 /* Shaders.metal */; };
 		8503426F29DA19F200928641 /* Renderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8503426D29DA19F200928641 /* Renderer.swift */; };
 		8503427329DA1A9500928641 /* MetalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8503427229DA1A9500928641 /* MetalView.swift */; };
-		854AFCC629DDD1470054D4D9 /* TinyObjLoader.mm in Sources */ = {isa = PBXBuildFile; fileRef = 854AFCC529DDD1470054D4D9 /* TinyObjLoader.mm */; };
-		854AFCC929DDE3990054D4D9 /* Mesh.swift in Sources */ = {isa = PBXBuildFile; fileRef = 854AFCC829DDE3990054D4D9 /* Mesh.swift */; };
 		854AFCCD29DDEA380054D4D9 /* meshes in Resources */ = {isa = PBXBuildFile; fileRef = 854AFCCC29DDEA380054D4D9 /* meshes */; };
 /* End PBXBuildFile section */
 
@@ -28,11 +26,7 @@
 		8503426C29DA19F200928641 /* ShaderTypes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ShaderTypes.h; sourceTree = "<group>"; };
 		8503426D29DA19F200928641 /* Renderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Renderer.swift; sourceTree = "<group>"; };
 		8503427229DA1A9500928641 /* MetalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalView.swift; sourceTree = "<group>"; };
-		854AFCC329DDD0F70054D4D9 /* tiny_obj_loader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tiny_obj_loader.h; sourceTree = "<group>"; };
-		854AFCC429DDD1470054D4D9 /* TinyObjLoader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TinyObjLoader.h; sourceTree = "<group>"; };
-		854AFCC529DDD1470054D4D9 /* TinyObjLoader.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = TinyObjLoader.mm; sourceTree = "<group>"; };
 		854AFCC729DDE1950054D4D9 /* BridgingHeader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BridgingHeader.h; sourceTree = "<group>"; };
-		854AFCC829DDE3990054D4D9 /* Mesh.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Mesh.swift; sourceTree = "<group>"; };
 		854AFCCC29DDEA380054D4D9 /* meshes */ = {isa = PBXFileReference; lastKnownFileType = folder; path = meshes; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -54,7 +48,6 @@
 				854AFCD129DDEAD80054D4D9 /* Shared */,
 				854AFCD029DDEABC0054D4D9 /* Renderer */,
 				854AFCCE29DDEA790054D4D9 /* Resources */,
-				854AFCC229DDCAA10054D4D9 /* Mesh Loader */,
 				8503424C29DA05A700928641 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -65,17 +58,6 @@
 				8503424B29DA05A700928641 /* Phone-ton.app */,
 			);
 			name = Products;
-			sourceTree = "<group>";
-		};
-		854AFCC229DDCAA10054D4D9 /* Mesh Loader */ = {
-			isa = PBXGroup;
-			children = (
-				854AFCC829DDE3990054D4D9 /* Mesh.swift */,
-				854AFCC429DDD1470054D4D9 /* TinyObjLoader.h */,
-				854AFCC529DDD1470054D4D9 /* TinyObjLoader.mm */,
-				854AFCC329DDD0F70054D4D9 /* tiny_obj_loader.h */,
-			);
-			path = "Mesh Loader";
 			sourceTree = "<group>";
 		};
 		854AFCCE29DDEA790054D4D9 /* Resources */ = {
@@ -187,11 +169,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				8503426F29DA19F200928641 /* Renderer.swift in Sources */,
-				854AFCC929DDE3990054D4D9 /* Mesh.swift in Sources */,
 				8503426E29DA19F200928641 /* Shaders.metal in Sources */,
 				8503427329DA1A9500928641 /* MetalView.swift in Sources */,
 				8503425129DA05A700928641 /* ContentView.swift in Sources */,
-				854AFCC629DDD1470054D4D9 /* TinyObjLoader.mm in Sources */,
 				8503424F29DA05A700928641 /* PhoneTonApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

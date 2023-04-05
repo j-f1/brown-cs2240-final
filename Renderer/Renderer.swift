@@ -36,13 +36,13 @@ class Renderer: NSObject, MTKViewDelegate {
     
     var mesh: MTKMesh
     
-    init?(metalKitView: MTKView) {
+    init?(metalKitView: MTKView, modelURL: URL) {
         self.device = metalKitView.device!
         guard let queue = self.device.makeCommandQueue() else { return nil }
         self.commandQueue = queue
         
         let uniformBufferSize = alignedUniformsSize * maxBuffersInFlight
-        
+
         guard let buffer = self.device.makeBuffer(length:uniformBufferSize, options:[MTLResourceOptions.storageModeShared]) else { return nil }
         dynamicUniformBuffer = buffer
         
@@ -72,7 +72,7 @@ class Renderer: NSObject, MTKViewDelegate {
         depthState = state
         
         do {
-            mesh = try Renderer.buildMesh(device: device, mtlVertexDescriptor: mtlVertexDescriptor)
+            mesh = try Renderer.buildMesh(device: device, mtlVertexDescriptor: mtlVertexDescriptor, url: modelURL)
         } catch {
             print("Unable to build MetalKit Mesh. Error info: \(error)")
             return nil
@@ -139,28 +139,25 @@ class Renderer: NSObject, MTKViewDelegate {
     }
     
     class func buildMesh(device: MTLDevice,
-                         mtlVertexDescriptor: MTLVertexDescriptor) throws -> MTKMesh {
+                         mtlVertexDescriptor: MTLVertexDescriptor,
+                         url: URL) throws -> MTKMesh {
         /// Create and condition mesh data to feed into a pipeline using the given vertex descriptor
         
         let metalAllocator = MTKMeshBufferAllocator(device: device)
-        
-        let mdlMesh = MDLMesh.newBox(withDimensions: SIMD3<Float>(4, 4, 4),
-                                     segments: SIMD3<UInt32>(2, 2, 2),
-                                     geometryType: MDLGeometryType.triangles,
-                                     inwardNormals:false,
-                                     allocator: metalAllocator)
-        
         let mdlVertexDescriptor = MTKModelIOVertexDescriptorFromMetal(mtlVertexDescriptor)
-        
+
+        let asset = MDLAsset(url: url, vertexDescriptor: nil, bufferAllocator: metalAllocator)
+
         guard let attributes = mdlVertexDescriptor.attributes as? [MDLVertexAttribute] else {
             throw RendererError.badVertexDescriptor
         }
         attributes[VertexAttribute.position.rawValue].name = MDLVertexAttributePosition
         attributes[VertexAttribute.texcoord.rawValue].name = MDLVertexAttributeTextureCoordinate
         
+        let mdlMesh = asset[0] as! MDLMesh
         mdlMesh.vertexDescriptor = mdlVertexDescriptor
-        
-        return try MTKMesh(mesh:mdlMesh, device:device)
+
+        return try MTKMesh(mesh: mdlMesh, device: device)
     }
     
     class func loadTexture(device: MTLDevice,

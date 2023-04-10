@@ -13,9 +13,9 @@
 		8503426E29DA19F200928641 /* Shaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 8503426B29DA19F200928641 /* Shaders.metal */; };
 		8503426F29DA19F200928641 /* Renderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8503426D29DA19F200928641 /* Renderer.swift */; };
 		8503427329DA1A9500928641 /* MetalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8503427229DA1A9500928641 /* MetalView.swift */; };
+		850B182629E4D31600CD6453 /* models in Resources */ = {isa = PBXBuildFile; fileRef = 850B182529E4D31600CD6453 /* models */; };
 		854AFCC629DDD1470054D4D9 /* TinyObjLoader.mm in Sources */ = {isa = PBXBuildFile; fileRef = 854AFCC529DDD1470054D4D9 /* TinyObjLoader.mm */; };
 		854AFCC929DDE3990054D4D9 /* Mesh.swift in Sources */ = {isa = PBXBuildFile; fileRef = 854AFCC829DDE3990054D4D9 /* Mesh.swift */; };
-		854AFCCD29DDEA380054D4D9 /* meshes in Resources */ = {isa = PBXBuildFile; fileRef = 854AFCCC29DDEA380054D4D9 /* meshes */; };
 		85DD9BE829E4783E0015761E /* Raytracer.metal in Sources */ = {isa = PBXBuildFile; fileRef = 85DD9BE729E4783E0015761E /* Raytracer.metal */; };
 /* End PBXBuildFile section */
 
@@ -29,12 +29,12 @@
 		8503426C29DA19F200928641 /* ShaderTypes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ShaderTypes.h; sourceTree = "<group>"; };
 		8503426D29DA19F200928641 /* Renderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Renderer.swift; sourceTree = "<group>"; };
 		8503427229DA1A9500928641 /* MetalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalView.swift; sourceTree = "<group>"; };
+		850B182529E4D31600CD6453 /* models */ = {isa = PBXFileReference; lastKnownFileType = folder; path = models; sourceTree = "<group>"; };
 		854AFCC329DDD0F70054D4D9 /* tiny_obj_loader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tiny_obj_loader.h; sourceTree = "<group>"; };
 		854AFCC429DDD1470054D4D9 /* TinyObjLoader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TinyObjLoader.h; sourceTree = "<group>"; };
 		854AFCC529DDD1470054D4D9 /* TinyObjLoader.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = TinyObjLoader.mm; sourceTree = "<group>"; };
 		854AFCC729DDE1950054D4D9 /* BridgingHeader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BridgingHeader.h; sourceTree = "<group>"; };
 		854AFCC829DDE3990054D4D9 /* Mesh.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Mesh.swift; sourceTree = "<group>"; };
-		854AFCCC29DDEA380054D4D9 /* meshes */ = {isa = PBXFileReference; lastKnownFileType = folder; path = meshes; sourceTree = "<group>"; };
 		85DD9BE729E4783E0015761E /* Raytracer.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Raytracer.metal; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -86,7 +86,7 @@
 				8503425229DA05A800928641 /* Assets.xcassets */,
 				8503425429DA05A800928641 /* PhoneTon.entitlements */,
 				854AFCC729DDE1950054D4D9 /* BridgingHeader.h */,
-				854AFCCC29DDEA380054D4D9 /* meshes */,
+				850B182529E4D31600CD6453 /* models */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -178,8 +178,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				850B182629E4D31600CD6453 /* models in Resources */,
 				8503425329DA05A800928641 /* Assets.xcassets in Resources */,
-				854AFCCD29DDEA380054D4D9 /* meshes in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

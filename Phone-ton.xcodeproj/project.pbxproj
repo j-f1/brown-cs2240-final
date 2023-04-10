@@ -105,7 +105,6 @@
 			isa = PBXGroup;
 			children = (
 				8503426D29DA19F200928641 /* Renderer.swift */,
-				850B182329E4B8EC00CD6453 /* Mesh.swift */,
 				8503426B29DA19F200928641 /* Shaders.metal */,
 				85DD9BE729E4783E0015761E /* Raytracer.metal */,
 			);

@@ -20,7 +20,6 @@ class Renderer: NSObject, MTKViewDelegate {
     var dynamicUniformBuffer: MTLBuffer
     var pipelineState: MTLComputePipelineState
     var depthState: MTLDepthStencilState
-    var colorMap: MTLTexture
     
     let inFlightSemaphore = DispatchSemaphore(value: maxBuffersInFlight)
     
@@ -34,9 +33,9 @@ class Renderer: NSObject, MTKViewDelegate {
     
     var rotation: Float = 0
     
-    var mesh: MTKMesh
+    var mesh: Mesh
     
-    init?(metalKitView: MTKView) {
+    init?(metalKitView: MTKView, modelURL: URL?) {
         self.device = metalKitView.device!
         guard let queue = self.device.makeCommandQueue() else { return nil }
         self.commandQueue = queue
@@ -53,13 +52,9 @@ class Renderer: NSObject, MTKViewDelegate {
         metalKitView.depthStencilPixelFormat = MTLPixelFormat.depth32Float_stencil8
         metalKitView.colorPixelFormat = MTLPixelFormat.bgra8Unorm_srgb
         metalKitView.sampleCount = 1
-        
-//        let mtlVertexDescriptor = Renderer.buildMetalVertexDescriptor()
-        
+
         do {
-            pipelineState = try Renderer.buildRenderPipelineWithDevice(device: device,
-                                                                       metalKitView: metalKitView,
-                                                                       mtlVertexDescriptor: mtlVertexDescriptor)
+            pipelineState = try Renderer.buildRenderPipelineWithDevice(device: device)
         } catch {
             print("Unable to compile render pipeline state.  Error info: \(error)")
             return nil
@@ -70,21 +65,15 @@ class Renderer: NSObject, MTKViewDelegate {
         depthStateDescriptor.isDepthWriteEnabled = true
         guard let state = device.makeDepthStencilState(descriptor:depthStateDescriptor) else { return nil }
         depthState = state
-        
-        do {
-            mesh = try Renderer.buildMesh(device: device, mtlVertexDescriptor: mtlVertexDescriptor)
-        } catch {
-            print("Unable to build MetalKit Mesh. Error info: \(error)")
-            return nil
-        }
-        
+
+        guard let mesh = Mesh(contentsOf: modelURL) else { return nil }
+        self.mesh = mesh
+
         super.init()
         
     }
     
-    class func buildRenderPipelineWithDevice(device: MTLDevice,
-                                             metalKitView: MTKView,
-                                             mtlVertexDescriptor: MTLVertexDescriptor) throws -> MTLComputePipelineState {
+    class func buildRenderPipelineWithDevice(device: MTLDevice) throws -> MTLComputePipelineState {
         /// Build a render state pipeline object
         
         let library = device.makeDefaultLibrary()
@@ -105,31 +94,6 @@ class Renderer: NSObject, MTKViewDelegate {
         return try device.makeComputePipelineState(descriptor: pipelineDescriptor, options: []).0
     }
     
-    class func buildMesh(device: MTLDevice,
-                         mtlVertexDescriptor: MTLVertexDescriptor) throws -> MTKMesh {
-        /// Create and condition mesh data to feed into a pipeline using the given vertex descriptor
-        
-        let metalAllocator = MTKMeshBufferAllocator(device: device)
-        
-        let mdlMesh = MDLMesh.newBox(withDimensions: SIMD3<Float>(4, 4, 4),
-                                     segments: SIMD3<UInt32>(2, 2, 2),
-                                     geometryType: MDLGeometryType.triangles,
-                                     inwardNormals:false,
-                                     allocator: metalAllocator)
-        
-        let mdlVertexDescriptor = MTKModelIOVertexDescriptorFromMetal(mtlVertexDescriptor)
-        
-        guard let attributes = mdlVertexDescriptor.attributes as? [MDLVertexAttribute] else {
-            throw RendererError.badVertexDescriptor
-        }
-        attributes[VertexAttribute.position.rawValue].name = MDLVertexAttributePosition
-        attributes[VertexAttribute.texcoord.rawValue].name = MDLVertexAttributeTextureCoordinate
-        
-        mdlMesh.vertexDescriptor = mdlVertexDescriptor
-        
-        return try MTKMesh(mesh:mdlMesh, device:device)
-    }
-
     private func updateDynamicBufferState() {
         /// Update the state of our uniform buffers before rendering
         

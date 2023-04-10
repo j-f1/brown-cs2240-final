@@ -53,4 +53,14 @@ struct Triangle {
     vector_float3 colors[3];
 };
 
+struct Material {
+    vector_float3 diffuse;
+    vector_float3 specular;
+    vector_float3 transmittance;
+    vector_float3 emission;
+    float shininess;
+    float ior;
+    int illum;
+};
+
 #endif /* ShaderTypes_h */

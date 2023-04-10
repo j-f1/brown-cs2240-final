@@ -52,6 +52,16 @@ float halton(unsigned int i, unsigned int d) {
     return r;
 }
 
+__attribute__((always_inline))
+float3 transformPoint(float3 p, float4x4 transform) {
+    return (transform * float4(p.x, p.y, p.z, 1.0f)).xyz;
+}
+
+__attribute__((always_inline))
+float3 transformDirection(float3 p, float4x4 transform) {
+    return (transform * float4(p.x, p.y, p.z, 0.0f)).xyz;
+}
+
 // Interpolates the vertex attribute of an arbitrary type across the surface of a triangle
 // given the barycentric coordinates and triangle index in an intersection structure.
 template<typename T, typename IndexType>
@@ -80,6 +90,21 @@ inline T interpolateVertexAttribute(thread T *attributes, float2 uv) {
     // Compute the sum of the vertex attributes weighted by the barycentric coordinates.
     // The barycentric coordinates sum to one.
     return (1.0f - uv.x - uv.y) * T0 + uv.x * T1 + uv.y * T2;
+}
+
+// Uses the inversion method to map two uniformly random numbers to a 3D
+// unit hemisphere, where the probability of a given sample is proportional to the cosine
+// of the angle between the sample direction and the "up" direction (0, 1, 0).
+inline float3 sampleCosineWeightedHemisphere(float2 u) {
+    float phi = 2.0f * M_PI_F * u.x;
+
+    float cos_phi;
+    float sin_phi = sincos(phi, cos_phi);
+
+    float cos_theta = sqrt(u.y);
+    float sin_theta = sqrt(1.0f - cos_theta * cos_theta);
+
+    return float3(sin_theta * cos_phi, cos_theta, sin_theta * sin_phi);
 }
 
 // Aligns a direction on the unit hemisphere such that the hemisphere's "up" direction
@@ -231,55 +256,6 @@ kernel void raytracingKernel(
         // Transform the normal from object to world space.
         worldSpaceSurfaceNormal = normalize(transformDirection(objectSpaceSurfaceNormal, objectToWorldSpaceTransform));
 
-        // Choose a random light source to sample.
-        float lightSample = halton(offset + uniforms.frameIndex, 2 + bounce * 5 + 0);
-        unsigned int lightIndex = min((unsigned int)(lightSample * uniforms.lightCount), uniforms.lightCount - 1);
-
-        // Choose a random point to sample on the light source.
-        float2 r = float2(halton(offset + uniforms.frameIndex, 2 + bounce * 5 + 1),
-                          halton(offset + uniforms.frameIndex, 2 + bounce * 5 + 2));
-
-        float3 worldSpaceLightDirection;
-        float3 lightColor;
-        float lightDistance;
-
-        // Sample the lighting between the intersection point and the point on the area light.
-        sampleAreaLight(areaLights[lightIndex], r, worldSpaceIntersectionPoint, worldSpaceLightDirection,
-                        lightColor, lightDistance);
-
-        // Scale the light color by the cosine of the angle between the light direction and
-        // surface normal.
-        lightColor *= saturate(dot(worldSpaceSurfaceNormal, worldSpaceLightDirection));
-
-        // Scale the ray color by the color of the surface to simulate the surface absorbing light.
-        color *= surfaceColor;
-
-        // Compute the shadow ray. The shadow ray checks whether the sample position on the
-        // light source is visible from the current intersection point.
-        // If it is, the kernel adds lighting to the output image.
-        struct ray shadowRay;
-
-        // Add a small offset to the intersection point to avoid intersecting the same
-        // triangle again.
-        shadowRay.origin = worldSpaceIntersectionPoint + worldSpaceSurfaceNormal * 1e-3f;
-
-        // Travel toward the light source.
-        shadowRay.direction = worldSpaceLightDirection;
-
-        // Don't overshoot the light source.
-        shadowRay.max_distance = lightDistance - 1e-3f;
-
-        // Shadow rays check only whether there is an object between the intersection point
-        // and the light source. Tell Metal to return after finding any intersection.
-        i.accept_any_intersection(true);
-
-        intersection = i.intersect(shadowRay, accelerationStructure);
-
-        // If there was no intersection, then the light source is visible from the original
-        // intersection  point. Add the light's contribution to the image.
-        if (intersection.type == intersection_type::none)
-            accumulatedColor += lightColor * color;
-
         // Choose a random direction to continue the path of the ray. This causes light to
         // bounce between surfaces. An app might evaluate a more complicated equation to
         // calculate the amount of light that reflects between intersection points.  However,
@@ -297,4 +273,5 @@ kernel void raytracingKernel(
         ray.direction = worldSpaceSampleDirection;
     }
 
+    dstTex.write(float4(accumulatedColor, 1.0f), tid);
 }

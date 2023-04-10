@@ -14,6 +14,7 @@
 		8503426F29DA19F200928641 /* Renderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8503426D29DA19F200928641 /* Renderer.swift */; };
 		8503427329DA1A9500928641 /* MetalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8503427229DA1A9500928641 /* MetalView.swift */; };
 		854AFCCD29DDEA380054D4D9 /* meshes in Resources */ = {isa = PBXBuildFile; fileRef = 854AFCCC29DDEA380054D4D9 /* meshes */; };
+		85DD9BE829E4783E0015761E /* Raytracer.metal in Sources */ = {isa = PBXBuildFile; fileRef = 85DD9BE729E4783E0015761E /* Raytracer.metal */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,6 +29,7 @@
 		8503427229DA1A9500928641 /* MetalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalView.swift; sourceTree = "<group>"; };
 		854AFCC729DDE1950054D4D9 /* BridgingHeader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BridgingHeader.h; sourceTree = "<group>"; };
 		854AFCCC29DDEA380054D4D9 /* meshes */ = {isa = PBXFileReference; lastKnownFileType = folder; path = meshes; sourceTree = "<group>"; };
+		85DD9BE729E4783E0015761E /* Raytracer.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Raytracer.metal; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -86,6 +88,7 @@
 			children = (
 				8503426D29DA19F200928641 /* Renderer.swift */,
 				8503426B29DA19F200928641 /* Shaders.metal */,
+				85DD9BE729E4783E0015761E /* Raytracer.metal */,
 			);
 			path = Renderer;
 			sourceTree = "<group>";
@@ -173,6 +176,7 @@
 				8503427329DA1A9500928641 /* MetalView.swift in Sources */,
 				8503425129DA05A700928641 /* ContentView.swift in Sources */,
 				8503424F29DA05A700928641 /* PhoneTonApp.swift in Sources */,
+				85DD9BE829E4783E0015761E /* Raytracer.metal in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

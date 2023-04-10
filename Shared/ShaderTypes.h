@@ -32,11 +32,25 @@ typedef NS_ENUM(EnumBackingType, TextureIndex)
     TextureIndexColor    = 0,
 };
 
+typedef struct Camera {
+    vector_float3 position;
+    vector_float3 right;
+    vector_float3 up;
+    vector_float3 forward;
+} Camera;
+
 typedef struct
 {
-    matrix_float4x4 projectionMatrix;
-    matrix_float4x4 modelViewMatrix;
+    Camera camera;
+
+    unsigned int width;
+    unsigned int height;
+    unsigned int frameIndex;
 } Uniforms;
 
-#endif /* ShaderTypes_h */
+struct Triangle {
+    vector_float3 normals[3];
+    vector_float3 colors[3];
+};
 
+#endif /* ShaderTypes_h */

@@ -7,9 +7,14 @@ struct ContentView: View {
                 .imageScale(.large)
                 .foregroundColor(.accentColor)
             Text("Hello, world!")
-            MetalView(model: Bundle.main.url(forResource: "cow", withExtension: "obj", subdirectory: "meshes")!)
+            MetalView()
         }
         .padding()
+        .onAppear {
+            if let mesh = Mesh(contentsOf: Bundle.main.url(forResource: "cow", withExtension: "obj", subdirectory: "meshes")) {
+//                print(mesh.vertices)
+            }
+        }
     }
 }
 

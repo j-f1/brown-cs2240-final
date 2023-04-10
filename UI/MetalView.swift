@@ -2,18 +2,11 @@ import MetalKit
 import SwiftUI
 
 struct MetalView {
-    let model: URL
-
     class Coordinator {
         var renderer: Renderer?
-        let model: URL
-
-        init(model: URL) {
-            self.model = model
-        }
     }
     func makeCoordinator() -> Coordinator {
-        Coordinator(model: model)
+        Coordinator()
     }
 
     func makeView(context: Context) -> MTKView {
@@ -23,14 +16,10 @@ struct MetalView {
         }
         view.device = defaultDevice
 
-        context.coordinator.renderer = Renderer(metalKitView: view, modelURL: model)
+        context.coordinator.renderer = Renderer(metalKitView: view)
         view.delegate = context.coordinator.renderer
 
         return view
-    }
-
-    func updateView(_ view: MTKView, context: Context) {
-        assert(model == context.coordinator.model)
     }
 }
 
@@ -39,18 +28,14 @@ extension MetalView: NSViewRepresentable {
     func makeNSView(context: Context) -> MTKView {
         makeView(context: context)
     }
-    func updateNSView(_ nsView: MTKView, context: Context) {
-        updateView(nsView, context: context)
-    }
+    func updateNSView(_ nsView: MTKView, context: Context) {}
 }
 #elseif os(iOS)
 extension MetalView: UIViewRepresentable {
     func makeUIView(context: Context) -> MTKView {
         makeView(context: context)
     }
-    func updateUIView(_ uiView: MTKView, context: Context) {
-        updateView(nsView, context: context)
-    }
+    func updateUIView(_ uiView: MTKView, context: Context) {}
 }
 #else
 #error("Unsupported OS!")

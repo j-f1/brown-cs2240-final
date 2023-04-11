@@ -66,7 +66,7 @@ class Renderer: NSObject, MTKViewDelegate {
         guard let state = device.makeDepthStencilState(descriptor:depthStateDescriptor) else { return nil }
         depthState = state
 
-        guard let mesh = Mesh(contentsOf: modelURL) else { return nil }
+        guard let mesh = Mesh(contentsOf: modelURL, for: device) else { return nil }
         self.mesh = mesh
 
         super.init()

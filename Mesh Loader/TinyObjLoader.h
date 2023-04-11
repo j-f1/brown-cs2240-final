@@ -14,10 +14,10 @@ NS_ASSUME_NONNULL_BEGIN
 @property (readonly) NSInteger materialIdCount;
 @property (readonly) NSInteger faceCount;
 
-@property (readonly) const simd_double3 *vertices;
-@property (readonly) const simd_double3 *normals;
-@property (readonly) const long *materialIds;
-@property (readonly) const simd_long3 *faces;
+@property (readonly) const simd_float3 *vertices;
+@property (readonly) const simd_float3 *normals;
+@property (readonly) const ushort *materialIds;
+@property (readonly) const simd_ushort3 *faces;
 
 @property (readonly) NSArray<TinyObjMaterial *> *materials;
 

@@ -2,7 +2,7 @@
 
 #import "TinyObjLoader.h"
 
-#define TINYOBJLOADER_USE_DOUBLE
+//#define TINYOBJLOADER_USE_DOUBLE
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "tiny_obj_loader.h"
 
@@ -11,23 +11,24 @@ simd::float3 to_simd(const tinyobj::real_t val[3]) {
 }
 
 @implementation TinyObjLoader {
-    std::vector<simd::float3> _vertices;
-    std::vector<simd::float3> _normals;
-    std::vector<ushort> _materialIds;
-    std::vector<simd::ushort3> _faces;
+    tinyobj::attrib_t attrib;
+    std::vector<tinyobj::shape_t> shapes;
+    std::vector<tinyobj::material_t> materials;
+
+    std::vector<uint16> _materialIds;
+    std::vector<uint16> _faceVertices;
+    std::vector<uint16> _faceNormals;
 }
 
-@dynamic vertexCount, normalCount, materialIdCount, faceCount;
-@dynamic vertices, normals, materialIds, faces;
+@dynamic vertexCount, normalCount, materialIdCount;
+@dynamic vertices, normals, faceVertices, faceNormals, materialIds;
+@synthesize materials = _materials;
 
 - (instancetype)initWithContentsOfURL:(NSURL *)url {
     if (!url.isFileURL) return nil;
 
     std::string dirname = std::string(url.URLByDeletingLastPathComponent.fileSystemRepresentation) + "/";
 
-    tinyobj::attrib_t attrib;
-    std::vector<tinyobj::shape_t> shapes;
-    std::vector<tinyobj::material_t> materials;
     std::string err;
     bool ok = tinyobj::LoadObj(&attrib, &shapes, &materials, &err, url.fileSystemRepresentation, dirname.c_str(), true);
     if (!ok) {
@@ -39,52 +40,41 @@ simd::float3 to_simd(const tinyobj::real_t val[3]) {
         return nil;
     }
 
-    _vertices = {};
-    _normals = {};
     _materialIds = {};
-    _faces = {};
+    _faceVertices = {};
+    _faceNormals = {};
 
     _materials = [NSMutableArray arrayWithCapacity:materials.size()];
 
-    int nFaces = 0;
-    for(size_t s = 0; s < shapes.size(); s++) {
-        nFaces += shapes[s].mesh.num_face_vertices.size();
+    _faceCount = 0;
+    for (const tinyobj::shape_t &shape : shapes) {
+        _faceCount += shape.mesh.num_face_vertices.size();
+        #ifndef NDEBUG
+        for (const auto &n : shape.mesh.num_face_vertices) {
+            assert(n == 3);
+        }
+        #endif
     }
-    _faces.reserve(nFaces);
+    _faceVertices.reserve(_faceCount * 3);
+    _faceNormals.reserve(_faceCount * 3);
 
     for (const tinyobj::shape_t &shape : shapes) {
         size_t index_offset = 0;
         for(size_t f = 0; f < shape.mesh.num_face_vertices.size(); f++) {
-            unsigned  fv = shape.mesh.num_face_vertices[f];
+            unsigned fv = shape.mesh.num_face_vertices[f];
+            if (fv != 3) abort();
 
-            simd::ushort3 face;
             for(size_t v = 0; v < fv; v++) {
                 tinyobj::index_t idx = shape.mesh.indices[index_offset + v];
-                face[v] = idx.vertex_index;
+                if (idx.vertex_index == ((int)(uint16_t)-1)) abort();
+                _faceVertices.push_back(idx.vertex_index);
+                if (idx.normal_index == ((int)(uint16_t)-1)) abort();
+                _faceNormals.push_back(idx.normal_index);
             }
             index_offset += fv;
 
-            _faces.push_back(face);
             _materialIds.push_back(shape.mesh.material_ids[f]);
         }
-    }
-
-    _vertices.reserve(attrib.vertices.size() / 3);
-    for (size_t i = 0; i < attrib.vertices.size(); i += 3) {
-        simd::float3 vertex;
-        vertex[0] = attrib.vertices[i];
-        vertex[1] = attrib.vertices[i + 1];
-        vertex[2] = attrib.vertices[i + 2];
-        _vertices.push_back(vertex);
-    }
-
-    _normals.reserve(attrib.normals.size() / 3);
-    for (size_t i = 0; i < attrib.normals.size(); i += 3) {
-        simd::float3 normal;
-        normal[0] = attrib.normals[i];
-        normal[1] = attrib.normals[i + 1];
-        normal[2] = attrib.normals[i + 2];
-        _normals.push_back(normal);
     }
 
     for (const tinyobj::material_t &mat : materials) {
@@ -100,40 +90,40 @@ simd::float3 to_simd(const tinyobj::real_t val[3]) {
         [(NSMutableArray *)_materials addObject:material];
     }
 
-    NSLog(@"Loaded %lu faces and %lu vertices from %@", _faces.size(), _vertices.size(), url);
+    NSLog(@"Loaded %lu faces and %lu vertices from %@", _faceVertices.size() / 3, self.vertexCount, url);
     return self;
 }
 
 - (NSInteger)vertexCount {
-    return _vertices.size();
+    return attrib.vertices.size();
 }
 
 - (NSInteger)normalCount {
-    return _normals.size();
+    return attrib.normals.size();
 }
 
 - (NSInteger)materialIdCount {
     return _materialIds.size();
 }
 
-- (NSInteger)faceCount {
-    return _faces.size();
+- (const float *)vertices {
+    return attrib.vertices.data();
 }
 
-- (const simd_float3 *)vertices {
-    return _vertices.data();
+- (const float *)normals {
+    return attrib.normals.data();
 }
 
-- (const simd_float3 *)normals {
-    return _normals.data();
-}
-
-- (const ushort *)materialIds {
+- (const uint16 *)materialIds {
     return _materialIds.data();
 }
 
-- (const simd_ushort3 *)faces {
-    return _faces.data();
+- (const uint16 *)faceVertices {
+    return _faceVertices.data();
+}
+
+- (const uint16 *)faceNormals {
+    return _faceNormals.data();
 }
 
 @end

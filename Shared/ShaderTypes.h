@@ -16,20 +16,19 @@ typedef NSInteger EnumBackingType;
 
 typedef NS_ENUM(EnumBackingType, BufferIndex)
 {
-    BufferIndexMeshPositions = 0,
-    BufferIndexMeshGenerics  = 1,
-    BufferIndexUniforms      = 2
-};
-
-typedef NS_ENUM(EnumBackingType, VertexAttribute)
-{
-    VertexAttributePosition  = 0,
-    VertexAttributeTexcoord  = 1,
+    BufferIndexVertexPositions    = 0,
+    BufferIndexFaceVertices       = 1,
+    BufferIndexFaceMaterials      = 3,
+    BufferIndexMaterials          = 4,
+    BufferIndexIntersectorObjects = 5,
+    BufferIndexIntersector        = 6,
+    BufferIndexUniforms           = 7
 };
 
 typedef NS_ENUM(EnumBackingType, TextureIndex)
 {
-    TextureIndexColor    = 0,
+    TextureIndexRandom = 0,
+    TextureIndexDst    = 1
 };
 
 typedef struct Camera {

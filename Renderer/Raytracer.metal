@@ -128,14 +128,15 @@ inline float3 alignHemisphereWithNormal(float3 sample, float3 normal) {
 
 kernel void raytracingKernel(
      uint2                                                  tid                       [[thread_position_in_grid]],
-     constant Uniforms &                                    uniforms                  [[buffer(0)]],
-     texture2d<unsigned int>                                randomTex                 [[texture(0)]],
-     texture2d<float>                                       prevTex                   [[texture(1)]],
-     texture2d<float, access::write>                        dstTex                    [[texture(2)]],
-     device void                                           *resources                 [[buffer(1)]],
-     constant MTLAccelerationStructureInstanceDescriptor   *instances                 [[buffer(2)]],
-     instance_acceleration_structure                        accelerationStructure     [[buffer(4)]],
-     intersection_function_table<triangle_data, instancing> intersectionFunctionTable [[buffer(5)]]
+     constant Uniforms &                                    uniforms                  [[buffer(BufferIndexUniforms)]],
+     texture2d<unsigned int>                                randomTex                 [[texture(TextureIndexRandom)]],
+     texture2d<float, access::write>                        dstTex                    [[texture(TextureIndexDst)]],
+     constant float                                        *positions                 [[buffer(BufferIndexVertexPositions)]],
+     constant ushort                                       *vertices                  [[buffer(BufferIndexFaceVertices)]],
+     constant ushort                                       *materialIds               [[buffer(BufferIndexFaceMaterials)]],
+     constant Material                                     *materials                 [[buffer(BufferIndexMaterials)]],
+     constant MTLAccelerationStructureInstanceDescriptor   *instances                 [[buffer(BufferIndexIntersectorObjects)]],
+     instance_acceleration_structure                        accelerationStructure     [[buffer(BufferIndexIntersector)]]
 ) {
     // The sample aligns the thread count to the threadgroup size, which means the thread count
     // may be different than the bounds of the texture. Test to make sure this thread
@@ -226,32 +227,15 @@ kernel void raytracingKernel(
         // Compute the intersection point in world space.
         float3 worldSpaceIntersectionPoint = ray.origin + ray.direction * intersection.distance;
 
-        unsigned primitiveIndex = intersection.primitive_id;
-        unsigned int geometryIndex = instances[instanceIndex].accelerationStructureIndex;
-        float2 barycentric_coords = intersection.triangle_barycentric_coord;
-
         float3 worldSpaceSurfaceNormal = 0.0f;
         float3 surfaceColor = 0.0f;
 
-        float3 objectSpaceSurfaceNormal;
-        Triangle triangle;
+        // XXX: compute normals
+        float3 objectSpaceSurfaceNormal = float3(0, 0, 0);
+        auto material = materials[materialIds[intersection.geometry_id]];
 
-        // The ray hit a triangle. Look up the corresponding geometry's normal and UV buffers.
-        device TriangleResources & triangleResources = *(device TriangleResources *)((device char *)resources + resourcesStride * geometryIndex);
-
-        triangle.normals[0] =  triangleResources.vertexNormals[triangleResources.indices[primitiveIndex * 3 + 0]];
-        triangle.normals[1] =  triangleResources.vertexNormals[triangleResources.indices[primitiveIndex * 3 + 1]];
-        triangle.normals[2] =  triangleResources.vertexNormals[triangleResources.indices[primitiveIndex * 3 + 2]];
-
-        triangle.colors[0] =  triangleResources.vertexColors[triangleResources.indices[primitiveIndex * 3 + 0]];
-        triangle.colors[1] =  triangleResources.vertexColors[triangleResources.indices[primitiveIndex * 3 + 1]];
-        triangle.colors[2] =  triangleResources.vertexColors[triangleResources.indices[primitiveIndex * 3 + 2]];
-
-        // Interpolate the vertex normal at the intersection point.
-        objectSpaceSurfaceNormal = interpolateVertexAttribute(triangle.normals, barycentric_coords);
-
-        // Interpolate the vertex color at the intersection point.
-        surfaceColor = interpolateVertexAttribute(triangle.colors, barycentric_coords);
+        // XXX: path trace
+        surfaceColor = material.diffuse;
 
         // Transform the normal from object to world space.
         worldSpaceSurfaceNormal = normalize(transformDirection(objectSpaceSurfaceNormal, objectToWorldSpaceTransform));

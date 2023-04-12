@@ -9,7 +9,7 @@ import Foundation
 import Metal
 
 class Mesh {
-    let vertexBuffer: MTLBuffer // SIMD3<Float>
+    let vertexBuffer: MTLBuffer // Float
     let materialIdBuffer: MTLBuffer // uint16
     let faceVertexBuffer: MTLBuffer // uint16
     let materialBuffer: MTLBuffer // Material

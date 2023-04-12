@@ -10,10 +10,8 @@ import Metal
 
 class Mesh {
     let vertexBuffer: MTLBuffer // SIMD3<Float>
-//    let normalBuffer: MTLBuffer // SIMD3<Float>
     let materialIdBuffer: MTLBuffer // uint16
     let faceVertexBuffer: MTLBuffer // uint16
-//    let faceNormalBuffer: MTLBuffer // uint16
     let materialBuffer: MTLBuffer // Material
 
     init?(contentsOf url: URL?, for device: MTLDevice) {
@@ -29,20 +27,16 @@ class Mesh {
         let materials = loader.materials.map(Material.init)
         guard
             let vertexBuffer = device.makeBuffer(bytes: loader.vertices, length: loader.vertexCount * MemoryLayout<Float>.stride, options: options),
-//            let normalBuffer = device.makeBuffer(bytes: loader.normals, length: loader.normalCount * MemoryLayout<Float>.stride, options: options),
             let materialIdBuffer = device.makeBuffer(bytes: loader.materialIds, length: loader.materialIdCount * MemoryLayout<UInt16>.stride, options: options),
             let faceVertexBuffer = device.makeBuffer(bytes: loader.faceVertices, length: loader.faceCount * 3 * MemoryLayout<UInt16>.stride, options: options),
-//            let faceNormalBuffer = device.makeBuffer(bytes: loader.faceNormals, length: loader.faceCount * 3 * MemoryLayout<UInt16>.stride, options: options),
             let materialBuffer = materials.withUnsafeBytes({ ptr in
                 device.makeBuffer(bytes: ptr.baseAddress!, length: ptr.count, options: options)
             })
         else { return nil }
 
         self.vertexBuffer = vertexBuffer
-//        self.normalBuffer = normalBuffer
         self.materialIdBuffer = materialIdBuffer
         self.faceVertexBuffer = faceVertexBuffer
-//        self.faceNormalBuffer = faceNormalBuffer
         self.materialBuffer = materialBuffer
     }
 

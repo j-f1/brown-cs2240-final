@@ -2,11 +2,8 @@ import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundColor(.accentColor)
-            Text("Hello, world!")
+        HStack {
+            GUIView()
             MetalView(model: Bundle.main.url(forResource: "cow", withExtension: "obj", subdirectory: "meshes")!)
         }
         .padding()

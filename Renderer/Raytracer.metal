@@ -136,8 +136,9 @@ kernel void raytracingKernel(
      constant ushort                                       *materialIds               [[buffer(BufferIndexFaceMaterials)]],
      constant Material                                     *materials                 [[buffer(BufferIndexMaterials)]],
      constant MTLAccelerationStructureInstanceDescriptor   *instances                 [[buffer(BufferIndexIntersectorObjects)]],
-     instance_acceleration_structure                        accelerationStructure     [[buffer(BufferIndexIntersector)]]
+     primitive_acceleration_structure                       accelerationStructure     [[buffer(BufferIndexIntersector)]]
 ) {
+
     // The sample aligns the thread count to the threadgroup size, which means the thread count
     // may be different than the bounds of the texture. Test to make sure this thread
     // is referencing a pixel within the bounds of the texture.
@@ -183,13 +184,13 @@ kernel void raytracingKernel(
     float3 accumulatedColor = float3(0.0f, 0.0f, 0.0f);
 
     // Create an intersector to test for intersection between the ray and the geometry in the scene.
-    intersector<triangle_data, instancing> i;
+    intersector<triangle_data> i;
 
     // not using intersection functions, so some hints to Metal for better performance.
     i.assume_geometry_type(geometry_type::triangle);
     i.force_opacity(forced_opacity::opaque);
 
-    typename intersector<triangle_data, instancing>::result_type intersection;
+    typename intersector<triangle_data>::result_type intersection;
 
     // Simulate up to three ray bounces. Each bounce propagates light backward along the
     // ray's path toward the camera.
@@ -204,9 +205,13 @@ kernel void raytracingKernel(
 
         // Stop if the ray didn't hit anything and has bounced out of the scene.
         if (intersection.type == intersection_type::none)
-            break;
+            accumulatedColor = float3(1, 0, 0);
+        else
+            accumulatedColor = float3(intersection.geometry_id, intersection.primitive_id, 0);
 
-        unsigned int instanceIndex = intersection.instance_id;
+        break;
+
+        unsigned int instanceIndex = 0; //XXX: intersection.instance_id;
 
 //        // Look up the mask for this instance, which indicates what type of geometry the ray hit.
 //        unsigned int mask = instances[instanceIndex].mask;

@@ -145,13 +145,14 @@ class Renderer: NSObject, MTKViewDelegate {
     private func updateGameState() {
         /// Update any game state before rendering
         
-//        uniforms[0].projectionMatrix = projectionMatrix
-        
-//        let rotationAxis = SIMD3<Float>(1, 1, 0)
-//        let modelMatrix = matrix4x4_rotation(radians: rotation, axis: rotationAxis)
-//        let viewMatrix = matrix4x4_translation(0.0, 0.0, -8.0)
-//        uniforms[0].modelViewMatrix = simd_mul(viewMatrix, modelMatrix)
-        rotation += 0.01
+        uniforms[0].camera = Camera(
+            position: .init(x: 0, y: 1, z: 3.6),
+            right: .init(x: 1, y: 0, z: 0),
+            up: .init(x: 0, y: 1, z: 0),
+            forward: .init(x: 0, y: 0, z: -1)
+        )
+        uniforms[0].width = UInt32(outputTexture.width)
+        uniforms[0].height = UInt32(outputTexture.height)
     }
     
     func draw(in view: MTKView) {
@@ -173,7 +174,7 @@ class Renderer: NSObject, MTKViewDelegate {
             if let computeEncoder = commandBuffer.makeComputeCommandEncoder() {
                 /// Final pass rendering code here
                 computeEncoder.label = "Primary Compute Encoder"
-                computeEncoder.pushDebugGroup("Draw Box")
+                computeEncoder.pushDebugGroup("Setup")
                 computeEncoder.setComputePipelineState(pipelineState)
                 computeEncoder.setBuffer(dynamicUniformBuffer, offset: uniformBufferOffset, index: BufferIndex.uniforms.rawValue)
                 // XXX: real textures!
@@ -185,6 +186,7 @@ class Renderer: NSObject, MTKViewDelegate {
                 computeEncoder.setBuffer(mesh.materialBuffer, offset: 0, index: BufferIndex.materials.rawValue)
                 computeEncoder.setBuffer(mesh.instanceDescriptors, offset: 0, index: BufferIndex.intersectorObjects.rawValue)
                 computeEncoder.setAccelerationStructure(mesh.accelerationStructure, bufferIndex: BufferIndex.intersector.rawValue)
+                computeEncoder.popDebugGroup()
 
                 // Launch a rectangular grid of threads on the GPU to perform ray tracing, with one thread per
                 // pixel. The sample needs to align the number of threads to a multiple of the threadgroup
@@ -200,11 +202,11 @@ class Renderer: NSObject, MTKViewDelegate {
                 )
                 computeEncoder.dispatchThreadgroups(threadgroups, threadsPerThreadgroup: threadsPerThreadgroup)
 
-                computeEncoder.popDebugGroup()
                 computeEncoder.endEncoding()
             }
             
             commandBuffer.commit()
+            commandBuffer.waitUntilCompleted()
         }
     }
     

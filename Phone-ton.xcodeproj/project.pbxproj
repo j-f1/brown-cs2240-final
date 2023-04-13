@@ -13,6 +13,7 @@
 		8503426F29DA19F200928641 /* Renderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8503426D29DA19F200928641 /* Renderer.swift */; };
 		8503427329DA1A9500928641 /* MetalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8503427229DA1A9500928641 /* MetalView.swift */; };
 		850B182629E4D31600CD6453 /* models in Resources */ = {isa = PBXBuildFile; fileRef = 850B182529E4D31600CD6453 /* models */; };
+		851F052B29E84EAD008AFCCA /* Halton.metal in Sources */ = {isa = PBXBuildFile; fileRef = 851F052A29E84EAD008AFCCA /* Halton.metal */; };
 		854AFCC629DDD1470054D4D9 /* TinyObjLoader.mm in Sources */ = {isa = PBXBuildFile; fileRef = 854AFCC529DDD1470054D4D9 /* TinyObjLoader.mm */; };
 		854AFCC929DDE3990054D4D9 /* Mesh.swift in Sources */ = {isa = PBXBuildFile; fileRef = 854AFCC829DDE3990054D4D9 /* Mesh.swift */; };
 		85DD9BE829E4783E0015761E /* Raytracer.metal in Sources */ = {isa = PBXBuildFile; fileRef = 85DD9BE729E4783E0015761E /* Raytracer.metal */; };
@@ -28,6 +29,9 @@
 		8503426D29DA19F200928641 /* Renderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Renderer.swift; sourceTree = "<group>"; };
 		8503427229DA1A9500928641 /* MetalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalView.swift; sourceTree = "<group>"; };
 		850B182529E4D31600CD6453 /* models */ = {isa = PBXFileReference; lastKnownFileType = folder; path = models; sourceTree = "<group>"; };
+		851F052629E84D8F008AFCCA /* Halton.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Halton.h; sourceTree = "<group>"; };
+		851F052929E84DE7008AFCCA /* Sampler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Sampler.h; sourceTree = "<group>"; };
+		851F052A29E84EAD008AFCCA /* Halton.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = Halton.metal; sourceTree = "<group>"; };
 		854AFCC329DDD0F70054D4D9 /* tiny_obj_loader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tiny_obj_loader.h; sourceTree = "<group>"; };
 		854AFCC429DDD1470054D4D9 /* TinyObjLoader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TinyObjLoader.h; sourceTree = "<group>"; };
 		854AFCC529DDD1470054D4D9 /* TinyObjLoader.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = TinyObjLoader.mm; sourceTree = "<group>"; };
@@ -104,6 +108,9 @@
 			children = (
 				8503426D29DA19F200928641 /* Renderer.swift */,
 				85DD9BE729E4783E0015761E /* Raytracer.metal */,
+				851F052929E84DE7008AFCCA /* Sampler.h */,
+				851F052A29E84EAD008AFCCA /* Halton.metal */,
+				851F052629E84D8F008AFCCA /* Halton.h */,
 			);
 			path = Renderer;
 			sourceTree = "<group>";
@@ -188,6 +195,7 @@
 			files = (
 				8503426F29DA19F200928641 /* Renderer.swift in Sources */,
 				854AFCC929DDE3990054D4D9 /* Mesh.swift in Sources */,
+				851F052B29E84EAD008AFCCA /* Halton.metal in Sources */,
 				8503427329DA1A9500928641 /* MetalView.swift in Sources */,
 				8503425129DA05A700928641 /* ContentView.swift in Sources */,
 				854AFCC629DDD1470054D4D9 /* TinyObjLoader.mm in Sources */,

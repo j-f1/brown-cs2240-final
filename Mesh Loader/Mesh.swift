@@ -50,6 +50,7 @@ class Mesh {
         geometryDescriptor.indexBuffer = faceVertexBuffer
         geometryDescriptor.vertexBuffer = vertexBuffer
         geometryDescriptor.indexType = .uint16
+        geometryDescriptor.triangleCount = loader.faceCount
 
         let faces = loader.faceCount
         guard
@@ -79,7 +80,6 @@ class Mesh {
             // doesn't actually build the acceleration structure, but rather allocates memory.
             let accelerationStructure = device.makeAccelerationStructure(size: accelSizes.accelerationStructureSize)
         else { return nil }
-        self.accelerationStructure = accelerationStructure
 
         guard
             // Allocate scratch space Metal uses to build the acceleration structure.
@@ -93,6 +93,8 @@ class Mesh {
             // Allocate a buffer for Metal to write the compacted accelerated structure's size into.
             let compactedSizeBuffer = device.makeBuffer(length: MemoryLayout<UInt32>.size, options: .storageModeShared)
         else { return nil }
+
+        commandEncoder.label = "Make Acceleration Structure"
 
         scratchBuffer.label = "Scratch Buffer"
         compactedSizeBuffer.label = "Compacted Size Buffer"
@@ -142,6 +144,8 @@ class Mesh {
             let commandBuffer2 = commandQueue.makeCommandBuffer(),
             let commandEncoder2 = commandBuffer2.makeAccelerationStructureCommandEncoder()
         else { return nil }
+
+        self.accelerationStructure = compactedAccelerationStructure
 
         // Encode the command to copy and compact the acceleration structure into the
         // smaller acceleration structure.

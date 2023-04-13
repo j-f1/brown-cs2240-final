@@ -17,7 +17,7 @@ struct MetalView {
     }
 
     func makeView(context: Context) -> MTKView {
-        let view = MTKView()
+        let view = MTKView(frame: .init(origin: .zero, size: .init(width: 512, height: 512)))
         guard let defaultDevice = MTLCreateSystemDefaultDevice() else {
             fatalError("Metal is not supported on this device")
         }

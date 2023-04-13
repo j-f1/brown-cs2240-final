@@ -17,6 +17,8 @@ class Renderer: NSObject, MTKViewDelegate {
     
     public let device: MTLDevice
     let commandQueue: MTLCommandQueue
+    let outputTexture: MTLTexture
+    let randomTexture: MTLTexture
     var dynamicUniformBuffer: MTLBuffer
     var pipelineState: MTLComputePipelineState
     var depthState: MTLDepthStencilState
@@ -66,8 +68,44 @@ class Renderer: NSObject, MTKViewDelegate {
         guard let state = device.makeDepthStencilState(descriptor:depthStateDescriptor) else { return nil }
         depthState = state
 
-        guard let mesh = Mesh(contentsOf: modelURL, for: device) else { return nil }
+        guard let mesh = Mesh(contentsOf: modelURL, for: device, commandQueue: commandQueue) else { return nil }
         self.mesh = mesh
+
+        let textureDescriptor = MTLTextureDescriptor()
+        textureDescriptor.pixelFormat = .rgba32Float
+        textureDescriptor.textureType = .type2D
+        textureDescriptor.width = Int(metalKitView.bounds.width) // XXX: handle resize?
+        textureDescriptor.height = Int(metalKitView.bounds.height)
+
+        // Store the texture in private memory because only the GPU reads or writes this texture.
+        textureDescriptor.storageMode = .private
+        textureDescriptor.usage = [.shaderRead, .shaderWrite]
+
+        guard let outputTexture = device.makeTexture(descriptor: textureDescriptor) else { return nil }
+        self.outputTexture = outputTexture
+
+        // Create a texture that contains a random integer value for each pixel. The sample
+        // uses these values to decorrelate pixels while drawing pseudorandom numbers from the
+        // Halton sequence.
+        textureDescriptor.pixelFormat = .r32Uint
+        textureDescriptor.usage = .shaderRead
+
+        // The sample initializes the data in the texture, so it can't be private.
+        #if !TARGET_OS_IPHONE
+        textureDescriptor.storageMode = .managed
+        #else
+        textureDescriptor.storageMode = .shared
+        #endif
+
+        guard let randomTexture = device.makeTexture(descriptor: textureDescriptor) else { return nil }
+        self.randomTexture = randomTexture
+        let randomValues = [UInt32](repeating: 0, count: randomTexture.width * randomTexture.height).map { _ in UInt32.random(in: .min ... .max) }
+        randomTexture.replace(
+            region: .init(origin: .zero, size: .init(width: randomTexture.width, height: randomTexture.height, depth: 1)),
+            mipmapLevel: 0,
+            withBytes: randomValues,
+            bytesPerRow: MemoryLayout<UInt32>.size * randomTexture.width
+        )
 
         super.init()
         
@@ -135,8 +173,33 @@ class Renderer: NSObject, MTKViewDelegate {
             if let computeEncoder = commandBuffer.makeComputeCommandEncoder() {
                 /// Final pass rendering code here
                 computeEncoder.label = "Primary Compute Encoder"
-                                computeEncoder.pushDebugGroup("Draw Box")
+                computeEncoder.pushDebugGroup("Draw Box")
                 computeEncoder.setComputePipelineState(pipelineState)
+                computeEncoder.setBuffer(dynamicUniformBuffer, offset: uniformBufferOffset, index: BufferIndex.uniforms.rawValue)
+                // XXX: real textures!
+                computeEncoder.setTexture(randomTexture, index: TextureIndex.random.rawValue)
+                computeEncoder.setTexture(outputTexture, index: TextureIndex.dst.rawValue)
+                computeEncoder.setBuffer(mesh.vertexBuffer, offset: 0, index: BufferIndex.vertexPositions.rawValue)
+                computeEncoder.setBuffer(mesh.faceVertexBuffer, offset: 0, index: BufferIndex.faceVertices.rawValue)
+                computeEncoder.setBuffer(mesh.materialIdBuffer, offset: 0, index: BufferIndex.faceMaterials.rawValue)
+                computeEncoder.setBuffer(mesh.materialBuffer, offset: 0, index: BufferIndex.materials.rawValue)
+                computeEncoder.setBuffer(mesh.instanceDescriptors, offset: 0, index: BufferIndex.intersectorObjects.rawValue)
+                computeEncoder.setAccelerationStructure(mesh.accelerationStructure, bufferIndex: BufferIndex.intersector.rawValue)
+
+                // Launch a rectangular grid of threads on the GPU to perform ray tracing, with one thread per
+                // pixel. The sample needs to align the number of threads to a multiple of the threadgroup
+                // size, because earlier, when it created the pipeline objects, it declared that the pipeline
+                // would always use a threadgroup size that's a multiple of the thread execution width
+                // (SIMD group size). An 8x8 threadgroup is a safe threadgroup size and small enough to be
+                // supported on most devices. A more advanced app would choose the threadgroup size dynamically.
+                let threadsPerThreadgroup = MTLSize(width: 8, height: 8, depth: 1)
+                let threadgroups = MTLSize(
+                    width: (Int(view.bounds.width) + threadsPerThreadgroup.width - 1) / threadsPerThreadgroup.width,
+                    height: (Int(view.bounds.height) + threadsPerThreadgroup.height - 1) / threadsPerThreadgroup.height,
+                    depth: 1
+                )
+                computeEncoder.dispatchThreadgroups(threadgroups, threadsPerThreadgroup: threadsPerThreadgroup)
+
                 computeEncoder.popDebugGroup()
                 computeEncoder.endEncoding()
             }
@@ -151,6 +214,10 @@ class Renderer: NSObject, MTKViewDelegate {
         let aspect = Float(size.width) / Float(size.height)
         projectionMatrix = matrix_perspective_right_hand(fovyRadians: radians_from_degrees(65), aspectRatio:aspect, nearZ: 0.1, farZ: 100.0)
     }
+}
+
+extension MTLOrigin {
+    static let zero = MTLOrigin(x: 0, y: 0, z: 0)
 }
 
 // Generic matrix math utility functions

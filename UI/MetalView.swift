@@ -24,8 +24,13 @@ struct MetalView {
         view.device = defaultDevice
         view.framebufferOnly = false
 
-        context.coordinator.renderer = Renderer(metalKitView: view, modelURL: model)
-        view.delegate = context.coordinator.renderer
+        Task.detached {
+            let renderer = await Renderer(metalKitView: view, modelURL: model)
+            await MainActor.run {
+                context.coordinator.renderer = renderer
+                view.delegate = renderer
+            }
+        }
 
         return view
     }

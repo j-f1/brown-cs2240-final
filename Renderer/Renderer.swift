@@ -15,8 +15,9 @@ class Renderer: NSObject, MTKViewDelegate {
     var pipelineState: MTLComputePipelineState
     var scene: Scene
 
-    init?(metalKitView: MTKView, modelURL: URL?) {
-        self.device = metalKitView.device!
+    init?(metalKitView: MTKView, modelURL: URL?) async {
+        let start = Date.now
+        self.device = await metalKitView.device!
         guard let queue = self.device.makeCommandQueue() else { return nil }
         self.commandQueue = queue
 
@@ -25,11 +26,13 @@ class Renderer: NSObject, MTKViewDelegate {
         
         self.uniformBuffer.label = "UniformBuffer"
 
-        metalKitView.colorPixelFormat = .bgr10_xr_srgb
-        #if os(macOS)
-        metalKitView.colorspace = CGColorSpace(name: CGColorSpace.displayP3)
-        #endif
-        metalKitView.sampleCount = 1
+        await MainActor.run {
+            metalKitView.colorPixelFormat = .bgr10_xr_srgb
+            #if os(macOS)
+            metalKitView.colorspace = CGColorSpace(name: CGColorSpace.displayP3)
+            #endif
+            metalKitView.sampleCount = 1
+        }
 
         do {
             pipelineState = try Renderer.buildRenderPipelineWithDevice(device: device)
@@ -37,17 +40,20 @@ class Renderer: NSObject, MTKViewDelegate {
             print("Unable to compile render pipeline state.  Error info: \(error)")
             return nil
         }
-        
-        guard let mesh = Scene(contentsOf: modelURL, for: device, commandQueue: commandQueue) else { return nil }
+
+        guard let modelURL else { return nil }
+        guard let mesh = await Scene(contentsOf: modelURL, for: device, commandQueue: commandQueue) else { return nil }
         self.scene = mesh
 
-        guard let randomTexture = Renderer.buildRandomTexture(size: metalKitView.drawableSize, on: device) else { return nil }
+        guard let randomTexture = Renderer.buildRandomTexture(size: await metalKitView.drawableSize, on: device) else { return nil }
         self.randomTexture = randomTexture
 
         super.init()
+
+        print("Loaded \(modelURL.lastPathComponent) in \((Date.now.timeIntervalSince(start) * 1000).formatted(.number.precision(.significantDigits(...3))))ms")
     }
 
-    class func buildRandomTexture(size: CGSize, on device: MTLDevice) -> MTLTexture? {
+    private class func buildRandomTexture(size: CGSize, on device: MTLDevice) -> MTLTexture? {
         let textureDescriptor = MTLTextureDescriptor()
         textureDescriptor.pixelFormat = .rgba32Float
         textureDescriptor.textureType = .type2D
@@ -71,7 +77,7 @@ class Renderer: NSObject, MTKViewDelegate {
         return randomTexture
     }
     
-    class func buildRenderPipelineWithDevice(device: MTLDevice) throws -> MTLComputePipelineState {
+    private class func buildRenderPipelineWithDevice(device: MTLDevice) throws -> MTLComputePipelineState {
         /// Build a render state pipeline object
         let library = device.makeDefaultLibrary()
         let pipelineDescriptor = MTLComputePipelineDescriptor()

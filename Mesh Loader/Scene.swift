@@ -9,10 +9,8 @@ class Scene {
     let accelerationStructure: MTLAccelerationStructure
     let instanceDescriptors: MTLBuffer // MTLAccelerationStructureInstanceDescriptor
 
-    init?(contentsOf url: URL?, for device: MTLDevice, commandQueue: MTLCommandQueue) {
-        guard let url, let loader = TinyObjLoader(contentsOf: url) else {
-            return nil
-        }
+    init?(contentsOf url: URL, for device: MTLDevice, commandQueue: MTLCommandQueue) async {
+        guard let loader = await runBlocking({ TinyObjLoader(contentsOf: url) }) else { return nil }
 
         let materials = loader.materials.map(Material.init)
         guard
@@ -119,7 +117,9 @@ class Scene {
         // structures, such as static scene geometry. Avoid compacting acceleration structures that
         // you rebuild every frame, as the synchronization cost may be significant.
 
-        commandBuffer.waitUntilCompleted()
+        await runBlocking {
+            commandBuffer.waitUntilCompleted()
+        }
 
         let compactedSize = compactedSizeBuffer.contents().assumingMemoryBound(to: Int.self).pointee
 
@@ -148,6 +148,14 @@ class Scene {
         // compacted acceleration structure.
         commandEncoder2.endEncoding()
         commandBuffer2.commit()
+    }
+}
+
+private func runBlocking<T>(qos: DispatchQoS.QoSClass = .userInitiated, _ cb: @escaping () -> T) async -> T {
+    await withCheckedContinuation { continuation in
+        DispatchQueue.global(qos: qos).async {
+            continuation.resume(returning: cb())
+        }
     }
 }
 

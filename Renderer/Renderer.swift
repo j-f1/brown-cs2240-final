@@ -20,7 +20,7 @@ class Renderer: NSObject, MTKViewDelegate {
         guard let queue = self.device.makeCommandQueue() else { return nil }
         self.commandQueue = queue
 
-        guard let buffer = self.device.makeBuffer(length: MemoryLayout<Uniforms>.size, options: .storageModeShared) else { return nil }
+        guard let buffer = self.device.makeBuffer(length: MemoryLayout<Uniforms>.size, options: []) else { return nil }
         uniformBuffer = buffer
         
         self.uniformBuffer.label = "UniformBuffer"
@@ -59,13 +59,6 @@ class Renderer: NSObject, MTKViewDelegate {
         // Halton sequence.
         textureDescriptor.pixelFormat = .r32Uint
         textureDescriptor.usage = .shaderRead
-
-        // The sample initializes the data in the texture, so it can't be private.
-        #if !os(iOS)
-        textureDescriptor.storageMode = .managed
-        #else
-        textureDescriptor.storageMode = .shared
-        #endif
 
         guard let randomTexture = device.makeTexture(descriptor: textureDescriptor) else { return nil }
         let randomValues = [UInt32](repeating: 0, count: randomTexture.width * randomTexture.height).map { _ in UInt32.random(in: .min ... .max) }

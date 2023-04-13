@@ -13,19 +13,14 @@ class Scene {
         guard let url, let loader = TinyObjLoader(contentsOf: url) else {
             return nil
         }
-        #if os(iOS)
-        let options = MTLResourceOptions.storageModeShared
-        #else
-        let options = MTLResourceOptions.storageModeManaged
-        #endif
 
         let materials = loader.materials.map(Material.init)
         guard
-            let vertexBuffer = device.makeBuffer(bytes: loader.vertices, length: loader.vertexCount * MemoryLayout<Float>.stride, options: options),
-            let materialIdBuffer = device.makeBuffer(bytes: loader.materialIds, length: loader.materialIdCount * MemoryLayout<UInt16>.stride, options: options),
-            let faceVertexBuffer = device.makeBuffer(bytes: loader.faceVertices, length: loader.faceCount * 3 * MemoryLayout<UInt16>.stride, options: options),
+            let vertexBuffer = device.makeBuffer(bytes: loader.vertices, length: loader.vertexCount * MemoryLayout<Float>.stride, options: []),
+            let materialIdBuffer = device.makeBuffer(bytes: loader.materialIds, length: loader.materialIdCount * MemoryLayout<UInt16>.stride, options: []),
+            let faceVertexBuffer = device.makeBuffer(bytes: loader.faceVertices, length: loader.faceCount * 3 * MemoryLayout<UInt16>.stride, options: []),
             let materialBuffer = materials.withUnsafeBytes({ ptr in
-                device.makeBuffer(bytes: ptr.baseAddress!, length: ptr.count, options: options)
+                device.makeBuffer(bytes: ptr.baseAddress!, length: ptr.count, options: [])
             })
         else { return nil }
 
@@ -46,7 +41,7 @@ class Scene {
 
         let faces = loader.faceCount
         guard
-            let instanceDescriptors = device.makeBuffer(length: MemoryLayout<MTLAccelerationStructureInstanceDescriptor>.size * faces, options: options)
+            let instanceDescriptors = device.makeBuffer(length: MemoryLayout<MTLAccelerationStructureInstanceDescriptor>.size * faces, options: [])
         else { return nil }
         instanceDescriptors.label = "Instance Descriptors"
         self.instanceDescriptors = instanceDescriptors

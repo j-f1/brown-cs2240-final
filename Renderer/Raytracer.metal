@@ -181,7 +181,7 @@ kernel void raytracingKernel(
     // the surface absorbs.
     float3 color = float3(1.0f, 1.0f, 1.0f);
 
-    float3 accumulatedColor = float3(0.0f, 0.0f, 0.0f);
+    float4 accumulatedColor = float4(0.0f, 0.0f, 0.0f, 0.0f);
 
     // Create an intersector to test for intersection between the ray and the geometry in the scene.
     intersector<triangle_data> i;
@@ -205,22 +205,8 @@ kernel void raytracingKernel(
 
         // Stop if the ray didn't hit anything and has bounced out of the scene.
         if (intersection.type == intersection_type::none)
-            accumulatedColor = float3(1, 0, 0);
-        else
-            accumulatedColor = float3(intersection.geometry_id, intersection.primitive_id, 0);
-
-        break;
-
-        unsigned int instanceIndex = 0; //XXX: intersection.instance_id;
-
-//        // Look up the mask for this instance, which indicates what type of geometry the ray hit.
-//        unsigned int mask = instances[instanceIndex].mask;
-//
-//        // If the ray hit a light source, set the color to white, and stop immediately.
-//        if (mask == GEOMETRY_MASK_LIGHT) {
-//            accumulatedColor = float3(1.0f, 1.0f, 1.0f);
-//            break;
-//        }
+            break;
+        unsigned int instanceIndex = intersection.primitive_id;
 
         // The ray hit something. Look up the transformation matrix for this instance.
         float4x4 objectToWorldSpaceTransform(1.0f);
@@ -230,37 +216,38 @@ kernel void raytracingKernel(
                 objectToWorldSpaceTransform[column][row] = instances[instanceIndex].transformationMatrix[column][row];
 
         // Compute the intersection point in world space.
-        float3 worldSpaceIntersectionPoint = ray.origin + ray.direction * intersection.distance;
-
-        float3 worldSpaceSurfaceNormal = 0.0f;
-        float3 surfaceColor = 0.0f;
-
-        // XXX: compute normals
-        float3 objectSpaceSurfaceNormal = float3(0, 0, 0);
-        auto material = materials[materialIds[intersection.geometry_id]];
+//        float3 worldSpaceIntersectionPoint = ray.origin + ray.direction * intersection.distance;
+//
+//        float3 worldSpaceSurfaceNormal = 0.0f;
+//        float3 surfaceColor = 0.0f;
+//
+//        // XXX: compute normals
+//        float3 objectSpaceSurfaceNormal = float3(0, 0, 0);
+        auto material = materials[materialIds[intersection.primitive_id]];
 
         // XXX: path trace
-        surfaceColor = material.diffuse;
+        accumulatedColor = float4(material.diffuse, 1);
+        break;
 
-        // Transform the normal from object to world space.
-        worldSpaceSurfaceNormal = normalize(transformDirection(objectSpaceSurfaceNormal, objectToWorldSpaceTransform));
-
-        // Choose a random direction to continue the path of the ray. This causes light to
-        // bounce between surfaces. An app might evaluate a more complicated equation to
-        // calculate the amount of light that reflects between intersection points.  However,
-        // all the math in this kernel cancels out because this app assumes a simple diffuse
-        // BRDF and samples the rays with a cosine distribution over the hemisphere (importance
-        // sampling). This requires that the kernel only multiply the colors together. This
-        // sampling strategy also reduces the amount of noise in the output image.
-        r = float2(halton(offset + uniforms.frameIndex, 2 + bounce * 5 + 3),
-                   halton(offset + uniforms.frameIndex, 2 + bounce * 5 + 4));
-
-        float3 worldSpaceSampleDirection = sampleCosineWeightedHemisphere(r);
-        worldSpaceSampleDirection = alignHemisphereWithNormal(worldSpaceSampleDirection, worldSpaceSurfaceNormal);
-
-        ray.origin = worldSpaceIntersectionPoint + worldSpaceSurfaceNormal * 1e-3f;
-        ray.direction = worldSpaceSampleDirection;
+//        // Transform the normal from object to world space.
+//        worldSpaceSurfaceNormal = normalize(transformDirection(objectSpaceSurfaceNormal, objectToWorldSpaceTransform));
+//
+//        // Choose a random direction to continue the path of the ray. This causes light to
+//        // bounce between surfaces. An app might evaluate a more complicated equation to
+//        // calculate the amount of light that reflects between intersection points.  However,
+//        // all the math in this kernel cancels out because this app assumes a simple diffuse
+//        // BRDF and samples the rays with a cosine distribution over the hemisphere (importance
+//        // sampling). This requires that the kernel only multiply the colors together. This
+//        // sampling strategy also reduces the amount of noise in the output image.
+//        r = float2(halton(offset + uniforms.frameIndex, 2 + bounce * 5 + 3),
+//                   halton(offset + uniforms.frameIndex, 2 + bounce * 5 + 4));
+//
+//        float3 worldSpaceSampleDirection = sampleCosineWeightedHemisphere(r);
+//        worldSpaceSampleDirection = alignHemisphereWithNormal(worldSpaceSampleDirection, worldSpaceSurfaceNormal);
+//
+//        ray.origin = worldSpaceIntersectionPoint + worldSpaceSurfaceNormal * 1e-3f;
+//        ray.direction = worldSpaceSampleDirection;
     }
 
-    dstTex.write(float4(accumulatedColor, 1.0f), tid);
+    dstTex.write(accumulatedColor, tid);
 }

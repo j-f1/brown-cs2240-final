@@ -26,7 +26,7 @@ kernel void raytracingKernel(
      primitive_acceleration_structure                       accelerationStructure     [[buffer(BufferIndexIntersector)]]
 ) {
 
-    // The sample aligns the thread count to the threadgroup size, which means the thread count
+    // We align the thread count to the threadgroup size, which means the thread count
     // may be different than the bounds of the texture. Test to make sure this thread
     // is referencing a pixel within the bounds of the texture.
     if (tid.x >= uniforms.width || tid.y >= uniforms.height) return;
@@ -83,11 +83,10 @@ kernel void raytracingKernel(
     // ray's path toward the camera.
     for (int bounce = 0; bounce < 3; bounce++) {
         // Get the closest intersection, not the first intersection. This is the default, but
-        // the sample adjusts this property below when it casts shadow rays.
+        // we will adjust this property below when casting shadow rays.
         i.accept_any_intersection(false);
 
-        // Check for intersection between the ray and the acceleration structure. If the sample
-        // isn't using intersection functions, it doesn't need to include one.
+        // Check for intersection between the ray and the acceleration structure.
         intersection = i.intersect(ray, accelerationStructure);
 
         // Stop if the ray didn't hit anything and has bounced out of the scene.

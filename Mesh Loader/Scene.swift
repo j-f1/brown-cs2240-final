@@ -75,7 +75,7 @@ class Scene {
 
         guard
             // Allocate scratch space Metal uses to build the acceleration structure.
-            // Use MTLResourceStorageModePrivate for the best performance because the sample
+            // Use MTLResourceStorageModePrivate for the best performance because the CPU
             // doesn't need access to buffer's contents.
             let scratchBuffer = device.makeBuffer(length: accelSizes.buildScratchBufferSize, options: .storageModePrivate),
             // Create a command buffer that performs the acceleration structure build.

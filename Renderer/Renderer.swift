@@ -54,7 +54,7 @@ class Renderer: NSObject, MTKViewDelegate {
         textureDescriptor.width = Int(size.width)
         textureDescriptor.height = Int(size.height)
 
-        // Create a texture that contains a random integer value for each pixel. The sample
+        // Create a texture that contains a random integer value for each pixel. The raytracer
         // uses these values to decorrelate pixels while drawing pseudorandom numbers from the
         // Halton sequence.
         textureDescriptor.pixelFormat = .r32Uint
@@ -122,8 +122,8 @@ class Renderer: NSObject, MTKViewDelegate {
                 computeEncoder.popDebugGroup()
 
                 // Launch a rectangular grid of threads on the GPU to perform ray tracing, with one thread per
-                // pixel. The sample needs to align the number of threads to a multiple of the threadgroup
-                // size, because earlier, when it created the pipeline objects, it declared that the pipeline
+                // pixel. The number of threads needs to be aligned to a multiple of the threadgroup size,
+                // because earlier, when it created the pipeline objects, it declared that the pipeline
                 // would always use a threadgroup size that's a multiple of the thread execution width
                 // (SIMD group size). An 8x8 threadgroup is a safe threadgroup size and small enough to be
                 // supported on most devices. A more advanced app would choose the threadgroup size dynamically.

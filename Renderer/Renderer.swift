@@ -108,15 +108,15 @@ class Renderer: NSObject, MTKViewDelegate {
                 computeEncoder.label = "Primary Compute Encoder"
                 computeEncoder.pushDebugGroup("Setup")
                 computeEncoder.setComputePipelineState(pipelineState)
-                computeEncoder.setBuffer(uniformBuffer, offset: 0, index: BufferIndex.uniforms.rawValue)
-                computeEncoder.setTexture(randomTexture, index: TextureIndex.random.rawValue)
-                computeEncoder.setTexture(drawable.texture, index: TextureIndex.dst.rawValue)
-                computeEncoder.setBuffer(mesh.vertexBuffer, offset: 0, index: BufferIndex.vertexPositions.rawValue)
-                computeEncoder.setBuffer(mesh.faceVertexBuffer, offset: 0, index: BufferIndex.faceVertices.rawValue)
-                computeEncoder.setBuffer(mesh.materialIdBuffer, offset: 0, index: BufferIndex.faceMaterials.rawValue)
-                computeEncoder.setBuffer(mesh.materialBuffer, offset: 0, index: BufferIndex.materials.rawValue)
-                computeEncoder.setBuffer(mesh.instanceDescriptors, offset: 0, index: BufferIndex.intersectorObjects.rawValue)
-                computeEncoder.setAccelerationStructure(mesh.accelerationStructure, bufferIndex: BufferIndex.intersector.rawValue)
+                computeEncoder[.uniforms] = uniformBuffer
+                computeEncoder[.random] = randomTexture
+                computeEncoder[.dst] = drawable.texture
+                computeEncoder[.vertexPositions] = mesh.vertexBuffer
+                computeEncoder[.faceVertices] = mesh.faceVertexBuffer
+                computeEncoder[.faceMaterials] = mesh.materialIdBuffer
+                computeEncoder[.materials] = mesh.materialBuffer
+                computeEncoder[.intersectorObjects] = mesh.instanceDescriptors
+                computeEncoder[.intersector] = mesh.accelerationStructure
                 computeEncoder.popDebugGroup()
 
                 // Launch a rectangular grid of threads on the GPU to perform ray tracing, with one thread per
@@ -144,6 +144,23 @@ class Renderer: NSObject, MTKViewDelegate {
 
     func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {
         /// Respond to drawable size or orientation changes here
+    }
+}
+
+private extension MTLComputeCommandEncoder {
+    subscript(name: TextureIndex) -> MTLTexture? {
+        get { nil }
+        set { setTexture(newValue, index: name.rawValue) }
+    }
+
+    subscript(name: BufferIndex) -> MTLAccelerationStructure? {
+        get { nil }
+        set { setAccelerationStructure(newValue, bufferIndex: name.rawValue) }
+    }
+
+    subscript(name: BufferIndex) -> MTLBuffer? {
+        get { nil }
+        set { setBuffer(newValue, offset: 0, index: name.rawValue) }
     }
 }
 

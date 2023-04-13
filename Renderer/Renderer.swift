@@ -103,6 +103,7 @@ class Renderer: NSObject, MTKViewDelegate {
             let height = Int(view.drawableSize.height)
             uniforms[0].width = UInt32(width)
             uniforms[0].height = UInt32(height)
+            uniforms[0].frameIndex += 1
 
             if let computeEncoder = commandBuffer.makeComputeCommandEncoder(), let drawable = view.currentDrawable {
                 /// Final pass rendering code here

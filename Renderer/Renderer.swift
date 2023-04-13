@@ -13,7 +13,7 @@ class Renderer: NSObject, MTKViewDelegate {
     let randomTexture: MTLTexture
     var uniformBuffer: MTLBuffer
     var pipelineState: MTLComputePipelineState
-    var mesh: Mesh
+    var scene: Scene
 
     init?(metalKitView: MTKView, modelURL: URL?) {
         self.device = metalKitView.device!
@@ -36,8 +36,8 @@ class Renderer: NSObject, MTKViewDelegate {
             return nil
         }
         
-        guard let mesh = Mesh(contentsOf: modelURL, for: device, commandQueue: commandQueue) else { return nil }
-        self.mesh = mesh
+        guard let mesh = Scene(contentsOf: modelURL, for: device, commandQueue: commandQueue) else { return nil }
+        self.scene = mesh
 
         guard let randomTexture = Renderer.buildRandomTexture(size: metalKitView.drawableSize, on: device) else { return nil }
         self.randomTexture = randomTexture
@@ -111,12 +111,12 @@ class Renderer: NSObject, MTKViewDelegate {
                 computeEncoder[.uniforms] = uniformBuffer
                 computeEncoder[.random] = randomTexture
                 computeEncoder[.dst] = drawable.texture
-                computeEncoder[.vertexPositions] = mesh.vertexBuffer
-                computeEncoder[.faceVertices] = mesh.faceVertexBuffer
-                computeEncoder[.faceMaterials] = mesh.materialIdBuffer
-                computeEncoder[.materials] = mesh.materialBuffer
-                computeEncoder[.intersectorObjects] = mesh.instanceDescriptors
-                computeEncoder[.intersector] = mesh.accelerationStructure
+                computeEncoder[.vertexPositions] = scene.vertexBuffer
+                computeEncoder[.faceVertices] = scene.faceVertexBuffer
+                computeEncoder[.faceMaterials] = scene.materialIdBuffer
+                computeEncoder[.materials] = scene.materialBuffer
+                computeEncoder[.intersectorObjects] = scene.instanceDescriptors
+                computeEncoder[.intersector] = scene.accelerationStructure
                 computeEncoder.popDebugGroup()
 
                 // Launch a rectangular grid of threads on the GPU to perform ray tracing, with one thread per

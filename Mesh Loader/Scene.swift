@@ -1,19 +1,11 @@
-//
-//  Mesh.swift
-//  Phone-ton
-//
-//  Created by Jed Fox on 2023-04-05.
-//
-
 import Foundation
 import Metal
 
-class Mesh {
+class Scene {
     let vertexBuffer: MTLBuffer // Float
     let materialIdBuffer: MTLBuffer // uint16
     let faceVertexBuffer: MTLBuffer // uint16
     let materialBuffer: MTLBuffer // Material
-//    let geometryDescriptor: MTLAccelerationStructureTriangleGeometryDescriptor
     let accelerationStructure: MTLAccelerationStructure
     let instanceDescriptors: MTLBuffer // MTLAccelerationStructureInstanceDescriptor
 

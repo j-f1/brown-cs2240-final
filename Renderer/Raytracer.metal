@@ -5,8 +5,6 @@ using namespace raytracing;
 // Including header shared between this Metal shader code and Swift/C code executing Metal API commands
 #import "ShaderTypes.h"
 
-constant unsigned int resourcesStride   [[function_constant(0)]];
-
 // Return the type for a bounding box intersection function.
 struct BoundingBoxIntersection {
     bool accept    [[accept_intersection]]; // Whether to accept or reject the intersection.

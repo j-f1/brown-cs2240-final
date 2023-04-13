@@ -7,51 +7,26 @@ import simd
 // The 256 byte aligned size of our uniform structure
 let alignedUniformsSize = (MemoryLayout<Uniforms>.size + 0xFF) & -0x100
 
-let maxBuffersInFlight = 3
-
-enum RendererError: Error {
-    case badVertexDescriptor
-}
-
 class Renderer: NSObject, MTKViewDelegate {
-    
     public let device: MTLDevice
     let commandQueue: MTLCommandQueue
     let randomTexture: MTLTexture
-    var dynamicUniformBuffer: MTLBuffer
+    var uniformBuffer: MTLBuffer
     var pipelineState: MTLComputePipelineState
-    var depthState: MTLDepthStencilState
-    
-    let inFlightSemaphore = DispatchSemaphore(value: maxBuffersInFlight)
-    
-    var uniformBufferOffset = 0
-    
-    var uniformBufferIndex = 0
-    
-    var uniforms: UnsafeMutablePointer<Uniforms>
-    
-    var projectionMatrix: matrix_float4x4 = matrix_float4x4()
-    
-    var rotation: Float = 0
-    
     var mesh: Mesh
-    
+
     init?(metalKitView: MTKView, modelURL: URL?) {
         self.device = metalKitView.device!
         guard let queue = self.device.makeCommandQueue() else { return nil }
         self.commandQueue = queue
+
+        guard let buffer = self.device.makeBuffer(length: MemoryLayout<Uniforms>.size, options: .storageModeShared) else { return nil }
+        uniformBuffer = buffer
         
-        let uniformBufferSize = alignedUniformsSize * maxBuffersInFlight
-        
-        guard let buffer = self.device.makeBuffer(length:uniformBufferSize, options:[MTLResourceOptions.storageModeShared]) else { return nil }
-        dynamicUniformBuffer = buffer
-        
-        self.dynamicUniformBuffer.label = "UniformBuffer"
-        
-        uniforms = UnsafeMutableRawPointer(dynamicUniformBuffer.contents()).bindMemory(to:Uniforms.self, capacity:1)
-        
-        metalKitView.depthStencilPixelFormat = MTLPixelFormat.depth32Float_stencil8
-        metalKitView.colorPixelFormat = MTLPixelFormat.bgra8Unorm_srgb
+        self.uniformBuffer.label = "UniformBuffer"
+
+        metalKitView.colorPixelFormat = .bgr10_xr_srgb
+        metalKitView.colorspace = CGColorSpace(name: CGColorSpace.displayP3)
         metalKitView.sampleCount = 1
 
         do {
@@ -61,20 +36,21 @@ class Renderer: NSObject, MTKViewDelegate {
             return nil
         }
         
-        let depthStateDescriptor = MTLDepthStencilDescriptor()
-        depthStateDescriptor.depthCompareFunction = MTLCompareFunction.less
-        depthStateDescriptor.isDepthWriteEnabled = true
-        guard let state = device.makeDepthStencilState(descriptor:depthStateDescriptor) else { return nil }
-        depthState = state
-
         guard let mesh = Mesh(contentsOf: modelURL, for: device, commandQueue: commandQueue) else { return nil }
         self.mesh = mesh
 
+        guard let randomTexture = Renderer.buildRandomTexture(size: metalKitView.drawableSize, on: device) else { return nil }
+        self.randomTexture = randomTexture
+
+        super.init()
+    }
+
+    class func buildRandomTexture(size: CGSize, on device: MTLDevice) -> MTLTexture? {
         let textureDescriptor = MTLTextureDescriptor()
         textureDescriptor.pixelFormat = .rgba32Float
         textureDescriptor.textureType = .type2D
-        textureDescriptor.width = Int(metalKitView.drawableSize.width)
-        textureDescriptor.height = Int(metalKitView.drawableSize.height)
+        textureDescriptor.width = Int(size.width)
+        textureDescriptor.height = Int(size.height)
 
         // Create a texture that contains a random integer value for each pixel. The sample
         // uses these values to decorrelate pixels while drawing pseudorandom numbers from the
@@ -90,7 +66,6 @@ class Renderer: NSObject, MTKViewDelegate {
         #endif
 
         guard let randomTexture = device.makeTexture(descriptor: textureDescriptor) else { return nil }
-        self.randomTexture = randomTexture
         let randomValues = [UInt32](repeating: 0, count: randomTexture.width * randomTexture.height).map { _ in UInt32.random(in: .min ... .max) }
         randomTexture.replace(
             region: .init(origin: .zero, size: .init(width: randomTexture.width, height: randomTexture.height, depth: 1)),
@@ -98,62 +73,30 @@ class Renderer: NSObject, MTKViewDelegate {
             withBytes: randomValues,
             bytesPerRow: MemoryLayout<UInt32>.size * randomTexture.width
         )
-
-        super.init()
-        
+        return randomTexture
     }
     
     class func buildRenderPipelineWithDevice(device: MTLDevice) throws -> MTLComputePipelineState {
         /// Build a render state pipeline object
-        
         let library = device.makeDefaultLibrary()
-
-
-        let constants = MTLFunctionConstantValues()
-        // The first constant is the stride between entries in the resource buffer. The sample
-        // uses this stride to allow intersection functions to look up any resources they use.
-        var resourcesStride = 0
-        constants.setConstantValue(&resourcesStride, type: .uint, index: 0)
-
-        let rayFunc = try library?.makeFunction(name: "raytracingKernel", constantValues: constants)
-
         let pipelineDescriptor = MTLComputePipelineDescriptor()
         pipelineDescriptor.label = "ComputePipeline"
-        pipelineDescriptor.computeFunction = rayFunc
+        pipelineDescriptor.computeFunction = library?.makeFunction(name: "raytracingKernel")
         pipelineDescriptor.threadGroupSizeIsMultipleOfThreadExecutionWidth = true
         return try device.makeComputePipelineState(descriptor: pipelineDescriptor, options: []).0
-    }
-    
-    private func updateDynamicBufferState() {
-        /// Update the state of our uniform buffers before rendering
-        
-        uniformBufferIndex = (uniformBufferIndex + 1) % maxBuffersInFlight
-        
-        uniformBufferOffset = alignedUniformsSize * uniformBufferIndex
-        
-        uniforms = UnsafeMutableRawPointer(dynamicUniformBuffer.contents() + uniformBufferOffset).bindMemory(to:Uniforms.self, capacity:1)
-
-        uniforms[0].camera = Camera(
-            position: .init(x: 0, y: 1, z: 3.6),
-            right: .init(x: 1, y: 0, z: 0),
-            up: .init(x: 0, y: 1, z: 0),
-            forward: .init(x: 0, y: 0, z: -1)
-        )
     }
 
     func draw(in view: MTKView) {
         /// Per frame updates hare
-        
-        _ = inFlightSemaphore.wait(timeout: DispatchTime.distantFuture)
-        
+
         if let commandBuffer = commandQueue.makeCommandBuffer() {
-            
-            let semaphore = inFlightSemaphore
-            commandBuffer.addCompletedHandler { (_ commandBuffer)-> Swift.Void in
-                semaphore.signal()
-            }
-            
-            self.updateDynamicBufferState()
+            let uniforms = UnsafeMutableRawPointer(uniformBuffer.contents()).bindMemory(to: Uniforms.self, capacity: 1)
+            uniforms[0].camera = Camera(
+                position: .init(x: 0, y: 1, z: 3.6),
+                right: .init(x: 1, y: 0, z: 0),
+                up: .init(x: 0, y: 1, z: 0),
+                forward: .init(x: 0, y: 0, z: -1)
+            )
 
             let width = Int(view.drawableSize.width)
             let height = Int(view.drawableSize.height)
@@ -165,8 +108,7 @@ class Renderer: NSObject, MTKViewDelegate {
                 computeEncoder.label = "Primary Compute Encoder"
                 computeEncoder.pushDebugGroup("Setup")
                 computeEncoder.setComputePipelineState(pipelineState)
-                computeEncoder.setBuffer(dynamicUniformBuffer, offset: uniformBufferOffset, index: BufferIndex.uniforms.rawValue)
-                // XXX: real textures!
+                computeEncoder.setBuffer(uniformBuffer, offset: 0, index: BufferIndex.uniforms.rawValue)
                 computeEncoder.setTexture(randomTexture, index: TextureIndex.random.rawValue)
                 computeEncoder.setTexture(drawable.texture, index: TextureIndex.dst.rawValue)
                 computeEncoder.setBuffer(mesh.vertexBuffer, offset: 0, index: BufferIndex.vertexPositions.rawValue)
@@ -199,49 +141,12 @@ class Renderer: NSObject, MTKViewDelegate {
             commandBuffer.waitUntilCompleted()
         }
     }
-    
+
     func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {
         /// Respond to drawable size or orientation changes here
-        
-        let aspect = Float(size.width) / Float(size.height)
-        projectionMatrix = matrix_perspective_right_hand(fovyRadians: radians_from_degrees(65), aspectRatio:aspect, nearZ: 0.1, farZ: 100.0)
     }
 }
 
 extension MTLOrigin {
     static let zero = MTLOrigin(x: 0, y: 0, z: 0)
-}
-
-// Generic matrix math utility functions
-func matrix4x4_rotation(radians: Float, axis: SIMD3<Float>) -> matrix_float4x4 {
-    let unitAxis = normalize(axis)
-    let ct = cosf(radians)
-    let st = sinf(radians)
-    let ci = 1 - ct
-    let x = unitAxis.x, y = unitAxis.y, z = unitAxis.z
-    return matrix_float4x4.init(columns:(vector_float4(    ct + x * x * ci, y * x * ci + z * st, z * x * ci - y * st, 0),
-                                         vector_float4(x * y * ci - z * st,     ct + y * y * ci, z * y * ci + x * st, 0),
-                                         vector_float4(x * z * ci + y * st, y * z * ci - x * st,     ct + z * z * ci, 0),
-                                         vector_float4(                  0,                   0,                   0, 1)))
-}
-
-func matrix4x4_translation(_ translationX: Float, _ translationY: Float, _ translationZ: Float) -> matrix_float4x4 {
-    return matrix_float4x4.init(columns:(vector_float4(1, 0, 0, 0),
-                                         vector_float4(0, 1, 0, 0),
-                                         vector_float4(0, 0, 1, 0),
-                                         vector_float4(translationX, translationY, translationZ, 1)))
-}
-
-func matrix_perspective_right_hand(fovyRadians fovy: Float, aspectRatio: Float, nearZ: Float, farZ: Float) -> matrix_float4x4 {
-    let ys = 1 / tanf(fovy * 0.5)
-    let xs = ys / aspectRatio
-    let zs = farZ / (nearZ - farZ)
-    return matrix_float4x4.init(columns:(vector_float4(xs,  0, 0,   0),
-                                         vector_float4( 0, ys, 0,   0),
-                                         vector_float4( 0,  0, zs, -1),
-                                         vector_float4( 0,  0, zs * nearZ, 0)))
-}
-
-func radians_from_degrees(_ degrees: Float) -> Float {
-    return (degrees / 180) * .pi
 }

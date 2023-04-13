@@ -17,7 +17,6 @@ class Renderer: NSObject, MTKViewDelegate {
     
     public let device: MTLDevice
     let commandQueue: MTLCommandQueue
-    let outputTexture: MTLTexture
     let randomTexture: MTLTexture
     var dynamicUniformBuffer: MTLBuffer
     var pipelineState: MTLComputePipelineState
@@ -74,15 +73,8 @@ class Renderer: NSObject, MTKViewDelegate {
         let textureDescriptor = MTLTextureDescriptor()
         textureDescriptor.pixelFormat = .rgba32Float
         textureDescriptor.textureType = .type2D
-        textureDescriptor.width = Int(metalKitView.bounds.width) // XXX: handle resize?
-        textureDescriptor.height = Int(metalKitView.bounds.height)
-
-        // Store the texture in private memory because only the GPU reads or writes this texture.
-        textureDescriptor.storageMode = .private
-        textureDescriptor.usage = [.shaderRead, .shaderWrite]
-
-        guard let outputTexture = device.makeTexture(descriptor: textureDescriptor) else { return nil }
-        self.outputTexture = outputTexture
+        textureDescriptor.width = Int(metalKitView.drawableSize.width)
+        textureDescriptor.height = Int(metalKitView.drawableSize.height)
 
         // Create a texture that contains a random integer value for each pixel. The sample
         // uses these values to decorrelate pixels while drawing pseudorandom numbers from the
@@ -128,7 +120,7 @@ class Renderer: NSObject, MTKViewDelegate {
         let pipelineDescriptor = MTLComputePipelineDescriptor()
         pipelineDescriptor.label = "ComputePipeline"
         pipelineDescriptor.computeFunction = rayFunc
-        pipelineDescriptor.threadGroupSizeIsMultipleOfThreadExecutionWidth = true;
+        pipelineDescriptor.threadGroupSizeIsMultipleOfThreadExecutionWidth = true
         return try device.makeComputePipelineState(descriptor: pipelineDescriptor, options: []).0
     }
     
@@ -140,21 +132,15 @@ class Renderer: NSObject, MTKViewDelegate {
         uniformBufferOffset = alignedUniformsSize * uniformBufferIndex
         
         uniforms = UnsafeMutableRawPointer(dynamicUniformBuffer.contents() + uniformBufferOffset).bindMemory(to:Uniforms.self, capacity:1)
-    }
-    
-    private func updateGameState() {
-        /// Update any game state before rendering
-        
+
         uniforms[0].camera = Camera(
             position: .init(x: 0, y: 1, z: 3.6),
             right: .init(x: 1, y: 0, z: 0),
             up: .init(x: 0, y: 1, z: 0),
             forward: .init(x: 0, y: 0, z: -1)
         )
-        uniforms[0].width = UInt32(outputTexture.width)
-        uniforms[0].height = UInt32(outputTexture.height)
     }
-    
+
     func draw(in view: MTKView) {
         /// Per frame updates hare
         
@@ -168,10 +154,13 @@ class Renderer: NSObject, MTKViewDelegate {
             }
             
             self.updateDynamicBufferState()
-            
-            self.updateGameState()
-            
-            if let computeEncoder = commandBuffer.makeComputeCommandEncoder() {
+
+            let width = Int(view.drawableSize.width)
+            let height = Int(view.drawableSize.height)
+            uniforms[0].width = UInt32(width)
+            uniforms[0].height = UInt32(height)
+
+            if let computeEncoder = commandBuffer.makeComputeCommandEncoder(), let drawable = view.currentDrawable {
                 /// Final pass rendering code here
                 computeEncoder.label = "Primary Compute Encoder"
                 computeEncoder.pushDebugGroup("Setup")
@@ -179,7 +168,7 @@ class Renderer: NSObject, MTKViewDelegate {
                 computeEncoder.setBuffer(dynamicUniformBuffer, offset: uniformBufferOffset, index: BufferIndex.uniforms.rawValue)
                 // XXX: real textures!
                 computeEncoder.setTexture(randomTexture, index: TextureIndex.random.rawValue)
-                computeEncoder.setTexture(outputTexture, index: TextureIndex.dst.rawValue)
+                computeEncoder.setTexture(drawable.texture, index: TextureIndex.dst.rawValue)
                 computeEncoder.setBuffer(mesh.vertexBuffer, offset: 0, index: BufferIndex.vertexPositions.rawValue)
                 computeEncoder.setBuffer(mesh.faceVertexBuffer, offset: 0, index: BufferIndex.faceVertices.rawValue)
                 computeEncoder.setBuffer(mesh.materialIdBuffer, offset: 0, index: BufferIndex.faceMaterials.rawValue)
@@ -196,13 +185,14 @@ class Renderer: NSObject, MTKViewDelegate {
                 // supported on most devices. A more advanced app would choose the threadgroup size dynamically.
                 let threadsPerThreadgroup = MTLSize(width: 8, height: 8, depth: 1)
                 let threadgroups = MTLSize(
-                    width: (Int(view.bounds.width) + threadsPerThreadgroup.width - 1) / threadsPerThreadgroup.width,
-                    height: (Int(view.bounds.height) + threadsPerThreadgroup.height - 1) / threadsPerThreadgroup.height,
+                    width: (width + threadsPerThreadgroup.width - 1) / threadsPerThreadgroup.width,
+                    height: (height + threadsPerThreadgroup.height - 1) / threadsPerThreadgroup.height,
                     depth: 1
                 )
                 computeEncoder.dispatchThreadgroups(threadgroups, threadsPerThreadgroup: threadsPerThreadgroup)
 
                 computeEncoder.endEncoding()
+                commandBuffer.present(drawable)
             }
             
             commandBuffer.commit()

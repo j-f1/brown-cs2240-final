@@ -8,7 +8,7 @@ struct ContentView: View {
                 .foregroundColor(.accentColor)
             Text("Hello, world!")
             MetalView(model: Bundle.main.url(forResource: "CornellBox-Original", withExtension: "obj", subdirectory: "models/CornellBox"))
-                .frame(width: 512, height: 512)
+                .aspectRatio(1, contentMode: .fit)
         }
         .padding()
     }

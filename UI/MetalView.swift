@@ -22,6 +22,7 @@ struct MetalView {
             fatalError("Metal is not supported on this device")
         }
         view.device = defaultDevice
+        view.framebufferOnly = false
 
         context.coordinator.renderer = Renderer(metalKitView: view, modelURL: model)
         view.delegate = context.coordinator.renderer

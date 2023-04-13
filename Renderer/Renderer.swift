@@ -26,7 +26,9 @@ class Renderer: NSObject, MTKViewDelegate {
         self.uniformBuffer.label = "UniformBuffer"
 
         metalKitView.colorPixelFormat = .bgr10_xr_srgb
+        #if os(macOS)
         metalKitView.colorspace = CGColorSpace(name: CGColorSpace.displayP3)
+        #endif
         metalKitView.sampleCount = 1
 
         do {
@@ -59,7 +61,7 @@ class Renderer: NSObject, MTKViewDelegate {
         textureDescriptor.usage = .shaderRead
 
         // The sample initializes the data in the texture, so it can't be private.
-        #if !TARGET_OS_IPHONE
+        #if !os(iOS)
         textureDescriptor.storageMode = .managed
         #else
         textureDescriptor.storageMode = .shared

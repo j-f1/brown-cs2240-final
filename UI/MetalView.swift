@@ -50,7 +50,7 @@ extension MetalView: UIViewRepresentable {
         makeView(context: context)
     }
     func updateUIView(_ uiView: MTKView, context: Context) {
-        updateView(nsView, context: context)
+        updateView(uiView, context: context)
     }
 }
 #else

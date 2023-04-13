@@ -19,10 +19,10 @@ NS_ASSUME_NONNULL_BEGIN
 @property (readonly) const float *vertices; // [x, y, z, x, y, z, ...]
 @property (readonly) const float *normals; // [x, y, z, x, y, z, ...]
 
-@property (readonly) const uint16 *faceVertices; // [v1, v2, v3, v1, v2, v3, ...]
-@property (readonly) const uint16 *faceNormals; // [v1, v2, v3, v1, v2, v3, ...]
+@property (readonly) const uint16_t *faceVertices; // [v1, v2, v3, v1, v2, v3, ...]
+@property (readonly) const uint16_t *faceNormals; // [v1, v2, v3, v1, v2, v3, ...]
 
-@property (readonly) const uint16 *materialIds; // per-face array
+@property (readonly) const uint16_t *materialIds; // per-face array
 
 @property (readonly) NSArray<TinyObjMaterial *> *materials;
 

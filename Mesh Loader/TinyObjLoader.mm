@@ -15,9 +15,9 @@ simd::float3 to_simd(const tinyobj::real_t val[3]) {
     std::vector<tinyobj::shape_t> shapes;
     std::vector<tinyobj::material_t> materials;
 
-    std::vector<uint16> _materialIds;
-    std::vector<uint16> _faceVertices;
-    std::vector<uint16> _faceNormals;
+    std::vector<uint16_t> _materialIds;
+    std::vector<uint16_t> _faceVertices;
+    std::vector<uint16_t> _faceNormals;
 }
 
 @dynamic vertexCount, normalCount, materialIdCount;
@@ -114,15 +114,15 @@ simd::float3 to_simd(const tinyobj::real_t val[3]) {
     return attrib.normals.data();
 }
 
-- (const uint16 *)materialIds {
+- (const uint16_t *)materialIds {
     return _materialIds.data();
 }
 
-- (const uint16 *)faceVertices {
+- (const uint16_t *)faceVertices {
     return _faceVertices.data();
 }
 
-- (const uint16 *)faceNormals {
+- (const uint16_t *)faceNormals {
     return _faceNormals.data();
 }
 

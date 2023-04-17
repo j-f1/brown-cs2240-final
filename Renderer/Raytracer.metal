@@ -26,10 +26,12 @@ kernel void raytracingKernel(
      primitive_acceleration_structure                       accelerationStructure     [[buffer(BufferIndexIntersector)]]
 ) {
 
+    constant RenderSettings &settings = uniforms.settings;
+
     // We align the thread count to the threadgroup size, which means the thread count
     // may be different than the bounds of the texture. Test to make sure this thread
     // is referencing a pixel within the bounds of the texture.
-    if (tid.x >= uniforms.width || tid.y >= uniforms.height) return;
+    if (tid.x >= settings.imageWidth || tid.y >= settings.imageHeight) return;
 
     // The ray to cast.
     ray ray;
@@ -47,7 +49,7 @@ kernel void raytracingKernel(
     pixel += r;
 
     // Map pixel coordinates to -1..1.
-    float2 uv = (float2)pixel / float2(uniforms.width, uniforms.height);
+    float2 uv = (float2)pixel / float2(settings.imageWidth, settings.imageHeight);
     uv = uv * 2.0f - 1.0f;
 
     constant Camera & camera = uniforms.camera;

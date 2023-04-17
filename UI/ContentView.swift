@@ -6,11 +6,13 @@ struct ContentView: View {
     @State var filepath: String = "cow.obj"
 //    @State var settings: RenderSettings = DEFAULT_SETTINGS;
 
+    @Environment(\.displayScale) private var scale
+
     var body: some View {
         HStack {
             GUIView(settings: $settings, filepath: $filepath)
-            MetalView(model: Bundle.main.url(forResource: "CornellBox-Original", withExtension: "obj", subdirectory: "models/CornellBox"))
-                .aspectRatio(1, contentMode: .fit)
+            MetalView(settings: settings, model: Bundle.main.url(forResource: "CornellBox-Original", withExtension: "obj", subdirectory: "models/CornellBox"))
+                .frame(width: CGFloat(settings.imageWidth) / scale, height: CGFloat(settings.imageHeight) / scale)
         }
         .padding()
     }

@@ -2,6 +2,7 @@ import MetalKit
 import SwiftUI
 
 struct MetalView {
+    let settings: RenderSettings
     let model: URL?
 
     class Coordinator {
@@ -25,7 +26,7 @@ struct MetalView {
         view.framebufferOnly = false
 
         Task.detached {
-            let renderer = await Renderer(metalKitView: view, modelURL: model)
+            let renderer = await Renderer(metalKitView: view, modelURL: model, settings: settings)
             await MainActor.run {
                 context.coordinator.renderer = renderer
                 view.delegate = renderer
@@ -37,6 +38,7 @@ struct MetalView {
 
     func updateView(_ view: MTKView, context: Context) {
         assert(model == context.coordinator.model)
+        context.coordinator.renderer?.settings = settings
     }
 }
 

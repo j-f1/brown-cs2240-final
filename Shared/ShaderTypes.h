@@ -37,17 +37,7 @@ typedef struct Camera {
     vector_float3 forward;
 } Camera;
 
-typedef struct
-{
-    Camera camera;
-
-    unsigned int width;
-    unsigned int height;
-    unsigned int frameIndex;
-} Uniforms;
-
-typedef struct
-{
+typedef struct RenderSettings {
     bool diffuseOn;
     bool mirrorOn;
     bool refractionOn;
@@ -64,9 +54,18 @@ typedef struct
     int samplesPerPixel;
     simd_float3 toneMap;
     float gammaCorrection;
-    int imageWidth;
-    int imageHeight;
+    unsigned int imageWidth;
+    unsigned int imageHeight;
 } RenderSettings;
+
+struct Uniforms {
+    Camera camera;
+
+    unsigned int frameIndex;
+
+    RenderSettings settings;
+};
+
 
 //RenderSettings DEFAULT_SETTINGS = RenderSettings(.diffuseOn: true, mirrorOn: true, refractionOn: true, glossyOn: true,subsurfaceScatteringOn: true, ssSigma_s: 1.0,ssSigma_a: simd_float3(0.01, 0.1, 1.0), ssEta: 1, ssG: 0, directLightingOn: true, importanceSamplingOn: true, glassTransmittanceOn: true, russianRoulette: 0.9,samplesPerPixel: 16, toneMap: simd_float3(0.299, 0.587, 0.114), gammaCorrection: 0.4,imageWidth: 512, imageHeight: 512);
 

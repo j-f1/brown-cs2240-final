@@ -8,14 +8,16 @@ import simd
 let alignedUniformsSize = (MemoryLayout<Uniforms>.size + 0xFF) & -0x100
 
 class Renderer: NSObject, MTKViewDelegate {
-    public let device: MTLDevice
-    let commandQueue: MTLCommandQueue
-    let randomTexture: MTLTexture
-    var uniformBuffer: MTLBuffer
-    var pipelineState: MTLComputePipelineState
-    var scene: Scene
+    var settings: RenderSettings
 
-    init?(metalKitView: MTKView, modelURL: URL?) async {
+    private let device: MTLDevice
+    private let commandQueue: MTLCommandQueue
+    private let randomTexture: MTLTexture
+    private var uniformBuffer: MTLBuffer
+    private var pipelineState: MTLComputePipelineState
+    private var scene: Scene
+
+    init?(metalKitView: MTKView, modelURL: URL?, settings: RenderSettings) async {
         let start = Date.now
         self.device = await metalKitView.device!
         guard let queue = self.device.makeCommandQueue() else { return nil }
@@ -47,6 +49,8 @@ class Renderer: NSObject, MTKViewDelegate {
 
         guard let randomTexture = Renderer.buildRandomTexture(size: await metalKitView.drawableSize, on: device) else { return nil }
         self.randomTexture = randomTexture
+
+        self.settings = settings
 
         super.init()
 
@@ -101,9 +105,10 @@ class Renderer: NSObject, MTKViewDelegate {
 
             let width = Int(view.drawableSize.width)
             let height = Int(view.drawableSize.height)
-            uniforms[0].width = UInt32(width)
-            uniforms[0].height = UInt32(height)
+            assert(width == settings.imageWidth)
+            assert(height == settings.imageHeight)
             uniforms[0].frameIndex += 1
+            uniforms[0].settings = settings
 
             if let computeEncoder = commandBuffer.makeComputeCommandEncoder(), let drawable = view.currentDrawable {
                 /// Final pass rendering code here

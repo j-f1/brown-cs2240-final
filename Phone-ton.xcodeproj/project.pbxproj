@@ -32,6 +32,7 @@
 		851F052629E84D8F008AFCCA /* Halton.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Halton.h; sourceTree = "<group>"; };
 		851F052929E84DE7008AFCCA /* Sampler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Sampler.h; sourceTree = "<group>"; };
 		851F052A29E84EAD008AFCCA /* Halton.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = Halton.metal; sourceTree = "<group>"; };
+		851F052C29E87F2B008AFCCA /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		854AFCC329DDD0F70054D4D9 /* tiny_obj_loader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tiny_obj_loader.h; sourceTree = "<group>"; };
 		854AFCC429DDD1470054D4D9 /* TinyObjLoader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TinyObjLoader.h; sourceTree = "<group>"; };
 		854AFCC529DDD1470054D4D9 /* TinyObjLoader.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = TinyObjLoader.mm; sourceTree = "<group>"; };
@@ -54,6 +55,7 @@
 		8503424229DA05A700928641 = {
 			isa = PBXGroup;
 			children = (
+				851F052C29E87F2B008AFCCA /* README.md */,
 				854AFCCF29DDEA9F0054D4D9 /* UI */,
 				854AFCD129DDEAD80054D4D9 /* Shared */,
 				854AFCD029DDEABC0054D4D9 /* Renderer */,

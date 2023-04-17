@@ -37,29 +37,6 @@ typedef struct
     matrix_float4x4 modelViewMatrix;
 } Uniforms;
 
-//SORRY JED JUST LEAVING THIS HERE SO I HAVE A REFERENCE FOR WHEN I FIX THIS
-//typedef struct
-//{
-//    bool diffuseOn = true;
-//    bool mirrorOn = true;
-//    bool refractionOn = true;
-//    bool glossyOn = true;
-//    bool subsurfaceScatteringOn = true;
-//    float ssSigma_s = 1.0;
-//    simd_float3 ssSigma_a = {0.01, 0.1, 1.0};
-//    float ssEta = 1;
-//    float ssG = 0;
-//    bool directLightingOn = true;
-//    bool importanceSamplingOn = true;
-//    bool glassTransmittanceOn = true;
-//    float russianRoulette = 0.9;
-//    int samplesPerPixel = 16;
-//    simd_float3 toneMap = {0.299, 0.587, 0.114};
-//    float gammaCorrection = 0.4;
-//    int imageWidth = 512;
-//    int imageHeight = 512;
-//} RenderSettings;
-
 typedef struct
 {
     bool diffuseOn;
@@ -82,5 +59,10 @@ typedef struct
     int imageHeight;
 } RenderSettings;
 
+//RenderSettings DEFAULT_SETTINGS = RenderSettings(.diffuseOn: true, mirrorOn: true, refractionOn: true, glossyOn: true,subsurfaceScatteringOn: true, ssSigma_s: 1.0,ssSigma_a: simd_float3(0.01, 0.1, 1.0), ssEta: 1, ssG: 0, directLightingOn: true, importanceSamplingOn: true, glassTransmittanceOn: true, russianRoulette: 0.9,samplesPerPixel: 16, toneMap: simd_float3(0.299, 0.587, 0.114), gammaCorrection: 0.4,imageWidth: 512, imageHeight: 512);
+
+#define DEFAULT_SETTINGS {true, true, true,  true,true,  1.0,simd_float3(0.01, 0.1, 1.0), 1, 0, true, true, true, 0.9,16, simd_float3(0.299, 0.587, 0.114), 0.4, 512, 512}
+
 #endif /* ShaderTypes_h */
+
 

@@ -27,6 +27,7 @@ struct MetalView {
 
         Task.detached {
             let renderer = await Renderer(metalKitView: view, modelURL: model, settings: settings)
+            if renderer == nil { assertionFailure() }
             await MainActor.run {
                 context.coordinator.renderer = renderer
                 view.delegate = renderer

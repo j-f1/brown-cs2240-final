@@ -20,7 +20,10 @@ class Renderer: NSObject, MTKViewDelegate {
     init?(metalKitView: MTKView, modelURL: URL?, settings: RenderSettings) async {
         let start = Date.now
         self.device = await metalKitView.device!
-        guard let queue = self.device.makeCommandQueue() else { return nil }
+        guard let queue = self.device.makeCommandQueue() else {
+            print("Unable to allocate command queue")
+            return nil
+        }
         self.commandQueue = queue
 
         guard let buffer = self.device.makeBuffer(length: MemoryLayout<Uniforms>.size, options: []) else { return nil }
@@ -43,11 +46,21 @@ class Renderer: NSObject, MTKViewDelegate {
             return nil
         }
 
-        guard let modelURL else { return nil }
-        guard let mesh = await Scene(contentsOf: modelURL, for: device, commandQueue: commandQueue) else { return nil }
+        guard let modelURL else {
+            print("No model URL provided")
+            return nil
+        }
+        guard let mesh = await Scene(contentsOf: modelURL, for: device, commandQueue: commandQueue) else {
+            print("Unable to load model at \(modelURL.absoluteString)")
+            return nil
+        }
         self.scene = mesh
 
-        guard let randomTexture = Renderer.buildRandomTexture(size: await metalKitView.drawableSize, on: device) else { return nil }
+        guard let randomTexture = Renderer.buildRandomTexture(size: await metalKitView.drawableSize, on: device) else {
+            print("Unable to create random texture")
+            return nil
+        }
+
         self.randomTexture = randomTexture
 
         self.settings = settings

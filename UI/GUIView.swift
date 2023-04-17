@@ -1,17 +1,10 @@
 import SwiftUI
 
 struct GUIView: View {
+    @Binding var settings: RenderSettings
     //TODO MOVE THESE AND MAKE THEM NOT DUMB
-    @State private var diffuseOn: Bool = true
-    @State private var mirrorOn: Bool = true
-    @State private var refractOn: Bool = true
-    @State private var glossyOn: Bool = true
-    @State private var subScOn: Bool = true
-    @State private var impSamplingOn: Bool = true
-    @State private var directLOn: Bool = true
-    @State private var glassTransOn: Bool = true
-    @State private var sppString: String = ""
-//    @FocusState private var sppFieldIsFocused: Bool = false
+    @State private var stateSettings: RenderSettings = RenderSettings();
+    @State private var samplesPerPixel = 0;
     
     var body: some View {
         VStack (alignment: .leading) {
@@ -22,31 +15,47 @@ struct GUIView: View {
             }
             VStack {
                 Text("BSSDFs")
-                Toggle("Diffuse", isOn: $diffuseOn)
-                Toggle("Mirror", isOn: $mirrorOn)
-                Toggle("Refract", isOn: $refractOn)
-                Toggle("Glossy", isOn: $glossyOn)
-                Toggle("Subsurface Scattering", isOn: $subScOn)
-                Toggle("Importance Sampling", isOn: $impSamplingOn)
+                Toggle("Diffuse", isOn: $stateSettings.diffuseOn)
+                Toggle("Mirror", isOn: $stateSettings.mirrorOn)
+                Toggle("Refract", isOn: $stateSettings.refractionOn)
+                Toggle("Glossy", isOn: $stateSettings.glossyOn)
+                Toggle("Subsurface Scattering", isOn: $stateSettings.subsurfaceScatteringOn)
+                Toggle("Importance Sampling", isOn: $stateSettings.importanceSamplingOn)
             }
             VStack {
                 TextField(
                         "Samples Per Pixel",
-                        text: $sppString
+                        value: $stateSettings.samplesPerPixel,
+                        format: .number
                     )
-//                    .focused($sppFieldIsFocused)
-                    .onSubmit {
-                        selectFile()
-                    }
+                    .textFieldStyle(.roundedBorder)
                     .disableAutocorrection(true)
                     .border(.secondary)
-                Toggle("Direct Lighting", isOn: $directLOn)
-                Toggle("Glass Transmittance", isOn: $glassTransOn)
-                Text("Russian Roulette")
-                Text("Tone Mapping")
-                Text("Gamma Correction")
-                Text("Image width")
-                Text("Image height")
+                Toggle("Direct Lighting", isOn: $stateSettings.directLightingOn)
+                Toggle("Glass Transmittance", isOn: $stateSettings.glassTransmittanceOn)
+                Form {
+                    TextField("Russian Roulette", value: $stateSettings.russianRoulette, format: .number).textFieldStyle(.roundedBorder) {
+                        Text("Russian Roulette")
+                    }
+                    TextField("Tone Mapping R", value: $stateSettings.toneMap[0], format: .number).textFieldStyle(.roundedBorder) {
+                        Text("Russian Roulette")
+                    }
+                    TextField("Tone Mapping G", value: $stateSettings.toneMap[1], format: .number).textFieldStyle(.roundedBorder) {
+                        Text("Russian Roulette")
+                    }
+                    TextField("Tone Mapping B", value: $stateSettings.toneMap[2], format: .number).textFieldStyle(.roundedBorder) {
+                        Text("Russian Roulette")
+                    }
+                    TextField("Gamma Correction", value: $stateSettings.gammaCorrection, format: .number).textFieldStyle(.roundedBorder) {
+                        Text("Russian Roulette")
+                    }
+                    TextField("Image width", value: $stateSettings.imageWidth, format: .number).textFieldStyle(.roundedBorder) {
+                        Text("Russian Roulette")
+                    }
+                    TextField("Image height", value: $stateSettings.imageHeight, format: .number).textFieldStyle(.roundedBorder) {
+                        Text("Russian Roulette")
+                    }
+                }
             }
         }
         .padding(20)
@@ -55,7 +64,7 @@ struct GUIView: View {
 
 struct GUIView_Previews: PreviewProvider {
     static var previews: some View {
-        GUIView()
+        GUIView(settings: .constant(RenderSettings()))
     }
 }
 
@@ -63,3 +72,4 @@ struct GUIView_Previews: PreviewProvider {
 func selectFile() {
     print("File Selected")
 }
+

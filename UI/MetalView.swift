@@ -2,13 +2,13 @@ import MetalKit
 import SwiftUI
 
 struct MetalView {
-    let model: URL
+    let model: URL?
 
     class Coordinator {
         var renderer: Renderer?
-        let model: URL
+        let model: URL?
 
-        init(model: URL) {
+        init(model: URL?) {
             self.model = model
         }
     }
@@ -17,14 +17,20 @@ struct MetalView {
     }
 
     func makeView(context: Context) -> MTKView {
-        let view = MTKView()
+        let view = MTKView(frame: .init(origin: .zero, size: .init(width: 512, height: 512)))
         guard let defaultDevice = MTLCreateSystemDefaultDevice() else {
             fatalError("Metal is not supported on this device")
         }
         view.device = defaultDevice
+        view.framebufferOnly = false
 
-        context.coordinator.renderer = Renderer(metalKitView: view, modelURL: model)
-        view.delegate = context.coordinator.renderer
+        Task.detached {
+            let renderer = await Renderer(metalKitView: view, modelURL: model)
+            await MainActor.run {
+                context.coordinator.renderer = renderer
+                view.delegate = renderer
+            }
+        }
 
         return view
     }
@@ -49,7 +55,7 @@ extension MetalView: UIViewRepresentable {
         makeView(context: context)
     }
     func updateUIView(_ uiView: MTKView, context: Context) {
-        updateView(nsView, context: context)
+        updateView(uiView, context: context)
     }
 }
 #else

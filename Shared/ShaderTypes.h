@@ -15,26 +15,35 @@ typedef NSInteger EnumBackingType;
 #include <simd/simd.h>
 typedef NS_ENUM(EnumBackingType, BufferIndex)
 {
-    BufferIndexMeshPositions = 0,
-    BufferIndexMeshGenerics  = 1,
-    BufferIndexUniforms      = 2
-};
-
-typedef NS_ENUM(EnumBackingType, VertexAttribute)
-{
-    VertexAttributePosition  = 0,
-    VertexAttributeTexcoord  = 1,
+    BufferIndexVertexPositions    = 0,
+    BufferIndexFaceVertices       = 1,
+    BufferIndexFaceMaterials      = 3,
+    BufferIndexMaterials          = 4,
+    BufferIndexIntersectorObjects = 5,
+    BufferIndexIntersector        = 6,
+    BufferIndexUniforms           = 7
 };
 
 typedef NS_ENUM(EnumBackingType, TextureIndex)
 {
-    TextureIndexColor    = 0,
+    TextureIndexRandom = 0,
+    TextureIndexDst    = 1
 };
+
+typedef struct Camera {
+    vector_float3 position;
+    vector_float3 right;
+    vector_float3 up;
+    vector_float3 forward;
+} Camera;
 
 typedef struct
 {
-    matrix_float4x4 projectionMatrix;
-    matrix_float4x4 modelViewMatrix;
+    Camera camera;
+
+    unsigned int width;
+    unsigned int height;
+    unsigned int frameIndex;
 } Uniforms;
 
 typedef struct
@@ -63,6 +72,19 @@ typedef struct
 
 #define DEFAULT_SETTINGS {true, true, true,  true,true,  1.0,simd_float3(0.01, 0.1, 1.0), 1, 0, true, true, true, 0.9,16, simd_float3(0.299, 0.587, 0.114), 0.4, 512, 512}
 
+struct Triangle {
+    vector_float3 normals[3];
+    vector_float3 colors[3];
+};
+
+struct Material {
+    vector_float3 diffuse;
+    vector_float3 specular;
+    vector_float3 transmittance;
+    vector_float3 emission;
+    float shininess;
+    float ior;
+    int illum;
+};
+
 #endif /* ShaderTypes_h */
-
-

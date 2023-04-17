@@ -50,7 +50,7 @@ struct GUIView: View {
                         } else {
                             Text("Select File")
                         }
-                    }.fileImporter(isPresented: $selectingModel, allowedContentTypes: [UTType(mimeType: "model/obj")!]) { result in
+                    }.fileImporter(isPresented: $selectingModel, allowedContentTypes: [.data]) { result in
                         if case .success(let url) = result {
                             model = url
                         }

@@ -128,6 +128,7 @@ kernel void raytracingKernel(
     // Map pixel coordinates to -1..1.
     float2 uv = (float2)pixel / float2(settings.imageWidth, settings.imageHeight);
     uv = uv * 2.0f - 1.0f;
+    uv.y = -uv.y;
 
     constant Camera & camera = uniforms.camera;
 

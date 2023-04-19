@@ -1,8 +1,6 @@
 //
 //  Header containing types and enum constants shared between Metal shaders and Swift/ObjC source
 //
-#ifndef Shared_h
-#define Shared_h
 
 #ifdef __METAL_VERSION__
 #define NS_ENUM(_type, _name) enum _name : _type _name; enum _name : _type
@@ -80,5 +78,3 @@ struct Material {
     float ior;
     int illum;
 };
-
-#endif /* Shared_h */

@@ -1,7 +1,4 @@
-#ifndef common_h
-#define common_h
-
-#include <metal_stdlib>
+#import <metal_stdlib>
 using namespace metal;
 using namespace raytracing;
 
@@ -20,5 +17,3 @@ struct SceneState {
     const constant int *emissives;
     const int           emissivesCount;
 };
-
-#endif /* common_h */

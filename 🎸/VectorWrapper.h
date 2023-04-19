@@ -1,7 +1,4 @@
-#ifndef VectorWrapper_h
-#define VectorWrapper_h
-
-#include <metal_stdlib>
+#import <metal_stdlib>
 
 const constant float FLOAT_EPSILON = 1e-4f;
 
@@ -140,5 +137,3 @@ inline Location offset(const thread Location &source, const thread Direction &di
 
 
 #undef VECTOR_WRAPPER
-
-#endif /* VectorWrapper_h */

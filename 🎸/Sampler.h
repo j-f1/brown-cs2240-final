@@ -1,7 +1,4 @@
-#ifndef Sampler_h
-#define Sampler_h
-
-#include <metal_stdlib>
+#import <metal_stdlib>
 
 /// Uses the inversion method to map two uniformly random numbers to a 3D
 /// unit hemisphere, where the probability of a given sample is proportional to the cosine
@@ -40,5 +37,3 @@ inline float3 alignHemisphereWithNormal(float3 sample, float3 normal) {
     // with the normal.
     return sample.x * right + sample.y * up + sample.z * forward;
 }
-
-#endif /* Sampler_h */

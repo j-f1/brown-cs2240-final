@@ -60,8 +60,8 @@ inline bool floatEpsEqual(float a, float b) {
         inline T operator - () const {                      \
             return {-v};                                    \
         }                                                   \
-        inline bool zero() const {                          \
-            return magnitude() < 0.001;                     \
+        inline operator bool() const {                      \
+            return magnitude() > 0.01;                      \
         }                                                   \
         inline bool epsEqual(const thread T &other) const { \
             return floatEpsEqual(v.x, other.v.x)            \

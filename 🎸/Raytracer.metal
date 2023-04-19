@@ -8,51 +8,28 @@ float3 transformDirection(float3 p, float4x4 transform) {
     return (transform * float4(p.x, p.y, p.z, 0.0f)).xyz;
 }
 
-inline Color traceRay(const thread ray &ray, const thread int &pathLength,
-               const thread primitive_acceleration_structure &accelerationStructure,
-               const thread SceneState &scene) {
-    // Create an intersector to test for intersection between the ray and the geometry in the scene.
-    intersector<triangle_data> i;
+__attribute__((always_inline))
+float3 unpack(constant float *floats, unsigned int idx) {
+    return float3(floats[idx * 3 + 0], floats[idx * 3 + 1], floats[idx * 3 + 2]);
+}
 
-    // not using intersection functions, so some hints to Metal for better performance.
-    i.assume_geometry_type(geometry_type::triangle);
-    i.force_opacity(forced_opacity::opaque);
-
-    Intersection intersection;
-
-    // Get the closest intersection, not the first intersection. This is the default, but
-    // we will adjust this property below when casting shadow rays.
-    i.accept_any_intersection(false);
-
+inline Color traceRay(const thread ray &ray, const thread int &pathLength, const thread SceneState &scene) {
     // Check for intersection between the ray and the acceleration structure.
-    intersection = i.intersect(ray, accelerationStructure);
+    auto intersection = scene.intersector(ray);
 
     // Stop if the ray didn't hit anything and has bounced out of the scene.
     if (intersection.type == intersection_type::none)
         return Color::black();
-    unsigned int instanceIndex = intersection.primitive_id;
-
-    // The ray hit something. Look up the transformation matrix for this instance.
-    float4x4 objectToWorldSpaceTransform(1.0f);
-
-    for (int column = 0; column < 4; column++)
-        for (int row = 0; row < 3; row++)
-            objectToWorldSpaceTransform[column][row] = scene.instances[instanceIndex].transformationMatrix[column][row];
 
     // Compute the intersection point in world space.
-    //        float3 worldSpaceIntersectionPoint = ray.origin + ray.direction * intersection.distance;
-    //
-    //        float3 worldSpaceSurfaceNormal = 0.0f;
-    //        float3 surfaceColor = 0.0f;
-    //
-    //        // XXX: compute normals
-    //        float3 objectSpaceSurfaceNormal = float3(0, 0, 0);
+    float3 intersectionPoint = ray.origin + ray.direction * intersection.distance;
+    float3 normal = unpack(scene.normals, intersection.primitive_id);
     auto material = scene.materials[scene.materialIds[intersection.primitive_id]];
 
 //    if (pathLength == 0) traceRay(ray, pathLength + 1, accelerationStructure, scene);
 
     // XXX: path trace
-    return Color(material.diffuse);
+    return Color((normal + 1) / 2);//material.diffuse);
 
     //        // Transform the normal from object to world space.
     //        worldSpaceSurfaceNormal = normalize(transformDirection(objectSpaceSurfaceNormal, objectToWorldSpaceTransform));
@@ -75,18 +52,19 @@ inline Color traceRay(const thread ray &ray, const thread int &pathLength,
 }
 
 kernel void raytracingKernel(
-     uint2                                                  tid                       [[thread_position_in_grid]],
-     constant Uniforms &                                    uniforms                  [[buffer(BufferIndexUniforms)]],
-     texture2d<unsigned int>                                randomTex                 [[texture(TextureIndexRandom)]],
-     texture2d<float, access::write>                        dstTex                    [[texture(TextureIndexDst)]],
-     constant float                                        *positions                 [[buffer(BufferIndexVertexPositions)]],
-     constant ushort                                       *vertices                  [[buffer(BufferIndexFaceVertices)]],
-     constant ushort                                       *materialIds               [[buffer(BufferIndexFaceMaterials)]],
-     constant Material                                     *materials                 [[buffer(BufferIndexMaterials)]],
-     constant MTLAccelerationStructureInstanceDescriptor   *instances                 [[buffer(BufferIndexIntersectorObjects)]],
-     primitive_acceleration_structure                       accelerationStructure     [[buffer(BufferIndexIntersector)]]
+     uint2                               tid                       [[thread_position_in_grid]],
+     
+     constant Uniforms &                 uniforms                  [[buffer(BufferIndexUniforms)]],
+     texture2d<unsigned int>             randomTex                 [[texture(TextureIndexRandom)]],
+     texture2d<float, access::write>     dstTex                    [[texture(TextureIndexDst)]],
+     constant float                     *positions                 [[buffer(BufferIndexVertexPositions)]],
+     constant ushort                    *vertices                  [[buffer(BufferIndexFaceVertices)]],
+     constant float                     *normals                   [[buffer(BufferIndexFaceNormals)]],
+     constant ushort                    *materialIds               [[buffer(BufferIndexFaceMaterials)]],
+     constant Material                  *materials                 [[buffer(BufferIndexMaterials)]],
+     primitive_acceleration_structure    accelerationStructure     [[buffer(BufferIndexIntersector)]]
 ) {
-    SceneState state{instances, materials, materialIds};
+    SceneState state{positions, vertices, normals, materials, materialIds, Intersector{accelerationStructure}};
     constant RenderSettings &settings = uniforms.settings;
 
     // We align the thread count to the threadgroup size, which means the thread count
@@ -126,6 +104,6 @@ kernel void raytracingKernel(
     // Don't limit intersection distance.
     ray.max_distance = INFINITY;
 
-    Color color = traceRay(ray, 0, accelerationStructure, state);
+    Color color = traceRay(ray, 0, state);
     dstTex.write(float4(color._unwrap(), 1), tid);
 }

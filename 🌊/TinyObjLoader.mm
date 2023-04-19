@@ -126,6 +126,23 @@ simd::float3 to_simd(const tinyobj::real_t val[3]) {
     return _faceNormals.data();
 }
 
+- (simd_float3)vertex:(int)off ofFace:(uint16_t)face {
+    uint16_t vert = _faceVertices[face * 3 + off];
+    return {attrib.vertices[vert * 3], attrib.vertices[vert * 3 + 1], attrib.vertices[vert * 3 + 2]};
+}
+
+- (simd_float3)normalForFace:(uint16_t)face {
+
+    auto v1 = [self vertex:0 ofFace:face];
+    auto v2 = [self vertex:1 ofFace:face];
+    auto v3 = [self vertex:2 ofFace:face];
+
+    // https://www.khronos.org/opengl/wiki/Calculating_a_Surface_Normal
+    simd::float3 u = v2 - v1;
+    simd::float3 v = v3 - v1;
+    return simd::normalize(simd::cross(u, v));
+}
+
 @end
 
 @implementation TinyObjMaterial

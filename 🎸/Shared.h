@@ -11,13 +11,14 @@ typedef NSInteger EnumBackingType;
 #endif
 
 #include <simd/simd.h>
+
 typedef NS_ENUM(EnumBackingType, BufferIndex)
 {
     BufferIndexVertexPositions    = 0,
     BufferIndexFaceVertices       = 1,
+    BufferIndexFaceNormals        = 2,
     BufferIndexFaceMaterials      = 3,
     BufferIndexMaterials          = 4,
-    BufferIndexIntersectorObjects = 5,
     BufferIndexIntersector        = 6,
     BufferIndexUniforms           = 7
 };
@@ -26,6 +27,11 @@ typedef NS_ENUM(EnumBackingType, TextureIndex)
 {
     TextureIndexRandom = 0,
     TextureIndexDst    = 1
+};
+
+typedef NS_ENUM(EnumBackingType, FunctionConstantIndex)
+{
+    FunctionConstantIndexBatchSize = 0
 };
 
 typedef struct Camera {
@@ -69,7 +75,8 @@ struct Uniforms {
 
 #define DEFAULT_SETTINGS {true, true, true,  true,true,  1.0,simd_float3(0.01, 0.1, 1.0), 1, 0, true, true, true, 0.9,16, simd_float3(0.299, 0.587, 0.114), 0.4, 512, 512}
 
-struct Material {
+// See also Material struct
+struct RawMaterial {
     vector_float3 diffuse;
     vector_float3 specular;
     vector_float3 transmittance;

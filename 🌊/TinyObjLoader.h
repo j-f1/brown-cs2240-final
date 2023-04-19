@@ -26,6 +26,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (readonly) NSArray<TinyObjMaterial *> *materials;
 
+- (simd_float3)normalForFace:(uint16_t)face;
+
 @end
 
 @interface TinyObjMaterial : NSObject

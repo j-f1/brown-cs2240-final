@@ -6,13 +6,13 @@ class Scene {
     let materialIdBuffer: MTLBuffer // uint16
     let faceVertexBuffer: MTLBuffer // uint16
     let materialBuffer: MTLBuffer // Material
+    let normalBuffer: MTLBuffer // Float
     let accelerationStructure: MTLAccelerationStructure
-    let instanceDescriptors: MTLBuffer // MTLAccelerationStructureInstanceDescriptor
 
     init?(contentsOf url: URL, for device: MTLDevice, commandQueue: MTLCommandQueue) async {
         guard let loader = await runBlocking({ TinyObjLoader(contentsOf: url) }) else { return nil }
 
-        let materials = loader.materials.map(Material.init)
+        let materials = loader.materials.map(RawMaterial.init)
         guard
             let vertexBuffer = device.makeBuffer(bytes: loader.vertices, length: loader.vertexCount * MemoryLayout<Float>.stride, options: []),
             let materialIdBuffer = device.makeBuffer(bytes: loader.materialIds, length: loader.materialIdCount * MemoryLayout<UInt16>.stride, options: []),
@@ -39,20 +39,16 @@ class Scene {
 
         let faces = loader.faceCount
         guard
-            let instanceDescriptors = device.makeBuffer(length: MemoryLayout<MTLAccelerationStructureInstanceDescriptor>.size * faces, options: [])
+            let normalBuffer = device.makeBuffer(length: MemoryLayout<Float>.stride * faces * 3, options: [])
         else { return nil }
-        instanceDescriptors.label = "Instance Descriptors"
-        self.instanceDescriptors = instanceDescriptors
-        let buf = UnsafeMutableBufferPointer(start: instanceDescriptors.contents().assumingMemoryBound(to: MTLAccelerationStructureInstanceDescriptor.self), count: faces)
-        for i in 0..<faces {
-            buf[i] = .init(
-                transformationMatrix: .init(),
-                options: .opaque,
-                mask: 0,
-                intersectionFunctionTableOffset: 0,
-                accelerationStructureIndex: UInt32(i)
-            )
-        }
+        normalBuffer.label = "Instance Descriptors"
+        self.normalBuffer = normalBuffer
+        var result = UnsafeMutableRawBufferPointer(start: normalBuffer.contents(), count: normalBuffer.length)
+            .initializeMemory(as: Float.self, from: (0..<faces).flatMap { i in
+                let normal = loader.normal(forFace: UInt16(i))
+                return [normal.x, normal.y, normal.z]
+            })
+        assert(result.unwritten.next() == nil)
 
         let descriptor = MTLPrimitiveAccelerationStructureDescriptor()
         descriptor.geometryDescriptors = [geometryDescriptor]
@@ -159,7 +155,7 @@ private func runBlocking<T>(qos: DispatchQoS.QoSClass = .userInitiated, _ cb: @e
     }
 }
 
-private extension Material {
+private extension RawMaterial {
     init(_ mat: TinyObjMaterial) {
         self.init(
             diffuse: mat.diffuse,

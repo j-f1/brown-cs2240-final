@@ -94,7 +94,7 @@ class Renderer: NSObject, MTKViewDelegate {
         )
         return randomTexture
     }
-    
+
     private class func buildRenderPipelineWithDevice(device: MTLDevice) throws -> MTLComputePipelineState {
         /// Build a render state pipeline object
         let library = device.makeDefaultLibrary()
@@ -134,9 +134,9 @@ class Renderer: NSObject, MTKViewDelegate {
                 computeEncoder[.dst] = drawable.texture
                 computeEncoder[.vertexPositions] = scene.vertexBuffer
                 computeEncoder[.faceVertices] = scene.faceVertexBuffer
+                computeEncoder[.faceNormals] = scene.normalBuffer
                 computeEncoder[.faceMaterials] = scene.materialIdBuffer
                 computeEncoder[.materials] = scene.materialBuffer
-                computeEncoder[.intersectorObjects] = scene.instanceDescriptors
                 computeEncoder[.intersector] = scene.accelerationStructure
                 computeEncoder.popDebugGroup()
 

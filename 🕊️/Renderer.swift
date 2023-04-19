@@ -17,9 +17,10 @@ class Renderer: NSObject, MTKViewDelegate {
     private var pipelineState: MTLComputePipelineState
     private var scene: Scene
 
+    @MainActor
     init?(metalKitView: MTKView, modelURL: URL?, settings: RenderSettings) async {
         let start = Date.now
-        self.device = await metalKitView.device!
+        self.device = metalKitView.device!
         guard let queue = self.device.makeCommandQueue() else {
             print("Unable to allocate command queue")
             return nil
@@ -32,7 +33,7 @@ class Renderer: NSObject, MTKViewDelegate {
         self.uniformBuffer.label = "UniformBuffer"
 
         await MainActor.run {
-            metalKitView.colorPixelFormat = .bgr10_xr_srgb
+            metalKitView.colorPixelFormat = .bgra8Unorm_srgb
             #if os(macOS)
             metalKitView.colorspace = CGColorSpace(name: CGColorSpace.displayP3)
             #endif

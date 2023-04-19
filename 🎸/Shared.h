@@ -1,8 +1,8 @@
 //
 //  Header containing types and enum constants shared between Metal shaders and Swift/ObjC source
 //
-#ifndef ShaderTypes_h
-#define ShaderTypes_h
+#ifndef Shared_h
+#define Shared_h
 
 #ifdef __METAL_VERSION__
 #define NS_ENUM(_type, _name) enum _name : _type _name; enum _name : _type
@@ -71,11 +71,6 @@ struct Uniforms {
 
 #define DEFAULT_SETTINGS {true, true, true,  true,true,  1.0,simd_float3(0.01, 0.1, 1.0), 1, 0, true, true, true, 0.9,16, simd_float3(0.299, 0.587, 0.114), 0.4, 512, 512}
 
-struct Triangle {
-    vector_float3 normals[3];
-    vector_float3 colors[3];
-};
-
 struct Material {
     vector_float3 diffuse;
     vector_float3 specular;
@@ -86,4 +81,4 @@ struct Material {
     int illum;
 };
 
-#endif /* ShaderTypes_h */
+#endif /* Shared_h */

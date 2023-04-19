@@ -16,6 +16,7 @@
 		851F052B29E84EAD008AFCCA /* Halton.metal in Sources */ = {isa = PBXBuildFile; fileRef = 851F052A29E84EAD008AFCCA /* Halton.metal */; };
 		854AFCC629DDD1470054D4D9 /* TinyObjLoader.mm in Sources */ = {isa = PBXBuildFile; fileRef = 854AFCC529DDD1470054D4D9 /* TinyObjLoader.mm */; };
 		854AFCC929DDE3990054D4D9 /* Scene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 854AFCC829DDE3990054D4D9 /* Scene.swift */; };
+		859B85D829F034970002119A /* DirectLighting.metal in Sources */ = {isa = PBXBuildFile; fileRef = 859B85D729F034970002119A /* DirectLighting.metal */; };
 		85DD9BE829E4783E0015761E /* Raytracer.metal in Sources */ = {isa = PBXBuildFile; fileRef = 85DD9BE729E4783E0015761E /* Raytracer.metal */; };
 		F0C29DD729E63FC500488B98 /* GUIView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0C29DD629E63FC500488B98 /* GUIView.swift */; };
 /* End PBXBuildFile section */
@@ -26,7 +27,7 @@
 		8503425029DA05A700928641 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		8503425229DA05A800928641 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		8503425429DA05A800928641 /* PhoneTon.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PhoneTon.entitlements; sourceTree = "<group>"; };
-		8503426C29DA19F200928641 /* ShaderTypes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ShaderTypes.h; sourceTree = "<group>"; };
+		8503426C29DA19F200928641 /* Shared.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Shared.h; sourceTree = "<group>"; };
 		8503426D29DA19F200928641 /* Renderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Renderer.swift; sourceTree = "<group>"; };
 		8503427229DA1A9500928641 /* MetalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalView.swift; sourceTree = "<group>"; };
 		850B182529E4D31600CD6453 /* models */ = {isa = PBXFileReference; lastKnownFileType = folder; path = models; sourceTree = "<group>"; };
@@ -38,9 +39,12 @@
 		854AFCC429DDD1470054D4D9 /* TinyObjLoader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TinyObjLoader.h; sourceTree = "<group>"; };
 		854AFCC529DDD1470054D4D9 /* TinyObjLoader.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = TinyObjLoader.mm; sourceTree = "<group>"; };
 		854AFCC729DDE1950054D4D9 /* BridgingHeader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BridgingHeader.h; sourceTree = "<group>"; };
-		F0C29DD629E63FC500488B98 /* GUIView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GUIView.swift; sourceTree = "<group>"; };
 		854AFCC829DDE3990054D4D9 /* Scene.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Scene.swift; sourceTree = "<group>"; };
+		859B85D729F034970002119A /* DirectLighting.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = DirectLighting.metal; sourceTree = "<group>"; };
+		859B85D929F034D40002119A /* common.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = common.h; sourceTree = "<group>"; };
+		859B85DA29F035880002119A /* VectorWrapper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VectorWrapper.h; sourceTree = "<group>"; };
 		85DD9BE729E4783E0015761E /* Raytracer.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Raytracer.metal; sourceTree = "<group>"; };
+		F0C29DD629E63FC500488B98 /* GUIView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GUIView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,11 +62,10 @@
 			isa = PBXGroup;
 			children = (
 				851F052C29E87F2B008AFCCA /* README.md */,
-				854AFCCF29DDEA9F0054D4D9 /* UI */,
-				854AFCD129DDEAD80054D4D9 /* Shared */,
-				854AFCD029DDEABC0054D4D9 /* Renderer */,
-				854AFCCE29DDEA790054D4D9 /* Resources */,
-				854AFCC229DDCAA10054D4D9 /* Mesh Loader */,
+				854AFCCF29DDEA9F0054D4D9 /* 🕊️ */,
+				854AFCD029DDEABC0054D4D9 /* 🎸 */,
+				854AFCCE29DDEA790054D4D9 /* 🖼️ */,
+				854AFCC229DDCAA10054D4D9 /* 🌊 */,
 				8503424C29DA05A700928641 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -75,57 +78,53 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		854AFCC229DDCAA10054D4D9 /* Mesh Loader */ = {
+		854AFCC229DDCAA10054D4D9 /* 🌊 */ = {
 			isa = PBXGroup;
 			children = (
-				854AFCC829DDE3990054D4D9 /* Scene.swift */,
+				854AFCC729DDE1950054D4D9 /* BridgingHeader.h */,
 				854AFCC429DDD1470054D4D9 /* TinyObjLoader.h */,
 				854AFCC529DDD1470054D4D9 /* TinyObjLoader.mm */,
 				854AFCC329DDD0F70054D4D9 /* tiny_obj_loader.h */,
 			);
-			path = "Mesh Loader";
+			path = "🌊";
 			sourceTree = "<group>";
 		};
-		854AFCCE29DDEA790054D4D9 /* Resources */ = {
+		854AFCCE29DDEA790054D4D9 /* 🖼️ */ = {
 			isa = PBXGroup;
 			children = (
 				8503425229DA05A800928641 /* Assets.xcassets */,
 				8503425429DA05A800928641 /* PhoneTon.entitlements */,
-				854AFCC729DDE1950054D4D9 /* BridgingHeader.h */,
 				850B182529E4D31600CD6453 /* models */,
 			);
-			path = Resources;
+			path = "🖼️";
 			sourceTree = "<group>";
 		};
-		854AFCCF29DDEA9F0054D4D9 /* UI */ = {
+		854AFCCF29DDEA9F0054D4D9 /* 🕊️ */ = {
 			isa = PBXGroup;
 			children = (
 				8503424E29DA05A700928641 /* PhoneTonApp.swift */,
 				8503425029DA05A700928641 /* ContentView.swift */,
 				F0C29DD629E63FC500488B98 /* GUIView.swift */,
 				8503427229DA1A9500928641 /* MetalView.swift */,
+				8503426D29DA19F200928641 /* Renderer.swift */,
+				854AFCC829DDE3990054D4D9 /* Scene.swift */,
 			);
-			path = UI;
+			path = "🕊️";
 			sourceTree = "<group>";
 		};
-		854AFCD029DDEABC0054D4D9 /* Renderer */ = {
+		854AFCD029DDEABC0054D4D9 /* 🎸 */ = {
 			isa = PBXGroup;
 			children = (
-				8503426D29DA19F200928641 /* Renderer.swift */,
+				859B85D929F034D40002119A /* common.h */,
+				859B85D729F034970002119A /* DirectLighting.metal */,
+				851F052629E84D8F008AFCCA /* Halton.h */,
+				851F052A29E84EAD008AFCCA /* Halton.metal */,
 				85DD9BE729E4783E0015761E /* Raytracer.metal */,
 				851F052929E84DE7008AFCCA /* Sampler.h */,
-				851F052A29E84EAD008AFCCA /* Halton.metal */,
-				851F052629E84D8F008AFCCA /* Halton.h */,
+				8503426C29DA19F200928641 /* Shared.h */,
+				859B85DA29F035880002119A /* VectorWrapper.h */,
 			);
-			path = Renderer;
-			sourceTree = "<group>";
-		};
-		854AFCD129DDEAD80054D4D9 /* Shared */ = {
-			isa = PBXGroup;
-			children = (
-				8503426C29DA19F200928641 /* ShaderTypes.h */,
-			);
-			path = Shared;
+			path = "🎸";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -198,8 +197,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				859B85D829F034970002119A /* DirectLighting.metal in Sources */,
 				8503426F29DA19F200928641 /* Renderer.swift in Sources */,
-				8503426E29DA19F200928641 /* Shaders.metal in Sources */,
 				F0C29DD729E63FC500488B98 /* GUIView.swift in Sources */,
 				854AFCC929DDE3990054D4D9 /* Scene.swift in Sources */,
 				851F052B29E84EAD008AFCCA /* Halton.metal in Sources */,
@@ -267,7 +266,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 12.4;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
-				MTL_HEADER_SEARCH_PATHS = Shared;
+				MTL_HEADER_SEARCH_PATHS = "🎸";
 				ONLY_ACTIVE_ARCH = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -321,7 +320,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 12.4;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
-				MTL_HEADER_SEARCH_PATHS = Shared;
+				MTL_HEADER_SEARCH_PATHS = "🎸";
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 			};
@@ -332,7 +331,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = Resources/PhoneTon.entitlements;
+				CODE_SIGN_ENTITLEMENTS = "🖼️/PhoneTon.entitlements";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -360,7 +359,7 @@
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_OBJC_BRIDGING_HEADER = Resources/BridgingHeader.h;
+				SWIFT_OBJC_BRIDGING_HEADER = "🌊/BridgingHeader.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -371,7 +370,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = Resources/PhoneTon.entitlements;
+				CODE_SIGN_ENTITLEMENTS = "🖼️/PhoneTon.entitlements";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -399,7 +398,7 @@
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_OBJC_BRIDGING_HEADER = Resources/BridgingHeader.h;
+				SWIFT_OBJC_BRIDGING_HEADER = "🌊/BridgingHeader.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};

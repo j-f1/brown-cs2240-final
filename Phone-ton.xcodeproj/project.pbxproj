@@ -16,7 +16,6 @@
 		851F052B29E84EAD008AFCCA /* Halton.metal in Sources */ = {isa = PBXBuildFile; fileRef = 851F052A29E84EAD008AFCCA /* Halton.metal */; };
 		854AFCC629DDD1470054D4D9 /* TinyObjLoader.mm in Sources */ = {isa = PBXBuildFile; fileRef = 854AFCC529DDD1470054D4D9 /* TinyObjLoader.mm */; };
 		854AFCC929DDE3990054D4D9 /* Scene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 854AFCC829DDE3990054D4D9 /* Scene.swift */; };
-		859B85D829F034970002119A /* DirectLighting.metal in Sources */ = {isa = PBXBuildFile; fileRef = 859B85D729F034970002119A /* DirectLighting.metal */; };
 		85DD9BE829E4783E0015761E /* Raytracer.metal in Sources */ = {isa = PBXBuildFile; fileRef = 85DD9BE729E4783E0015761E /* Raytracer.metal */; };
 		F0C29DD729E63FC500488B98 /* GUIView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0C29DD629E63FC500488B98 /* GUIView.swift */; };
 /* End PBXBuildFile section */
@@ -40,7 +39,6 @@
 		854AFCC529DDD1470054D4D9 /* TinyObjLoader.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = TinyObjLoader.mm; sourceTree = "<group>"; };
 		854AFCC729DDE1950054D4D9 /* BridgingHeader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BridgingHeader.h; sourceTree = "<group>"; };
 		854AFCC829DDE3990054D4D9 /* Scene.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Scene.swift; sourceTree = "<group>"; };
-		859B85D729F034970002119A /* DirectLighting.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = DirectLighting.metal; sourceTree = "<group>"; };
 		859B85D929F034D40002119A /* common.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = common.h; sourceTree = "<group>"; };
 		859B85DA29F035880002119A /* VectorWrapper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VectorWrapper.h; sourceTree = "<group>"; };
 		85DD9BE729E4783E0015761E /* Raytracer.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Raytracer.metal; sourceTree = "<group>"; };
@@ -116,7 +114,6 @@
 			isa = PBXGroup;
 			children = (
 				859B85D929F034D40002119A /* common.h */,
-				859B85D729F034970002119A /* DirectLighting.metal */,
 				851F052629E84D8F008AFCCA /* Halton.h */,
 				851F052A29E84EAD008AFCCA /* Halton.metal */,
 				85DD9BE729E4783E0015761E /* Raytracer.metal */,
@@ -197,7 +194,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				859B85D829F034970002119A /* DirectLighting.metal in Sources */,
 				8503426F29DA19F200928641 /* Renderer.swift in Sources */,
 				F0C29DD729E63FC500488B98 /* GUIView.swift in Sources */,
 				854AFCC929DDE3990054D4D9 /* Scene.swift in Sources */,
@@ -318,7 +314,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 12.4;
-				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				MTL_HEADER_SEARCH_PATHS = "🎸";
 				SWIFT_COMPILATION_MODE = wholemodule;

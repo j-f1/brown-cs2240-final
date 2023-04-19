@@ -112,8 +112,8 @@ class Renderer: NSObject, MTKViewDelegate {
             let uniforms = UnsafeMutableRawPointer(uniformBuffer.contents()).bindMemory(to: Uniforms.self, capacity: 1)
             uniforms[0].camera = Camera(
                 position: .init(x: 0, y: 1, z: 3.6),
-                right: .init(x: 1, y: 0, z: 0),
-                up: .init(x: 0, y: 1, z: 0),
+                right: .init(x: 0.4, y: 0, z: 0),
+                up: .init(x: 0, y: 0.4, z: 0),
                 forward: .init(x: 0, y: 0, z: -1)
             )
 

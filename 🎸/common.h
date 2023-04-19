@@ -15,6 +15,21 @@ struct Material {
     float ior;
     int illum;
 };
+
+namespace Illum {
+constexpr constant int flat = 0;
+constexpr constant int diffuse = 1;
+constexpr constant int diffuse_specular = 2;
+constexpr constant int diffuse_specular_reflection = 3;
+constexpr constant int glass = 4;
+constexpr constant int diffuse_specular_fresnel = 5;
+constexpr constant int refract = 6;
+constexpr constant int refract_fresnel = 7;
+constexpr constant int diffuse_specular_reflection_no_ray = 8;
+constexpr constant int glass_no_ray = 9;
+constexpr constant int shadow_only = 10;
+}
+
 static_assert(sizeof(Material) == sizeof(RawMaterial), "Material and RawMaterial must be memory compatible");
 static_assert(alignof(Material) == alignof(RawMaterial), "Material and RawMaterial must be memory compatible");
 

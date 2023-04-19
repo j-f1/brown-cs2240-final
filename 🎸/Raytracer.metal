@@ -9,27 +9,65 @@ float3 transformDirection(float3 p, float4x4 transform) {
 }
 
 __attribute__((always_inline))
-float3 unpack(constant float *floats, unsigned int idx) {
+constexpr float3 unpack(constant float *floats, unsigned int idx) {
     return float3(floats[idx * 3 + 0], floats[idx * 3 + 1], floats[idx * 3 + 2]);
 }
 
-inline Color traceRay(const thread ray &ray, const thread int &pathLength, const thread SceneState &scene) {
+struct RayTraceResult {
+    ray outRay;
+    Color tint;
+};
+
+inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLength, const thread SceneState &scene) {
     // Check for intersection between the ray and the acceleration structure.
-    auto intersection = scene.intersector(ray);
+    auto intersection = scene.intersector(inRay);
+    float3 intersectionPoint = inRay.origin + inRay.direction * intersection.distance;
+
+    RayTraceResult result {
+        .outRay = ray{intersectionPoint, 0.0f, inRay.min_distance, inRay.max_distance}
+    };
 
     // Stop if the ray didn't hit anything and has bounced out of the scene.
-    if (intersection.type == intersection_type::none)
-        return Color::black();
+    if (intersection.type == intersection_type::none) {
+        result.tint = Color::black();
+        return result;
+    }
 
-    // Compute the intersection point in world space.
-    float3 intersectionPoint = ray.origin + ray.direction * intersection.distance;
     float3 normal = unpack(scene.normals, intersection.primitive_id);
     auto material = scene.materials[scene.materialIds[intersection.primitive_id]];
 
-//    if (pathLength == 0) traceRay(ray, pathLength + 1, accelerationStructure, scene);
+    if (pathLength == 0 && material.emission) {
+        result.tint = material.emission;
+        return result;
+    }
 
-    // XXX: path trace
-    return Color((normal + 1) / 2);//material.diffuse);
+    switch (material.illum) {
+        case Illum::refract_fresnel:
+        case Illum::glass:
+            // result.outRay.direction = [glass BRDF]
+            result.tint = Color::white();
+            break;
+        case Illum::diffuse_specular_fresnel:
+        case Illum::diffuse_specular:
+            if (material.specular) {
+                if (material.shininess > 100) {
+                    // result.outRay.direction = [mirror BRDF]
+                    result.tint = material.specular;
+                } else {
+                    // result.outRay.direction = [specular BRDF]
+                    result.tint = material.specular;
+                }
+            } else {
+                // result.outRay.direction = [diffuse BRDF]
+                result.tint = material.diffuse;
+            }
+            break;
+        default:
+            result.tint = Color::pink();
+            break;
+    }
+
+    return result;
 
     //        // Transform the normal from object to world space.
     //        worldSpaceSurfaceNormal = normalize(transformDirection(objectSpaceSurfaceNormal, objectToWorldSpaceTransform));
@@ -104,6 +142,17 @@ kernel void raytracingKernel(
     // Don't limit intersection distance.
     ray.max_distance = INFINITY;
 
-    Color color = traceRay(ray, 0, state);
+    RayTraceResult result;
+    int depth = 0;
+    Color tint = Color::white();
+    do {
+        result = traceRay(ray, 0, state);
+        tint *= result.tint;
+        ray = result.outRay;
+        depth++;
+    } while (any(ray.direction != 0.f) && halton(offset + uniforms.frameIndex, 2 * depth) < settings.russianRoulette);
+
+    Color color = tint / pow(settings.russianRoulette, depth);
+
     dstTex.write(float4(color._unwrap(), 1), tid);
 }

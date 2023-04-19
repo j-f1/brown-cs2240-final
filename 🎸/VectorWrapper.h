@@ -99,6 +99,10 @@ public:
         // gamma!
         return {max(0, min(1, pow(corrected, 1 / 2.2)))};
     }
+
+    inline void operator *= (Color other) {
+        v *= other.v;
+    }
 };
 
 class Location {

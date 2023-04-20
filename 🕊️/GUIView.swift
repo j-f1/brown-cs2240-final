@@ -5,8 +5,8 @@ import UniformTypeIdentifiers
 struct GUIView: View {
     @Binding var settings: RenderSettings
     @Binding var model: URL?
-
-    @State private var stateSettings: RenderSettings
+    //TODO INITIALIZE THIS BETTER
+    @State private var stateSettings: RenderSettings = RenderSettings.defaultSettings;
     @State private var selectingModel = false
 
     init(settings: Binding<RenderSettings>, model: Binding<URL?>) {
@@ -22,7 +22,7 @@ struct GUIView: View {
         Text(label)
         #endif
     }
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Form {
@@ -84,7 +84,7 @@ struct GUIView: View {
                 #endif
 
                 Section(header: sectionHeader("Image Settings")) {
-                    
+
                     TextField(value: $stateSettings.toneMap[0], format: .number, prompt: Text("Tone Mapping R")) {
                         Text("Tone Mapping R")
                     }
@@ -103,7 +103,7 @@ struct GUIView: View {
                     TextField(value: $stateSettings.imageHeight, format: .number, prompt: Text("Image height")) {
                         Text("Image height")
                     }
-                    
+
                 }
                 #if os(macOS)
                 .textFieldStyle(.roundedBorder)

@@ -31,8 +31,16 @@ class Renderer: ObservableObject {
 
         guard let buffer = self.device.makeBuffer(length: MemoryLayout<Uniforms>.size, options: []) else { return nil }
         uniformBuffer = buffer
-        
+
         self.uniformBuffer.label = "UniformBuffer"
+
+        await MainActor.run {
+            metalKitView.colorPixelFormat = .bgra8Unorm //_srgb
+            #if os(macOS)
+            metalKitView.colorspace = CGColorSpace(name: CGColorSpace.displayP3)
+            #endif
+            metalKitView.sampleCount = 1
+        }
 
         do {
             pipelineState = try Renderer.buildRenderPipelineWithDevice(device: device)
@@ -198,4 +206,8 @@ private extension MTLComputeCommandEncoder {
 
 extension MTLOrigin {
     static let zero = MTLOrigin(x: 0, y: 0, z: 0)
+}
+
+extension RenderSettings {
+    static var defaultSettings : RenderSettings = RenderSettings(diffuseOn: true, mirrorOn: true, refractionOn: true, glossyOn: true,subsurfaceScatteringOn: true, ssSigma_s: 1.0,ssSigma_a: simd_float3(0.01, 0.1, 1.0), ssEta: 1, ssG: 0, directLightingOn: true, importanceSamplingOn: true, glassTransmittanceOn: true, russianRoulette: 0.9,samplesPerPixel: 16, toneMap: simd_float3(0.299, 0.587, 0.114), gammaCorrection: 0.4,imageWidth: 512, imageHeight: 512);
 }

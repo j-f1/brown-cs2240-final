@@ -49,7 +49,7 @@ inline Sample getNextDirection(const thread Location &intersectionPoint, const t
     //            break;
     //    }
     //
-    
+
     return Sample{Direction(0,0,0), 0};
 }
 
@@ -81,16 +81,18 @@ inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLe
         return result;
     }
 
+    SampleDirectionResult nextDirection = getNextDirection(intersectionPoint, material, inRay);
+
     if (scene.settings.directLightingOn) {
         result.illumination = directLighting(inRay, normal, material, scene);
     } else {
         result.illumination = Color::black();
     }
-    
+
     Sample sample = getNextDirection(intersection.location(), material, inRay);
     Color brdf = getBRDF(inRay, sample.direction, material);
     result.brdf = brdf;
-    
+
 
     float lightProjection = abs(dot(sample.direction, normal._unwrap()));
 
@@ -102,7 +104,7 @@ inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLe
 
 kernel void raytracingKernel(
      uint2                               tid                       [[thread_position_in_grid]],
-     
+
      constant Uniforms &                 uniforms                  [[buffer(BufferIndexUniforms)]],
      texture2d<unsigned int>             randomTex                 [[texture(TextureIndexRandom)]],
      texture2d<uint, access::write>      dstTex                    [[texture(TextureIndexDst)]],
@@ -149,6 +151,7 @@ kernel void raytracingKernel(
     // Don't limit intersection distance.
     ray.max_distance = INFINITY;
 
+    //raytracing loop
     RayTraceResult result;
     int depth = 0;
     Color totalBRDF = Color::white();

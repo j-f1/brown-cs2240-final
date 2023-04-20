@@ -39,7 +39,22 @@ private:
     intersector<triangle_data> i;
     const thread primitive_acceleration_structure &accelerationStructure;
 public:
-    typedef intersector<triangle_data>::result_type Intersection;
+    struct Intersection {
+        friend struct Intersector;
+    protected:
+        Intersection(intersector<triangle_data>::result_type i) : i(i) {}
+        intersector<triangle_data>::result_type i;
+    public:
+        inline operator bool() const {
+            return i.type != intersection_type::none;
+        }
+        inline int index() const {
+            return i.primitive_id;
+        }
+        inline float distance() const {
+            return i.distance;
+        }
+    };
 
     Intersector(const thread primitive_acceleration_structure &accelerationStructure)
     : i(), accelerationStructure(accelerationStructure)
@@ -54,7 +69,7 @@ public:
     }
 
     Intersection operator()(const thread ray &ray) const {
-        return i.intersect(ray, accelerationStructure);
+        return {i.intersect(ray, accelerationStructure)};
     }
 
     //    Intersection test(const thread ray &ray) {
@@ -72,9 +87,22 @@ struct SceneState {
     const constant Material                                   *materials;
     const constant ushort                                     *materialIds;
 
-    const thread Intersector &intersector;
-    const thread RandomGenerator &rng;
+    const constant  RenderSettings  &settings;
+    const thread    Intersector     &intersector;
+          thread    RandomGenerator &rng;
 
     const constant int *emissives;
     const int           emissivesCount;
 };
+
+inline constexpr float3 unpack(constant float *floats, unsigned int idx) {
+    return float3(floats[idx * 3 + 0], floats[idx * 3 + 1], floats[idx * 3 + 2]);
+}
+template<typename T>
+inline constexpr T unpack(constant float *floats, unsigned int idx) {
+    return T::_wrap(unpack(floats, idx));
+}
+inline constexpr ushort3 unpack(constant ushort *ints, unsigned int idx) {
+    return ushort3(ints[idx * 3 + 0], ints[idx * 3 + 1], ints[idx * 3 + 2]);
+}
+

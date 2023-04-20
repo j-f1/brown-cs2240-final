@@ -21,20 +21,20 @@ struct RayTraceResult {
 inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLength, const thread SceneState &scene) {
     // Check for intersection between the ray and the acceleration structure.
     auto intersection = scene.intersector(inRay);
-    float3 intersectionPoint = inRay.origin + inRay.direction * intersection.distance;
+    float3 intersectionPoint = inRay.origin + inRay.direction * intersection.distance();
 
     RayTraceResult result {
         .outRay = ray{intersectionPoint, 0.0f, inRay.min_distance, inRay.max_distance}
     };
 
     // Stop if the ray didn't hit anything and has bounced out of the scene.
-    if (intersection.type == intersection_type::none) {
+    if (!intersection) {
         result.tint = Color::black();
         return result;
     }
 
-    float3 normal = unpack(scene.normals, intersection.primitive_id);
-    auto material = scene.materials[scene.materialIds[intersection.primitive_id]];
+    float3 normal = unpack(scene.normals, intersection.index());
+    Material material = scene.materials[scene.materialIds[intersection.index()]];
 
     if (pathLength == 0 && material.emission) {
         result.tint = material.emission;

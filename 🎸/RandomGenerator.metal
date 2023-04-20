@@ -11,20 +11,18 @@ static constexpr constant unsigned int primes[] = {
 
 float RandomGenerator::halton(unsigned int i, unsigned int d) {
     assert(d < sizeof(primes) / sizeof(primes[0]));
-    unsigned int b = primes[d];
+    unsigned int base = primes[d];
 
-    float f = 1.0f;
-    float invB = 1.0f / b;
+    float coeff = 1.0f;
+    float invBase = 1.0f / base;
 
-    float r = 0;
+    float rand = 0;
 
     while (i > 0) {
-        f = f * invB;
-        r = r + f * (i % b);
-        i = i / b;
+        coeff *= invBase;
+        rand += coeff * (i % base);
+        i /= base;
     }
 
-    return r;
+    return rand;
 }
-
-

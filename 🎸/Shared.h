@@ -52,6 +52,7 @@ typedef struct RenderSettings {
     float ssEta;
     float ssG;
     bool directLightingOn;
+    int directLightingSamples;
     bool importanceSamplingOn;
     bool glassTransmittanceOn;
     float russianRoulette;

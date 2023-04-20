@@ -2,6 +2,7 @@
 using namespace metal;
 using namespace raytracing;
 
+#import "RandomGenerator.h"
 #import "VectorWrapper.h"
 
 #import "Shared.h"
@@ -72,6 +73,7 @@ struct SceneState {
     const constant ushort                                     *materialIds;
 
     const thread Intersector &intersector;
+    const thread RandomGenerator &rng;
 
     const constant int *emissives;
     const int           emissivesCount;

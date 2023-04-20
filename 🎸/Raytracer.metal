@@ -1,6 +1,6 @@
 #import "common.h"
 
-#import "Halton.h"
+#import "RandomGenerator.h"
 #import "Sampler.h"
 
 __attribute__((always_inline))
@@ -102,7 +102,8 @@ kernel void raytracingKernel(
      constant Material                  *materials                 [[buffer(BufferIndexMaterials)]],
      primitive_acceleration_structure    accelerationStructure     [[buffer(BufferIndexIntersector)]]
 ) {
-    SceneState state{positions, vertices, normals, materials, materialIds, Intersector{accelerationStructure}};
+    RandomGenerator rng{randomTex, tid, uniforms.frameIndex};
+    SceneState state{positions, vertices, normals, materials, materialIds, Intersector{accelerationStructure}, rng};
     constant RenderSettings &settings = uniforms.settings;
 
     // We align the thread count to the threadgroup size, which means the thread count
@@ -120,8 +121,7 @@ kernel void raytracingKernel(
     unsigned int offset = randomTex.read(tid).x;
 
     // Add a random offset to the pixel coordinates for antialiasing.
-    float2 r = float2(halton(offset + uniforms.frameIndex, 0),
-                      halton(offset + uniforms.frameIndex, 1));
+    float2 r = float2(rng(), rng());
 
     pixel += r;
 
@@ -151,7 +151,7 @@ kernel void raytracingKernel(
         tint *= result.tint;
         ray = result.outRay;
         depth++;
-    } while (any(ray.direction != 0.f) && halton(offset + uniforms.frameIndex, 2 * depth) < settings.russianRoulette);
+    } while (any(ray.direction != 0.f) && rng() < settings.russianRoulette);
 
     Color color = tint / pow(settings.russianRoulette, depth);
 

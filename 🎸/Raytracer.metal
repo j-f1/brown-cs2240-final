@@ -117,13 +117,8 @@ kernel void raytracingKernel(
     // Pixel coordinates for this thread.
     float2 pixel = (float2)tid;
 
-    // Apply a random offset to the random number index to decorrelate pixels.
-    unsigned int offset = randomTex.read(tid).x;
-
     // Add a random offset to the pixel coordinates for antialiasing.
-    float2 r = float2(rng(), rng());
-
-    pixel += r;
+    pixel += float2(rng(), rng());
 
     // Map pixel coordinates to -1..1.
     float2 uv = (float2)pixel / float2(settings.imageWidth, settings.imageHeight);

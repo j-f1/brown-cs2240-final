@@ -4,7 +4,8 @@ using namespace metal;
 struct RandomGenerator {
 public:
     RandomGenerator(const thread texture2d<unsigned int> &randomTex, uint2 tid, uint frameIndex)
-    : offset(randomTex.read(tid).x + frameIndex), samplesTaken(0) {}
+    // Apply a random offset to the random number index to decorrelate pixels.
+        : offset(randomTex.read(tid).x + frameIndex), samplesTaken(0) {}
 
     thread RandomGenerator &operator=(const thread RandomGenerator &) = delete;
 

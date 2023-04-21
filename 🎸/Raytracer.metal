@@ -6,7 +6,7 @@
 
 struct RayTraceResult {
     // next ray to follow
-    ray outRay;
+    ray ray;
     // brdf for that ray
     Color brdf;
     // total light (emission + direct lighting)
@@ -19,7 +19,7 @@ inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLe
     float3 intersectionPoint = inRay.origin + inRay.direction * intersection.distance();
 
     RayTraceResult result{
-        .outRay = ray{intersectionPoint, 0.f, inRay.min_distance, inRay.max_distance},
+        .ray = ray{intersectionPoint, 0.f, inRay.min_distance, inRay.max_distance},
         // .brdf = [uninitialized],
         // .illumination = [uninitialized]
     };
@@ -51,21 +51,21 @@ inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLe
     switch (material.illum) {
         case Illum::refract_fresnel:
         case Illum::glass:
-            // result.outRay.direction = [glass BRDF]._unwrap();
+            // result.ray.direction = [glass BRDF]._unwrap();
             result.brdf = Color::white();
             break;
         case Illum::diffuse_specular_fresnel:
         case Illum::diffuse_specular:
             if (material.specular) {
                 if (material.shininess > 100) {
-                    // result.outRay.direction = [mirror BRDF]._unwrap();
+                    // result.ray.direction = [mirror BRDF]._unwrap();
                     result.brdf = material.specular;
                 } else {
-                    // result.outRay.direction = [specular BRDF]._unwrap();
+                    // result.ray.direction = [specular BRDF]._unwrap();
                     result.brdf = material.specular;
                 }
             } else {
-                // result.outRay.direction = [diffuse BRDF]._unwrap();
+                // result.ray.direction = [diffuse BRDF]._unwrap();
                 result.brdf = material.diffuse;
             }
             break;
@@ -73,6 +73,8 @@ inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLe
             brdf = Color::pink();
             break;
     }
+
+    result.brdf *= abs(result.ray);
 
     return result;
 
@@ -155,8 +157,8 @@ kernel void raytracingKernel(
         totalIllumination += totalBRDF * result.illumination;
         totalBRDF *= result.brdf;
 
-        if (all(result.outRay.direction == 0.f)) break;
-        ray = result.outRay;
+        if (all(result.ray.direction == 0.f)) break;
+        ray = result.ray;
         depth++;
     } while (rng() < settings.russianRoulette);
 

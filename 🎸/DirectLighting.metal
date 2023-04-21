@@ -20,26 +20,26 @@ struct tri {
     }
 };
 
-Color directLighting(const thread ray &outRay, Direction normal, const thread Material &material, thread SceneState &scene) {
+Color directLighting(const thread ray &inRay, Direction normal, const thread Material &material, thread SceneState &scene) {
     Color result = Color::black();
     for (int i = 0; i < scene.emissivesCount; i++) {
         tri t{scene.emissives[i], scene};
 
         for (int j = 0; j < scene.settings.directLightingSamples; j++) {
             const Location target = t.sample(scene.rng);
-            Direction dir = Direction(outRay.origin, target);
+            Direction dir = Direction(inRay.origin, target);
             if (dir.dot(normal) < 0) continue;
-            ray inRay = outRay;
-            inRay.direction = dir._unwrap();
-            auto hit = scene.intersector(inRay);
+            ray outRay = inRay;
+            outRay.direction = dir._unwrap();
+            auto hit = scene.intersector(outRay);
             if (!hit) continue;
             if (hit.index() != t.idx) continue; // skip if there’s an obstacle
             if (t.normal.dot(-dir) < 0) continue;
             float area = length(cross((t.v2 - t.v1), (t.v3 - t.v1))) / 2;
             float distanceFactor = normal.dot(dir) * abs(t.normal.dot(-dir)) / length_squared(target._unwrap() - outRay.origin);
             Color brdf = Color::white(); // TODO: brdf(-dir, outRay.direction, normal, material);
-            result += Color(t.material.emission).componentWiseProduct(brdf) * area * distanceFactor;
+            result += brdf.componentWiseProduct(Color{t.material.emission}) * area * distanceFactor;
         }
     }
-    return Color::_wrap(result._unwrap() / scene.settings.directLightingSamples);
+    return result / float(scene.settings.directLightingSamples);
 }

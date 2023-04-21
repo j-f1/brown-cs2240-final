@@ -107,6 +107,13 @@ inline bool floatEpsEqual(float a, float b) {
 //        return {max(0, min(1, pow(corrected, 1 / 2.2)))};
 //    }
 //
+//    inline Color(const thread Color &c) : v(c.v) {}
+//    inline Color(const constant Color &c) : v(c.v) {}
+//
+//    inline Color operator * (Color other) const {
+//        return {v * other.v};
+//    }
+//
 //    inline void operator *= (Color other) {
 //        v *= other.v;
 //    }
@@ -149,14 +156,14 @@ inline bool floatEpsEqual(float a, float b) {
 // GENERATED CODE DO NOT MODIFY
 
 struct Color {
-protected: float3 v; public: inline Color(float r, float g, float b) : Color(float3(r, g, b)) {} inline Color() : v() {} inline float r() const { return v.x; } inline float g() const { return v.y; } inline float b() const { return v.z; } inline static Color _wrap(float3 v) { return {v}; } inline Color componentWiseProduct(const thread Color &other) const { return {v * other.v}; } inline Color cross(const thread Color &other) const { return {metal::cross(v, other.v)}; } inline float dot(const thread Color &other) const { return metal::dot(v, other.v); } inline float magnitude() const { return length(v); } inline float3 _unwrap() const { return v; } inline void normalize() { v = metal::normalize(float3()); } inline Color operator + (float o) const { return {v + float3(o, o, o)}; } inline Color operator + (const thread Color &o) const { return {v + o.v}; } inline void operator += (const thread Color &o) { v += o.v; } inline Color operator * (float o) const { return {v * o}; } inline void operator *= (float o) { v *= o; } inline Color operator / (const thread Color &o) const { return {v / o.v}; } inline Color operator / (float o) const { return {v / o}; } inline void operator /= (float o) { v /= o; } inline Color operator - () const { return {-v}; } inline operator bool() const { return magnitude() > 0.01; } inline bool epsEqual(const thread Color &other) const { return floatEpsEqual(v.x, other.v.x) && floatEpsEqual(v.y, other.v.y) && floatEpsEqual(v.z, other.v.z); }
-public:
     inline Color(float3 color) : v(color.x, color.y, color.z) {
         if (v.x < 0 || v.y < 0 || v.z < 0) {
             v = abs(v);
         }
     }
 
+protected: float3 v; public: inline Color(float r, float g, float b) : Color(float3(r, g, b)) {} inline Color() : v() {} inline float r() const { return v.x; } inline float g() const { return v.y; } inline float b() const { return v.z; } inline static Color _wrap(float3 v) { return {v}; } inline Color componentWiseProduct(const thread Color &other) const { return {v * other.v}; } inline Color cross(const thread Color &other) const { return {metal::cross(v, other.v)}; } inline float dot(const thread Color &other) const { return metal::dot(v, other.v); } inline float magnitude() const { return length(v); } inline float3 _unwrap() const { return v; } inline void normalize() { v = metal::normalize(float3()); } inline Color operator + (float o) const { return {v + float3(o, o, o)}; } inline Color operator + (const thread Color &o) const { return {v + o.v}; } inline void operator += (const thread Color &o) { v += o.v; } inline Color operator * (float o) const { return {v * o}; } inline void operator *= (float o) { v *= o; } inline Color operator / (const thread Color &o) const { return {v / o.v}; } inline Color operator / (float o) const { return {v / o}; } inline void operator /= (float o) { v /= o; } inline Color operator - () const { return {-v}; } inline operator bool() const { return magnitude() > 0.01; } inline bool epsEqual(const thread Color &other) const { return floatEpsEqual(v.x, other.v.x) && floatEpsEqual(v.y, other.v.y) && floatEpsEqual(v.z, other.v.z); }
+public:
     static inline const Color black() { return {0, 0, 0}; }
     static inline const Color white() { return {1, 1, 1}; }
     static inline const Color pink() { return {1, 0, 1}; }
@@ -177,6 +184,13 @@ public:
         auto corrected = (v*(a*v+b))/(v*(c*v+d)+e);
 
         return {max(0, min(1, pow(corrected, 1 / 2.2)))};
+    }
+
+    inline Color(const thread Color &c) : v(c.v) {}
+    inline Color(const constant Color &c) : v(c.v) {}
+
+    inline Color operator * (Color other) const {
+        return {v * other.v};
     }
 
     inline void operator *= (Color other) {

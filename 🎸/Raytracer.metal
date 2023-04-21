@@ -5,56 +5,72 @@
 #import "Sampler.h"
 
 struct RayTraceResult {
+    // next ray to follow
     ray outRay;
-    Color tint;
+    // brdf for that ray
+    Color brdf;
+    // total light (emission + direct lighting)
+    Color illumination;
 };
 
-inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLength, const thread SceneState &scene) {
+inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLength, thread SceneState &scene) {
     // Check for intersection between the ray and the acceleration structure.
     auto intersection = scene.intersector(inRay);
     float3 intersectionPoint = inRay.origin + inRay.direction * intersection.distance();
 
-    RayTraceResult result {
-        .outRay = ray{intersectionPoint, 0.0f, inRay.min_distance, inRay.max_distance}
+    RayTraceResult result{
+        .outRay = ray{intersectionPoint, 0.f, inRay.min_distance, inRay.max_distance},
+        // .brdf = [uninitialized],
+        // .illumination = [uninitialized]
     };
 
     // Stop if the ray didn't hit anything and has bounced out of the scene.
     if (!intersection) {
-        result.tint = Color::black();
+        result.brdf = Color::black();
+        result.illumination = Color::black();
         return result;
     }
 
-    float3 normal = unpack(scene.normals, intersection.index());
+    Direction normal = unpack<Direction>(scene.normals, intersection.index());
     Material material = scene.materials[scene.materialIds[intersection.index()]];
 
-    if (pathLength == 0 && material.emission) {
-        result.tint = material.emission;
+    if (material.emission) {
+        result.brdf = Color::black();
+        result.illumination = material.emission;
         return result;
     }
 
+    if (scene.settings.directLightingOn) {
+        result.illumination = directLighting(inRay, normal, material, scene);
+    } else {
+        result.illumination = Color::black();
+    }
+
+    Color brdf;
+    Direction outDirection;
     switch (material.illum) {
         case Illum::refract_fresnel:
         case Illum::glass:
-            // result.outRay.direction = [glass BRDF]
-            result.tint = Color::white();
+            // result.outRay.direction = [glass BRDF]._unwrap();
+            result.brdf = Color::white();
             break;
         case Illum::diffuse_specular_fresnel:
         case Illum::diffuse_specular:
             if (material.specular) {
                 if (material.shininess > 100) {
-                    // result.outRay.direction = [mirror BRDF]
-                    result.tint = material.specular;
+                    // result.outRay.direction = [mirror BRDF]._unwrap();
+                    result.brdf = material.specular;
                 } else {
-                    // result.outRay.direction = [specular BRDF]
-                    result.tint = material.specular;
+                    // result.outRay.direction = [specular BRDF]._unwrap();
+                    result.brdf = material.specular;
                 }
             } else {
-                // result.outRay.direction = [diffuse BRDF]
-                result.tint = material.diffuse;
+                // result.outRay.direction = [diffuse BRDF]._unwrap();
+                result.brdf = material.diffuse;
             }
             break;
         default:
-            result.tint = Color::pink();
+            brdf = Color::pink();
             break;
     }
 
@@ -131,15 +147,20 @@ kernel void raytracingKernel(
 
     RayTraceResult result;
     int depth = 0;
-    Color tint = Color::white();
+    Color totalBRDF = Color::white();
+    Color totalIllumination = Color::black();
     do {
         result = traceRay(ray, 0, state);
-        tint *= result.tint;
+
+        totalIllumination += totalBRDF * result.illumination;
+        totalBRDF *= result.brdf;
+
+        if (all(result.outRay.direction == 0.f)) break;
         ray = result.outRay;
         depth++;
-    } while (any(ray.direction != 0.f) && rng() < settings.russianRoulette);
+    } while (rng() < settings.russianRoulette);
 
-    Color color = tint / pow(settings.russianRoulette, depth);
+    Color color = totalIllumination / pow(settings.russianRoulette, depth);
 
     dstTex.write(float4(color._unwrap(), 1), tid);
 }

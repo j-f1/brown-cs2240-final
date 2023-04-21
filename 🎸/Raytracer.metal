@@ -1,17 +1,8 @@
 #import "common.h"
 
+#import "DirectLighting.h"
 #import "RandomGenerator.h"
 #import "Sampler.h"
-
-__attribute__((always_inline))
-float3 transformDirection(float3 p, float4x4 transform) {
-    return (transform * float4(p.x, p.y, p.z, 0.0f)).xyz;
-}
-
-__attribute__((always_inline))
-constexpr float3 unpack(constant float *floats, unsigned int idx) {
-    return float3(floats[idx * 3 + 0], floats[idx * 3 + 1], floats[idx * 3 + 2]);
-}
 
 struct RayTraceResult {
     ray outRay;
@@ -103,7 +94,7 @@ kernel void raytracingKernel(
      primitive_acceleration_structure    accelerationStructure     [[buffer(BufferIndexIntersector)]]
 ) {
     RandomGenerator rng{randomTex, tid, uniforms.frameIndex};
-    SceneState state{positions, vertices, normals, materials, materialIds, Intersector{accelerationStructure}, rng};
+    SceneState state{positions, vertices, normals, materials, materialIds, uniforms.settings, Intersector{accelerationStructure}, rng};
     constant RenderSettings &settings = uniforms.settings;
 
     // We align the thread count to the threadgroup size, which means the thread count

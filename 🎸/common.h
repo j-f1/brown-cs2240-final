@@ -17,6 +17,11 @@ struct Material {
     int illum;
 };
 
+struct Sample {
+    Direction direction;
+    float pdf;
+};
+
 namespace Illum {
 constexpr constant int flat = 0;
 constexpr constant int diffuse = 1;

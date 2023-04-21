@@ -46,35 +46,37 @@ inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLe
         result.illumination = Color::black();
     }
 
-    Color brdf;
-    Direction outDirection;
+    Sample sample;
     switch (material.illum) {
         case Illum::refract_fresnel:
         case Illum::glass:
-            // result.ray.direction = [glass BRDF]._unwrap();
+            // sample = [glass BRDF]
             result.brdf = Color::white();
             break;
         case Illum::diffuse_specular_fresnel:
         case Illum::diffuse_specular:
             if (material.specular) {
                 if (material.shininess > 100) {
-                    // result.ray.direction = [mirror BRDF]._unwrap();
+                    // sample = [mirror BRDF];
                     result.brdf = material.specular;
                 } else {
-                    // result.ray.direction = [specular BRDF]._unwrap();
+                    // sample = [specular BRDF];
                     result.brdf = material.specular;
                 }
             } else {
-                // result.ray.direction = [diffuse BRDF]._unwrap();
+                // sample = [diffuse BRDF];
                 result.brdf = material.diffuse;
             }
             break;
         default:
-            brdf = Color::pink();
+            sample.direction = Direction(0, 0, 0);
+            sample.pdf = 1;
+            result.brdf = Color::pink();
             break;
     }
 
-    result.brdf *= abs(dot(result.ray.direction, normal._unwrap()));
+    result.ray.direction = sample.direction;
+    result.brdf *= abs(dot(result.ray.direction, normal._unwrap())) * sample.pdf;
 
     // Q: should we multiply BRDF by nextDir.pdf?
     // what about result.illumination?

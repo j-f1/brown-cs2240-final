@@ -74,7 +74,10 @@ inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLe
             break;
     }
 
-    result.brdf *= abs(result.ray);
+    result.brdf *= abs(dot(result.ray.direction, normal._unwrap()));
+
+    // Q: should we multiply BRDF by nextDir.pdf?
+    // what about result.illumination?
 
     return result;
 

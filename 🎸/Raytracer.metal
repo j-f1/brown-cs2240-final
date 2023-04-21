@@ -33,10 +33,11 @@ inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLe
 
     Direction normal = unpack<Direction>(scene.normals, intersection.index());
     Material material = scene.materials[scene.materialIds[intersection.index()]];
+    float fresnel = abs(dot(inRay.direction, normal._unwrap()));
 
     if (material.emission) {
         result.brdf = Color::black();
-        result.illumination = material.emission;
+        result.illumination = fresnel * material.emission;
         return result;
     }
 
@@ -76,10 +77,7 @@ inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLe
     }
 
     result.ray.direction = sample.direction;
-    result.brdf *= abs(dot(result.ray.direction, normal._unwrap())) * sample.pdf;
-
-    // Q: should we multiply BRDF by nextDir.pdf?
-    // what about result.illumination?
+    result.brdf *= fresnel * sample.pdf;
 
     return result;
 

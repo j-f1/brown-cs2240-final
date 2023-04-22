@@ -56,11 +56,9 @@ inline Sample getNextDirection(const thread Location &intersectionPoint, const t
 inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLength, thread SceneState &scene) {
     // Check for intersection between the ray and the acceleration structure.
     auto intersection = scene.intersector(inRay);
-    float3 intersectionPoint = inRay.origin + inRay.direction * intersection.distance();
-    Location intersectionLocation = Location::_wrap(intersectionPoint);
-    
+
     RayTraceResult result{
-        .ray = ray{intersectionPoint, 0.f, inRay.min_distance, inRay.max_distance},
+        .ray = ray{intersection.location()._unwrap(), 0.f, inRay.min_distance, inRay.max_distance},
         // .brdf = [uninitialized],
         // .illumination = [uninitialized]
     };
@@ -89,7 +87,7 @@ inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLe
         result.illumination = Color::black();
     }
     
-    Sample sample = getNextDirection(intersectionLocation, material, inRay);
+    Sample sample = getNextDirection(intersection.location(), material, inRay);
     Color brdf = getBRDF(inRay, sample.direction, material);
     result.brdf = brdf;
     

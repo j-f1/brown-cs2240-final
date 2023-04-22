@@ -47,7 +47,8 @@ public:
     struct Intersection {
         friend struct Intersector;
     protected:
-        Intersection(intersector<triangle_data>::result_type i) : i(i) {}
+        Intersection(ray inRay, intersector<triangle_data>::result_type i) : inRay(inRay), i(i) {}
+        ray inRay;
         intersector<triangle_data>::result_type i;
     public:
         inline operator bool() const {
@@ -58,6 +59,9 @@ public:
         }
         inline float distance() const {
             return i.distance;
+        }
+        inline Location location() const {
+            return Location::_wrap(inRay.origin + inRay.direction * distance());
         }
     };
 
@@ -74,7 +78,7 @@ public:
     }
 
     Intersection operator()(const thread ray &ray) const {
-        return {i.intersect(ray, accelerationStructure)};
+        return {ray, i.intersect(ray, accelerationStructure)};
     }
 
     //    Intersection test(const thread ray &ray) {

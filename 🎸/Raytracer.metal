@@ -13,11 +13,52 @@ struct RayTraceResult {
     Color illumination;
 };
 
+//TODO eventually turn the outDir type to Ray because we will be in BSSDF land
+inline Color getBRDF(const thread ray &inRay, const thread Direction &outDir, const thread Material &mat) {
+    //TODO COCO
+    return 0.f;
+}
+
+inline Sample getNextDirection(const thread Location &intersectionPoint, const thread Material &mat, const thread ray &inRay) {
+    //TODO COCO
+    //    switch (material.illum) {
+    //        case Illum::refract_fresnel:
+    //        case Illum::glass:
+    //            // sample = [glass BRDF]
+    //            result.brdf = Color::white();
+    //            break;
+    //        case Illum::diffuse_specular_fresnel:
+    //        case Illum::diffuse_specular:
+    //            if (material.specular) {
+    //                if (material.shininess > 100) {
+    //                    // sample = [mirror BRDF];
+    //                    result.brdf = material.specular;
+    //                } else {
+    //                    // sample = [specular BRDF];
+    //                    result.brdf = material.specular;
+    //                }
+    //            } else {
+    //                // sample = [diffuse BRDF];
+    //                result.brdf = material.diffuse;
+    //            }
+    //            break;
+    //        default:
+    //            sample.direction = Direction(0, 0, 0);
+    //            sample.pdf = 1;
+    //            result.brdf = Color::pink();
+    //            break;
+    //    }
+    //
+    
+    return Sample{Direction(0,0,0), 0};
+}
+
 inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLength, thread SceneState &scene) {
     // Check for intersection between the ray and the acceleration structure.
     auto intersection = scene.intersector(inRay);
     float3 intersectionPoint = inRay.origin + inRay.direction * intersection.distance();
-
+    Location intersectionLocation = Location::_wrap(intersectionPoint);
+    
     RayTraceResult result{
         .ray = ray{intersectionPoint, 0.f, inRay.min_distance, inRay.max_distance},
         // .brdf = [uninitialized],
@@ -47,61 +88,18 @@ inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLe
     } else {
         result.illumination = Color::black();
     }
+    
+    Sample sample = getNextDirection(intersectionLocation, material, inRay);
+    Color brdf = getBRDF(inRay, sample.direction, material);
+    result.brdf = brdf;
+    
 
-    Sample sample;
-    switch (material.illum) {
-        case Illum::refract_fresnel:
-        case Illum::glass:
-            // sample = [glass BRDF]
-            result.brdf = Color::white();
-            break;
-        case Illum::diffuse_specular_fresnel:
-        case Illum::diffuse_specular:
-            if (material.specular) {
-                if (material.shininess > 100) {
-                    // sample = [mirror BRDF];
-                    result.brdf = material.specular;
-                } else {
-                    // sample = [specular BRDF];
-                    result.brdf = material.specular;
-                }
-            } else {
-                // sample = [diffuse BRDF];
-                result.brdf = material.diffuse;
-            }
-            break;
-        default:
-            sample.direction = Direction(0, 0, 0);
-            sample.pdf = 1;
-            result.brdf = Color::pink();
-            break;
-    }
-
-    float fresnel = abs(dot(sample.direction, normal._unwrap()));
+    float lightProjection = abs(dot(sample.direction, normal._unwrap()));
 
     result.ray.direction = sample.direction;
-    result.brdf *= fresnel / sample.pdf;
+    result.brdf *= lightProjection / sample.pdf;
 
     return result;
-
-    //        // Transform the normal from object to world space.
-    //        worldSpaceSurfaceNormal = normalize(transformDirection(objectSpaceSurfaceNormal, objectToWorldSpaceTransform));
-    //
-    //        // Choose a random direction to continue the path of the ray. This causes light to
-    //        // bounce between surfaces. An app might evaluate a more complicated equation to
-    //        // calculate the amount of light that reflects between intersection points.  However,
-    //        // all the math in this kernel cancels out because this app assumes a simple diffuse
-    //        // BRDF and samples the rays with a cosine distribution over the hemisphere (importance
-    //        // sampling). This requires that the kernel only multiply the colors together. This
-    //        // sampling strategy also reduces the amount of noise in the output image.
-    //        r = float2(halton(offset + uniforms.frameIndex, 2 + bounce * 5 + 3),
-    //                   halton(offset + uniforms.frameIndex, 2 + bounce * 5 + 4));
-    //
-    //        float3 worldSpaceSampleDirection = sampleCosineWeightedHemisphere(r);
-    //        worldSpaceSampleDirection = alignHemisphereWithNormal(worldSpaceSampleDirection, worldSpaceSurfaceNormal);
-    //
-    //        ray.origin = worldSpaceIntersectionPoint + worldSpaceSurfaceNormal * 1e-3f;
-    //        ray.direction = worldSpaceSampleDirection;
 }
 
 kernel void raytracingKernel(

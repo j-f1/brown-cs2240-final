@@ -33,11 +33,12 @@ inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLe
 
     Direction normal = unpack<Direction>(scene.normals, intersection.index());
     Material material = scene.materials[scene.materialIds[intersection.index()]];
-    float fresnel = abs(dot(inRay.direction, normal._unwrap()));
 
     if (material.emission) {
         result.brdf = Color::black();
-        result.illumination = fresnel * material.emission;
+        if (pathLength == 0 && scene.settings.directLightingOn) {
+            result.illumination = material.emission;
+        }
         return result;
     }
 
@@ -76,8 +77,10 @@ inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLe
             break;
     }
 
+    float fresnel = abs(dot(sample.direction, normal._unwrap()));
+
     result.ray.direction = sample.direction;
-    result.brdf *= fresnel * sample.pdf;
+    result.brdf *= fresnel / sample.pdf;
 
     return result;
 

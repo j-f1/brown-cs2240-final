@@ -61,13 +61,11 @@ typedef struct RenderSettings {
     float gammaCorrection;
     unsigned int imageWidth;
     unsigned int imageHeight;
+    unsigned int frameIndex;
 } RenderSettings;
 
 struct Uniforms {
     Camera camera;
-
-    unsigned int frameIndex;
-
     RenderSettings settings;
 };
 

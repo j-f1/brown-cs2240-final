@@ -4,13 +4,14 @@ import UniformTypeIdentifiers
 struct GUIView: View {
     @Binding var settings: RenderSettings
     @Binding var model: URL?
-    //TODO INITIALIZE THIS BETTER
-    @State private var stateSettings: RenderSettings = RenderSettings(diffuseOn: true, mirrorOn: true, refractionOn: true, glossyOn: true,subsurfaceScatteringOn: true, ssSigma_s: 1.0,ssSigma_a: simd_float3(0.01, 0.1, 1.0), ssEta: 1, ssG: 0, directLightingOn: true, directLightingSamples: 5, importanceSamplingOn: true, glassTransmittanceOn: true, russianRoulette: 0.9,samplesPerPixel: 16, toneMap: simd_float3(0.299, 0.587, 0.114), gammaCorrection: 0.4,imageWidth: 512, imageHeight: 512
-    );
+
+    @State private var stateSettings: RenderSettings
     @State private var selectingModel = false
-    
-    func submitSettings() {
-        settings = stateSettings;
+
+    init(settings: Binding<RenderSettings>, model: Binding<URL?>) {
+        self._settings = settings
+        self._model = model
+        self._stateSettings = .init(initialValue: settings.wrappedValue)
     }
     
     func exportImage() -> URL?{
@@ -105,8 +106,9 @@ struct GUIView: View {
                 }
                 Divider()
                 Section {
-                    Button(action: submitSettings) {
-                        Text("Rerender");
+                    Button("Rerender") {
+                        stateSettings.frameIndex += 1
+                        settings = stateSettings
                     }
                 }
                 Section {

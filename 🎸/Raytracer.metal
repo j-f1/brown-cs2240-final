@@ -113,9 +113,9 @@ kernel void raytracingKernel(
      constant Material                  *materials                 [[buffer(BufferIndexMaterials)]],
      primitive_acceleration_structure    accelerationStructure     [[buffer(BufferIndexIntersector)]]
 ) {
-    RandomGenerator rng{randomTex, tid, uniforms.frameIndex};
-    SceneState state{positions, vertices, normals, materials, materialIds, uniforms.settings, Intersector{accelerationStructure}, rng};
     constant RenderSettings &settings = uniforms.settings;
+    RandomGenerator rng{randomTex, tid, settings.frameIndex};
+    SceneState state{positions, vertices, normals, materials, materialIds, uniforms.settings, Intersector{accelerationStructure}, rng};
 
     // We align the thread count to the threadgroup size, which means the thread count
     // may be different than the bounds of the texture. Test to make sure this thread

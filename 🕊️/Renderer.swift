@@ -1,5 +1,3 @@
-// “Our” platform independent renderer class
-
 import Metal
 import MetalKit
 import simd
@@ -7,20 +5,33 @@ import simd
 // The 256 byte aligned size of our uniform structure
 let alignedUniformsSize = (MemoryLayout<Uniforms>.size + 0xFF) & -0x100
 
-class Renderer: NSObject, MTKViewDelegate {
-    var settings: RenderSettings
+@MainActor
+class Renderer: ObservableObject {
+    var settings: RenderSettings {
+        didSet {
+            guard let outputTexture = Renderer.buildOutputTexture(size: settings.size, on: device) else {
+                print("Unable to create new output texture")
+                return
+            }
+            self.outputTexture = outputTexture
+        }
+    }
 
-    private let device: MTLDevice
-    private let commandQueue: MTLCommandQueue
-    private let randomTexture: MTLTexture
-    private var uniformBuffer: MTLBuffer
-    private var pipelineState: MTLComputePipelineState
+    nonisolated private let device: MTLDevice
+    nonisolated private let commandQueue: MTLCommandQueue
+    nonisolated private let randomTexture: MTLTexture
+    nonisolated private let uniformBuffer: MTLBuffer
+    nonisolated private let pipelineState: MTLComputePipelineState
+    private var outputTexture: MTLTexture
     private var scene: Scene
 
+    @Published var rendering = false
+    @Published var content: MTLTexture?
+
     @MainActor
-    init?(metalKitView: MTKView, modelURL: URL?, settings: RenderSettings) async {
+    init?(device: MTLDevice, modelURL: URL, settings: RenderSettings) async {
         let start = Date.now
-        self.device = metalKitView.device!
+        self.device = device
         guard let queue = self.device.makeCommandQueue() else {
             print("Unable to allocate command queue")
             return nil
@@ -32,14 +43,6 @@ class Renderer: NSObject, MTKViewDelegate {
         
         self.uniformBuffer.label = "UniformBuffer"
 
-        await MainActor.run {
-            metalKitView.colorPixelFormat = .bgra8Unorm_srgb
-            #if os(macOS)
-            metalKitView.colorspace = CGColorSpace(name: CGColorSpace.displayP3)
-            #endif
-            metalKitView.sampleCount = 1
-        }
-
         do {
             pipelineState = try Renderer.buildRenderPipelineWithDevice(device: device)
         } catch {
@@ -47,26 +50,26 @@ class Renderer: NSObject, MTKViewDelegate {
             return nil
         }
 
-        guard let modelURL else {
-            print("No model URL provided")
-            return nil
-        }
         guard let mesh = await Scene(contentsOf: modelURL, for: device, commandQueue: commandQueue) else {
             print("Unable to load model at \(modelURL.absoluteString)")
             return nil
         }
         self.scene = mesh
 
-        guard let randomTexture = Renderer.buildRandomTexture(size: await metalKitView.drawableSize, on: device) else {
+        guard let randomTexture = Renderer.buildRandomTexture(size: settings.size, on: device) else {
             print("Unable to create random texture")
             return nil
         }
 
         self.randomTexture = randomTexture
 
-        self.settings = settings
+        guard let outputTexture = Renderer.buildOutputTexture(size: settings.size, on: device) else {
+            print("Unable to create random texture")
+            return nil
+        }
+        self.outputTexture = outputTexture
 
-        super.init()
+        self.settings = settings
 
         print("Loaded \(modelURL.lastPathComponent) in \((Date.now.timeIntervalSince(start) * 1000).formatted(.number.precision(.significantDigits(...3))))ms")
     }
@@ -95,6 +98,19 @@ class Renderer: NSObject, MTKViewDelegate {
         return randomTexture
     }
 
+    private class func buildOutputTexture(size: CGSize, on device: MTLDevice) -> MTLTexture? {
+        let textureDescriptor = MTLTextureDescriptor()
+        textureDescriptor.pixelFormat = .rgba32Float
+        textureDescriptor.textureType = .type2D
+        textureDescriptor.width = Int(size.width)
+        textureDescriptor.height = Int(size.height)
+
+        textureDescriptor.pixelFormat = .rgba32Float
+        textureDescriptor.usage = [.shaderRead, .shaderWrite]
+
+        return device.makeTexture(descriptor: textureDescriptor)
+    }
+
     private class func buildRenderPipelineWithDevice(device: MTLDevice) throws -> MTLComputePipelineState {
         /// Build a render state pipeline object
         let library = device.makeDefaultLibrary()
@@ -105,61 +121,68 @@ class Renderer: NSObject, MTKViewDelegate {
         return try device.makeComputePipelineState(descriptor: pipelineDescriptor, options: []).0
     }
 
-    func draw(in view: MTKView) {
-        /// Per frame updates hare
+    func render() {
+        guard !rendering else { return }
+        rendering = true
+        content = nil
 
-        if let commandBuffer = commandQueue.makeCommandBuffer() {
-            let uniforms = UnsafeMutableRawPointer(uniformBuffer.contents()).bindMemory(to: Uniforms.self, capacity: 1)
-            uniforms[0].camera = Camera(
-                position: .init(x: 0, y: 1, z: 3.6),
-                right: .init(x: 0.4, y: 0, z: 0),
-                up: .init(x: 0, y: 0.4, z: 0),
-                forward: .init(x: 0, y: 0, z: -1)
-            )
-
-            let width = Int(view.drawableSize.width)
-            let height = Int(view.drawableSize.height)
-            assert(width == settings.imageWidth)
-            assert(height == settings.imageHeight)
-            uniforms[0].frameIndex += 1
-            uniforms[0].settings = settings
-
-            if let computeEncoder = commandBuffer.makeComputeCommandEncoder(), let drawable = view.currentDrawable {
-                /// Final pass rendering code here
-                computeEncoder.label = "Primary Compute Encoder"
-                computeEncoder.pushDebugGroup("Setup")
-                computeEncoder.setComputePipelineState(pipelineState)
-                computeEncoder[.uniforms] = uniformBuffer
-                computeEncoder[.random] = randomTexture
-                computeEncoder[.dst] = drawable.texture
-                computeEncoder[.vertexPositions] = scene.vertexBuffer
-                computeEncoder[.faceVertices] = scene.faceVertexBuffer
-                computeEncoder[.faceNormals] = scene.normalBuffer
-                computeEncoder[.faceMaterials] = scene.materialIdBuffer
-                computeEncoder[.materials] = scene.materialBuffer
-                computeEncoder[.intersector] = scene.accelerationStructure
-                computeEncoder.popDebugGroup()
-
-                // Launch a rectangular grid of threads on the GPU to perform ray tracing, with one thread per
-                // pixel. The number of threads needs to be aligned to a multiple of the threadgroup size,
-                // because earlier, when it created the pipeline objects, it declared that the pipeline
-                // would always use a threadgroup size that's a multiple of the thread execution width
-                // (SIMD group size). An 8x8 threadgroup is a safe threadgroup size and small enough to be
-                // supported on most devices. A more advanced app would choose the threadgroup size dynamically.
-                let threadsPerThreadgroup = MTLSize(width: 8, height: 8, depth: 1)
-                let threadgroups = MTLSize(
-                    width: (width + threadsPerThreadgroup.width - 1) / threadsPerThreadgroup.width,
-                    height: (height + threadsPerThreadgroup.height - 1) / threadsPerThreadgroup.height,
-                    depth: 1
+        DispatchQueue.global(qos: .userInitiated).async { [self, outputTexture, settings, scene] in
+            if let commandBuffer = commandQueue.makeCommandBuffer() {
+                let uniforms = UnsafeMutableRawPointer(uniformBuffer.contents()).bindMemory(to: Uniforms.self, capacity: 1)
+                uniforms[0].camera = Camera(
+                    position: .init(x: 0, y: 1, z: 3.6),
+                    right: .init(x: 0.4, y: 0, z: 0),
+                    up: .init(x: 0, y: 0.4, z: 0),
+                    forward: .init(x: 0, y: 0, z: -1)
                 )
-                computeEncoder.dispatchThreadgroups(threadgroups, threadsPerThreadgroup: threadsPerThreadgroup)
 
-                computeEncoder.endEncoding()
-                commandBuffer.present(drawable)
+                let width = Int(settings.size.width)
+                let height = Int(settings.size.height)
+                assert(width == settings.imageWidth)
+                assert(height == settings.imageHeight)
+                uniforms[0].settings = settings
+
+                if let computeEncoder = commandBuffer.makeComputeCommandEncoder() {
+                    /// Final pass rendering code here
+                    computeEncoder.label = "Primary Compute Encoder"
+                    computeEncoder.pushDebugGroup("Setup")
+                    computeEncoder.setComputePipelineState(pipelineState)
+                    computeEncoder[.uniforms] = uniformBuffer
+                    computeEncoder[.random] = randomTexture
+                    computeEncoder[.dst] = outputTexture
+                    computeEncoder[.vertexPositions] = scene.vertexBuffer
+                    computeEncoder[.faceVertices] = scene.faceVertexBuffer
+                    computeEncoder[.faceNormals] = scene.normalBuffer
+                    computeEncoder[.faceMaterials] = scene.materialIdBuffer
+                    computeEncoder[.materials] = scene.materialBuffer
+                    computeEncoder[.intersector] = scene.accelerationStructure
+                    computeEncoder.popDebugGroup()
+
+                    // Launch a rectangular grid of threads on the GPU to perform ray tracing, with one thread per
+                    // pixel. The number of threads needs to be aligned to a multiple of the threadgroup size,
+                    // because earlier, when it created the pipeline objects, it declared that the pipeline
+                    // would always use a threadgroup size that's a multiple of the thread execution width
+                    // (SIMD group size). An 8x8 threadgroup is a safe threadgroup size and small enough to be
+                    // supported on most devices. A more advanced app would choose the threadgroup size dynamically.
+                    let threadsPerThreadgroup = MTLSize(width: 8, height: 8, depth: 1)
+                    let threadgroups = MTLSize(
+                        width: (width + threadsPerThreadgroup.width - 1) / threadsPerThreadgroup.width,
+                        height: (height + threadsPerThreadgroup.height - 1) / threadsPerThreadgroup.height,
+                        depth: 1
+                    )
+                    computeEncoder.dispatchThreadgroups(threadgroups, threadsPerThreadgroup: threadsPerThreadgroup)
+
+                    computeEncoder.endEncoding()
+                }
+
+                commandBuffer.commit()
+                commandBuffer.waitUntilCompleted()
+
+                DispatchQueue.main.async {
+                    self.content = outputTexture
+                    self.rendering = false
+                }
             }
-            
-            commandBuffer.commit()
-            commandBuffer.waitUntilCompleted()
         }
     }
 

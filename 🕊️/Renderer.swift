@@ -104,8 +104,6 @@ class Renderer: ObservableObject {
         textureDescriptor.textureType = .type2D
         textureDescriptor.width = Int(size.width)
         textureDescriptor.height = Int(size.height)
-
-        textureDescriptor.pixelFormat = .rgba32Float
         textureDescriptor.usage = [.shaderRead, .shaderWrite]
 
         return device.makeTexture(descriptor: textureDescriptor)

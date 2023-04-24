@@ -3,8 +3,8 @@ import SwiftUI
 struct RenderView: View {
     let settings: RenderSettings
     let model: URL?
+    @Binding var renderer: Renderer?
 
-    @State private var renderer: Renderer?
     @Environment(\.displayScale) private var scale
 
     private struct RenderResult: View {
@@ -12,7 +12,7 @@ struct RenderView: View {
 
         var body: some View {
             VStack {
-                if let content = renderer.content, let ciImage = CIImage(mtlTexture: content, options: [.toneMapHDRtoSDR: true]) {
+                if let content = renderer.content, let ciImage = CIImage(mtlTexture: content, options: [.colorSpace: CGColorSpace.sRGB]) {
                     #if canImport(AppKit)
                     let image = Image(nsImage: {
                         let imageRep = NSCIImageRep(ciImage: ciImage)
@@ -42,28 +42,12 @@ struct RenderView: View {
             }
         }
         .frame(width: settings.size.width / scale, height: settings.size.height / scale)
-        .task(id: model) {
-            guard let model else {
-                renderer = nil
-                return
-            }
-            renderer = await Renderer(
-                device: MTLCreateSystemDefaultDevice()!,
-                modelURL: model,
-                settings: settings
-            )
-            renderer?.render()
-        }
-        .onChange(of: settings) { newValue in
-            renderer?.settings = settings
-            renderer?.render()
-        }
 
     }
 }
 
 struct RenderView_Previews: PreviewProvider {
     static var previews: some View {
-        RenderView(settings: .init(), model: nil)
+        RenderView(settings: .init(), model: nil, renderer: .constant(nil))
     }
 }

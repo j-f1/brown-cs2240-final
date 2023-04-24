@@ -105,7 +105,7 @@ kernel void raytracingKernel(
      
      constant Uniforms &                 uniforms                  [[buffer(BufferIndexUniforms)]],
      texture2d<unsigned int>             randomTex                 [[texture(TextureIndexRandom)]],
-     texture2d<float, access::write>     dstTex                    [[texture(TextureIndexDst)]],
+     texture2d<uint, access::write>      dstTex                    [[texture(TextureIndexDst)]],
      constant float                     *positions                 [[buffer(BufferIndexVertexPositions)]],
      constant ushort                    *vertices                  [[buffer(BufferIndexFaceVertices)]],
      constant float                     *normals                   [[buffer(BufferIndexFaceNormals)]],
@@ -166,5 +166,5 @@ kernel void raytracingKernel(
 
     Color color = totalIllumination / pow(settings.russianRoulette, depth);
 
-    dstTex.write(float4(color.aces_approx()._unwrap(), 1), tid);
+    dstTex.write(uint4(uint3(color.aces_approx()._unwrap() * 255), 1), tid);
 }

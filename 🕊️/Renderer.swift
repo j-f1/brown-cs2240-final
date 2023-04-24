@@ -7,22 +7,13 @@ let alignedUniformsSize = (MemoryLayout<Uniforms>.size + 0xFF) & -0x100
 
 @MainActor
 class Renderer: ObservableObject {
-    var settings: RenderSettings {
-        didSet {
-            guard let outputTexture = Renderer.buildOutputTexture(size: settings.size, on: device) else {
-                print("Unable to create new output texture")
-                return
-            }
-            self.outputTexture = outputTexture
-        }
-    }
+    var settings: RenderSettings
 
     nonisolated private let device: MTLDevice
     nonisolated private let commandQueue: MTLCommandQueue
     nonisolated private let randomTexture: MTLTexture
     nonisolated private let uniformBuffer: MTLBuffer
     nonisolated private let pipelineState: MTLComputePipelineState
-    private var outputTexture: MTLTexture
     private var scene: Scene
 
     @Published var rendering = false
@@ -63,12 +54,6 @@ class Renderer: ObservableObject {
 
         self.randomTexture = randomTexture
 
-        guard let outputTexture = Renderer.buildOutputTexture(size: settings.size, on: device) else {
-            print("Unable to create random texture")
-            return nil
-        }
-        self.outputTexture = outputTexture
-
         self.settings = settings
 
         print("Loaded \(modelURL.lastPathComponent) in \((Date.now.timeIntervalSince(start) * 1000).formatted(.number.precision(.significantDigits(...3))))ms")
@@ -100,7 +85,7 @@ class Renderer: ObservableObject {
 
     private class func buildOutputTexture(size: CGSize, on device: MTLDevice) -> MTLTexture? {
         let textureDescriptor = MTLTextureDescriptor()
-        textureDescriptor.pixelFormat = .rgba32Float
+        textureDescriptor.pixelFormat = .rgba8Uint
         textureDescriptor.textureType = .type2D
         textureDescriptor.width = Int(size.width)
         textureDescriptor.height = Int(size.height)
@@ -120,11 +105,16 @@ class Renderer: ObservableObject {
     }
 
     func render() {
+        guard let outputTexture = Renderer.buildOutputTexture(size: settings.size, on: device) else {
+            print("Unable to create output texture")
+            return
+        }
+
         guard !rendering else { return }
         rendering = true
         content = nil
 
-        DispatchQueue.global(qos: .userInitiated).async { [self, outputTexture, settings, scene] in
+        DispatchQueue.global(qos: .userInitiated).async { [self, settings, scene] in
             if let commandBuffer = commandQueue.makeCommandBuffer() {
                 let uniforms = UnsafeMutableRawPointer(uniformBuffer.contents()).bindMemory(to: Uniforms.self, capacity: 1)
                 uniforms[0].camera = Camera(

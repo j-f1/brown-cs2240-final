@@ -26,7 +26,7 @@ struct ContentView: View {
         #else
         HStack {
             GUIView(settings: $settings, model: $model)
-            RenderView(settings: settings, model: model)
+            RenderView(settings: settings, model: model, renderer: $renderer)
         }
         .padding()
         #endif

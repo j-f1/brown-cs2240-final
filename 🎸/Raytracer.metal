@@ -166,5 +166,5 @@ kernel void raytracingKernel(
 
     Color color = totalIllumination / pow(settings.russianRoulette, depth);
 
-    dstTex.write(float4(color._unwrap(), 1), tid);
+    dstTex.write(float4(color.aces_approx()._unwrap(), 1), tid);
 }

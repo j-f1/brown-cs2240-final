@@ -82,7 +82,8 @@ struct GUIView: View {
                 #if os(macOS)
                 Divider()
                 #endif
-                Section(header: sectionHeader("Image Settings"), footer: Text("Click re-render to implement all settings")) {
+
+                Section(header: sectionHeader("Image Settings")) {
                     
                     TextField(value: $stateSettings.toneMap[0], format: .number, prompt: Text("Tone Mapping R")) {
                         Text("Tone Mapping R")
@@ -107,16 +108,6 @@ struct GUIView: View {
                 #if os(macOS)
                 .textFieldStyle(.roundedBorder)
                 #endif
-
-                #if os(macOS)
-                Divider()
-                #endif
-                Section {
-                    Button("Rerender") {
-                        stateSettings.frameIndex += 1
-                        settings = stateSettings
-                    }
-                }
             }
         }
         #if os(macOS)

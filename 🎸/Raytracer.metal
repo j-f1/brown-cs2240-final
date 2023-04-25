@@ -3,7 +3,6 @@
 #import "DirectLighting.h"
 #import "RandomGenerator.h"
 #import "Sampler.h"
-#include "math.h"
 
 struct RayTraceResult {
     // next ray to follow
@@ -17,51 +16,77 @@ struct RayTraceResult {
 //TODO eventually turn the outDir type to Ray because we will be in BSSDF land
 inline Color getBRDF(const thread ray &inRay, const thread Direction &outDir, const thread Material &mat) {
     //TODO COCO
-    return 0.f;
+//    switch (mat.illum) {
+//        case Illum::refract_fresnel:
+//        case Illum::glass:
+//            // [glass BRDF]
+//            break;
+//        case Illum::diffuse_specular_fresnel:
+//        case Illum::diffuse_specular:
+//            if (mat.specular) {
+//                if (mat.shininess > 100) {
+//                    // [mirror BRDF];
+//                } else {
+//                    // [specular BRDF];
+//                }
+//            } else {
+//                // [diffuse BRDF];
+//                return mat.diffuse/M_PI_F;
+//            }
+//            break;
+//        default:
+//
+//            break;
+//    }
+    return mat.diffuse/M_PI_F; //TODO REMOVE
+//    return 0.f;
 }
 
 inline Sample getNextDirection(const thread Location &intersectionPoint, const thread Material &mat, const thread ray &inRay, thread SceneState &scene) {
     
     float e1 = scene.rng(); //random number
     float e2 = scene.rng(); //random number
-    float phi = 2.0 * M_PI * e1; //random angle on the hemisphere
+    float phi = 2.0 * M_PI_F * e1; //random angle on the hemisphere
     float theta = acos(1.f-e2); //random angle on the hemisphere
     
     //TODO COCO
     Sample result = {.direction = Direction(0,0,0), .pdf = 1.f,};
-    if (scene.settings.importanceSamplingOn) {
-        switch (mat.illum) {
-            case Illum::refract_fresnel:
-            case Illum::glass:
-                // [glass BRDF]
-                break;
-            case Illum::diffuse_specular_fresnel:
-            case Illum::diffuse_specular:
-                if (mat.specular) {
-                    if (mat.shininess > 100) {
-                        // [mirror BRDF];
-                    } else {
-                        // [specular BRDF];
-                    }
-                } else {
-                    // [diffuse BRDF];
-                }
-                break;
-            default:
-                result.direction = Direction(0, 0, 0);
-                result.pdf = 1;
-                break;
-        }
-    } else {
-        float3 objSpaceRand = float3(1.*sin(theta)*cos(phi), 1.*cos(theta), 1.*sin(theta)*sin(phi));
-        
-        var translation = simd_quatf(from: objSpaceRand, to: float3(0,1,0));
-//        Quaternion translation = Quaternionf::FromTwoVectors(Vector3f(0,1,0), i.object->getNormal(i));
-        float3 worldSpaceRand = translation * objSpaceRand;
-        float3 normalized = worldSpaceRand.normalized();
-        result.direction = Direction{normalized};
-        result.pdf = 1.0/(2.0*M_PI);;
-    }
+//    if (scene.settings.importanceSamplingOn) {
+//        switch (mat.illum) {
+//            case Illum::refract_fresnel:
+//            case Illum::glass:
+//                // [glass BRDF]
+//                break;
+//            case Illum::diffuse_specular_fresnel:
+//            case Illum::diffuse_specular:
+//                if (mat.specular) {
+//                    if (mat.shininess > 100) {
+//                        // [mirror BRDF];
+//                    } else {
+//                        // [specular BRDF];
+//                    }
+//                } else {
+//                    // [diffuse BRDF];
+//                }
+//                break;
+//            default:
+//                result.direction = Direction(0, 0, 0);
+//                result.pdf = 1;
+//                break;
+//        }
+//    } else {
+//        float3 objSpaceRand = float3(1.*sin(theta)*cos(phi), 1.*cos(theta), 1.*sin(theta)*sin(phi));
+//        float3 worldSpaceRand = alignHemisphereWithNormal(objSpaceRand, float3(0,1,0));
+//        float3 n = normalize(worldSpaceRand);
+//        result.direction = Direction(n.x, n.y, n.z);
+//        result.pdf = 1.0/(2.0*M_PI_F);
+//    }
+    
+    float3 objSpaceRand = float3(1.*sin(theta)*cos(phi), 1.*cos(theta), 1.*sin(theta)*sin(phi));
+    float3 worldSpaceRand = alignHemisphereWithNormal(objSpaceRand, float3(0,1,0));
+    float3 n = normalize(worldSpaceRand);
+    result.direction = Direction(n.x, n.y, n.z);
+    result.pdf = 1.0/(2.0*M_PI_F);
     
     return result;
     

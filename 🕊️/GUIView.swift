@@ -6,7 +6,7 @@ struct GUIView: View {
     @Binding var settings: RenderSettings
     @Binding var model: URL?
     //TODO INITIALIZE THIS BETTER
-    @State private var stateSettings: RenderSettings = RenderSettings.defaultSettings;
+    @State private var stateSettings: RenderSettings = RenderSettings.default;
     @State private var selectingModel = false
 
     init(settings: Binding<RenderSettings>, model: Binding<URL?>) {

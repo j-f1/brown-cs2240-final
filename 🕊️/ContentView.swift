@@ -2,7 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
     // TODO: THIS IS A BAD PLACE FOR THESE INITIAL VALUES SO FIGURE SOMETHING OUT (PROBABLY DEFINE A MACRO)
-    @State var settings: RenderSettings = RenderSettings.defaultSettings
+    @State var settings: RenderSettings = RenderSettings.default
     @State var model = Bundle.main.url(forResource: "CornellBox-Original", withExtension: "obj", subdirectory: "models/CornellBox")
 
     // needs to be kept here since iOS destroys tabs when navigating away from them

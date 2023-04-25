@@ -81,7 +81,7 @@ inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLe
         return result;
     }
 
-    SampleDirectionResult nextDirection = getNextDirection(intersectionPoint, material, inRay);
+    Sample nextDirection = getNextDirection(intersection.location(), material, inRay);
 
     if (scene.settings.directLightingOn) {
         result.illumination = directLighting(inRay, normal, material, scene);

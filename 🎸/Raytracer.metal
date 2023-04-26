@@ -38,11 +38,12 @@ inline Color getBRDF(const thread ray &inRay, const thread Direction &outDir, co
 //
 //            break;
 //    }
-    return mat.diffuse/M_PI_F; //TODO REMOVE
+//    return mat.diffuse/M_PI_F; //TODO REMOVE
+    return Color::white();
 //    return 0.f;
 }
 
-inline Sample getNextDirection(const thread Location &intersectionPoint, const thread Material &mat, const thread ray &inRay, thread SceneState &scene) {
+inline Sample getNextDirection(const thread Location &intersectionPoint, const thread Direction normal, const thread Material &mat, const thread ray &inRay, thread SceneState &scene) {
     
     float e1 = scene.rng(); //random number
     float e2 = scene.rng(); //random number
@@ -81,12 +82,10 @@ inline Sample getNextDirection(const thread Location &intersectionPoint, const t
 //        result.direction = Direction(n.x, n.y, n.z);
 //        result.pdf = 1.0/(2.0*M_PI_F);
 //    }
-    
-    float3 objSpaceRand = float3(1.*sin(theta)*cos(phi), 1.*cos(theta), 1.*sin(theta)*sin(phi));
-    float3 worldSpaceRand = alignHemisphereWithNormal(objSpaceRand, float3(0,1,0));
-    float3 n = normalize(worldSpaceRand);
-    result.direction = Direction(n.x, n.y, n.z);
-    result.pdf = 1.0/(2.0*M_PI_F);
+    float3 randomHemi = sampleCosineWeightedHemisphere(float2(e1, e2)); //pick a random direction on the hemisphere
+    float3 worldSpaceRand = alignHemisphereWithNormal(randomHemi, normal._unwrap()); //align the random direction with the normal
+    result.direction = Direction(worldSpaceRand.x, worldSpaceRand.y, worldSpaceRand.z);
+    result.pdf = 1.f/(2.f*M_PI_F);
     
     return result;
     
@@ -120,7 +119,7 @@ inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLe
         return result;
     }
     
-    Sample sample = getNextDirection(intersection.location(), material, inRay, scene);
+    Sample sample = getNextDirection(intersection.location(), normal, material, inRay, scene);
     
     if (scene.settings.directLightingOn) {
         result.illumination = directLighting(inRay, normal, material, scene);
@@ -196,7 +195,7 @@ kernel void raytracingKernel(
     Color totalBRDF = Color::white();
     Color totalIllumination = Color::black();
     do {
-        result = traceRay(ray, 0, state);
+        result = traceRay(ray, depth, state); //depth -> 0
         
         totalIllumination += totalBRDF * result.illumination;
         totalBRDF *= result.brdf;

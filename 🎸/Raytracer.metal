@@ -186,7 +186,10 @@ kernel void raytracingKernel(
     ray.direction = normalize(uv.x * camera.right +
                               uv.y * camera.up +
                               camera.forward);
-    
+
+    // avoid self-intersection
+    ray.min_distance = 0.01;
+
     // Don't limit intersection distance.
     ray.max_distance = INFINITY;
     

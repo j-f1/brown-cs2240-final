@@ -79,7 +79,7 @@ simd::float3 to_simd(const tinyobj::real_t val[3]) {
 
             _materialIds.push_back(shape.mesh.material_ids[f]);
             if (materials[shape.mesh.material_ids[f]].emission[0] > 0.01 || materials[shape.mesh.material_ids[f]].emission[1] > 0.01 || materials[shape.mesh.material_ids[f]].emission[2] > 0.01) {
-                _emissiveFaces.push_back(f);
+                _emissiveFaces.push_back(_materialIds.size() - 1);
             }
         }
     }
@@ -97,7 +97,7 @@ simd::float3 to_simd(const tinyobj::real_t val[3]) {
         [(NSMutableArray *)_materials addObject:material];
     }
 
-    NSLog(@"Loaded %lu faces and %lu vertices from %@", _faceVertices.size() / 3, self.vertexCount, url);
+    NSLog(@"Loaded %lu faces, %lu vertices, and %lu materials from %@", _faceVertices.size() / 3, self.vertexCount, self.materials.count, url);
     return self;
 }
 

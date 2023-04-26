@@ -22,10 +22,26 @@ inline bool floatEpsEqual(float a, float b) {
         inline T(float field0, float field1, float field2)  \
             : T(float3(field0, field1, field2)) {}          \
         inline T() : v() {}                                 \
+        inline static T _wrap(float3 v) { return {v}; }     \
+        inline void normalize() {                           \
+            v = metal::normalize(float3());                 \
+        }                                                   \
+        inline void operator += (const thread T &o) {       \
+            v += o.v;                                       \
+        }                                                   \
+        inline void operator *= (float o) {                 \
+            v *= o;                                         \
+        }                                                   \
+        inline void operator /= (float o) {                 \
+            v /= o;                                         \
+        }                                                   \
+        VECTOR_WRAPPER_METHODS(const, T, field0, field1, field2) \
+        VECTOR_WRAPPER_METHODS(const constant, T, field0, field1, field2)
+
+//#define VECTOR_WRAPPER_METHODS(const, T, field0, field1, field2) \
         inline float field0() const { return v.x; }         \
         inline float field1() const { return v.y; }         \
         inline float field2() const { return v.z; }         \
-        inline static T _wrap(float3 v) { return {v}; }     \
         inline T componentWiseProduct(const thread T &other) const { return {v * other.v}; }  \
         inline T cross(const thread T &other) const {       \
             return {metal::cross(v, other.v)};              \
@@ -37,32 +53,20 @@ inline bool floatEpsEqual(float a, float b) {
             return length(v);                               \
         }                                                   \
         inline float3 _unwrap() const { return v; }         \
-        inline void normalize() {                           \
-            v = metal::normalize(float3());                 \
-        }                                                   \
         inline T operator + (float o) const {               \
             return {v + float3(o, o, o)};                   \
         }                                                   \
         inline T operator + (const thread T &o) const {     \
             return {v + o.v};                               \
         }                                                   \
-        inline void operator += (const thread T &o) {       \
-            v += o.v;                                       \
-        }                                                   \
         inline T operator * (float o) const {               \
             return {v * o};                                 \
-        }                                                   \
-        inline void operator *= (float o) {                 \
-            v *= o;                                         \
         }                                                   \
         inline T operator / (const thread T &o) const {     \
             return {v / o.v};                               \
         }                                                   \
         inline T operator / (float o) const {               \
             return {v / o};                                 \
-        }                                                   \
-        inline void operator /= (float o) {                 \
-            v /= o;                                         \
         }                                                   \
         inline T operator - () const {                      \
             return {-v};                                    \
@@ -156,14 +160,14 @@ inline bool floatEpsEqual(float a, float b) {
 // GENERATED CODE DO NOT MODIFY
 
 struct Color {
+protected: float3 v; public: inline Color(float r, float g, float b) : Color(float3(r, g, b)) {} inline Color() : v() {} inline static Color _wrap(float3 v) { return {v}; } inline void normalize() { v = metal::normalize(float3()); } inline void operator += (const thread Color &o) { v += o.v; } inline void operator *= (float o) { v *= o; } inline void operator /= (float o) { v /= o; } inline float r() const { return v.x; } inline float g() const { return v.y; } inline float b() const { return v.z; } inline Color componentWiseProduct(const thread Color &other) const { return {v * other.v}; } inline Color cross(const thread Color &other) const { return {metal::cross(v, other.v)}; } inline float dot(const thread Color &other) const { return metal::dot(v, other.v); } inline float magnitude() const { return length(v); } inline float3 _unwrap() const { return v; } inline Color operator + (float o) const { return {v + float3(o, o, o)}; } inline Color operator + (const thread Color &o) const { return {v + o.v}; } inline Color operator * (float o) const { return {v * o}; } inline Color operator / (const thread Color &o) const { return {v / o.v}; } inline Color operator / (float o) const { return {v / o}; } inline Color operator - () const { return {-v}; } inline operator bool() const { return magnitude() > 0.01; } inline bool epsEqual(const thread Color &other) const { return floatEpsEqual(v.x, other.v.x) && floatEpsEqual(v.y, other.v.y) && floatEpsEqual(v.z, other.v.z); } inline float r() const constant { return v.x; } inline float g() const constant { return v.y; } inline float b() const constant { return v.z; } inline Color componentWiseProduct(const constant thread Color &other) const constant { return {v * other.v}; } inline Color cross(const constant thread Color &other) const constant { return {metal::cross(v, other.v)}; } inline float dot(const constant thread Color &other) const constant { return metal::dot(v, other.v); } inline float magnitude() const constant { return length(v); } inline float3 _unwrap() const constant { return v; } inline Color operator + (float o) const constant { return {v + float3(o, o, o)}; } inline Color operator + (const constant thread Color &o) const constant { return {v + o.v}; } inline Color operator * (float o) const constant { return {v * o}; } inline Color operator / (const constant thread Color &o) const constant { return {v / o.v}; } inline Color operator / (float o) const constant { return {v / o}; } inline Color operator - () const constant { return {-v}; } inline operator bool() const constant { return magnitude() > 0.01; } inline bool epsEqual(const constant thread Color &other) const constant { return floatEpsEqual(v.x, other.v.x) && floatEpsEqual(v.y, other.v.y) && floatEpsEqual(v.z, other.v.z); }
+public:
     inline Color(float3 color) : v(color.x, color.y, color.z) {
         if (v.x < 0 || v.y < 0 || v.z < 0) {
             v = abs(v);
         }
     }
 
-protected: float3 v; public: inline Color(float r, float g, float b) : Color(float3(r, g, b)) {} inline Color() : v() {} inline float r() const { return v.x; } inline float g() const { return v.y; } inline float b() const { return v.z; } inline static Color _wrap(float3 v) { return {v}; } inline Color componentWiseProduct(const thread Color &other) const { return {v * other.v}; } inline Color cross(const thread Color &other) const { return {metal::cross(v, other.v)}; } inline float dot(const thread Color &other) const { return metal::dot(v, other.v); } inline float magnitude() const { return length(v); } inline float3 _unwrap() const { return v; } inline void normalize() { v = metal::normalize(float3()); } inline Color operator + (float o) const { return {v + float3(o, o, o)}; } inline Color operator + (const thread Color &o) const { return {v + o.v}; } inline void operator += (const thread Color &o) { v += o.v; } inline Color operator * (float o) const { return {v * o}; } inline void operator *= (float o) { v *= o; } inline Color operator / (const thread Color &o) const { return {v / o.v}; } inline Color operator / (float o) const { return {v / o}; } inline void operator /= (float o) { v /= o; } inline Color operator - () const { return {-v}; } inline operator bool() const { return magnitude() > 0.01; } inline bool epsEqual(const thread Color &other) const { return floatEpsEqual(v.x, other.v.x) && floatEpsEqual(v.y, other.v.y) && floatEpsEqual(v.z, other.v.z); }
-public:
     static inline const Color black() { return {0, 0, 0}; }
     static inline const Color white() { return {1, 1, 1}; }
     static inline const Color pink() { return {1, 0, 1}; }
@@ -196,17 +200,12 @@ public:
     inline void operator *= (Color other) {
         v *= other.v;
     }
-
-    inline float3 _unwrap() const constant {
-        return v;
-    }
 };
-static_assert(sizeof(Color) == sizeof(float3), "???");
 
 // GENERATED CODE DO NOT MODIFY
 class Location {
     inline Location(float3 loc) : v(loc.x, loc.y, loc.z) {}
-protected: float3 v; public: inline Location(float x, float y, float z) : Location(float3(x, y, z)) {} inline Location() : v() {} inline float x() const { return v.x; } inline float y() const { return v.y; } inline float z() const { return v.z; } inline static Location _wrap(float3 v) { return {v}; } inline Location componentWiseProduct(const thread Location &other) const { return {v * other.v}; } inline Location cross(const thread Location &other) const { return {metal::cross(v, other.v)}; } inline float dot(const thread Location &other) const { return metal::dot(v, other.v); } inline float magnitude() const { return length(v); } inline float3 _unwrap() const { return v; } inline void normalize() { v = metal::normalize(float3()); } inline Location operator + (float o) const { return {v + float3(o, o, o)}; } inline Location operator + (const thread Location &o) const { return {v + o.v}; } inline void operator += (const thread Location &o) { v += o.v; } inline Location operator * (float o) const { return {v * o}; } inline void operator *= (float o) { v *= o; } inline Location operator / (const thread Location &o) const { return {v / o.v}; } inline Location operator / (float o) const { return {v / o}; } inline void operator /= (float o) { v /= o; } inline Location operator - () const { return {-v}; } inline operator bool() const { return magnitude() > 0.01; } inline bool epsEqual(const thread Location &other) const { return floatEpsEqual(v.x, other.v.x) && floatEpsEqual(v.y, other.v.y) && floatEpsEqual(v.z, other.v.z); }
+protected: float3 v; public: inline Location(float x, float y, float z) : Location(float3(x, y, z)) {} inline Location() : v() {} inline static Location _wrap(float3 v) { return {v}; } inline void normalize() { v = metal::normalize(float3()); } inline void operator += (const thread Location &o) { v += o.v; } inline void operator *= (float o) { v *= o; } inline void operator /= (float o) { v /= o; } inline float x() const { return v.x; } inline float y() const { return v.y; } inline float z() const { return v.z; } inline Location componentWiseProduct(const thread Location &other) const { return {v * other.v}; } inline Location cross(const thread Location &other) const { return {metal::cross(v, other.v)}; } inline float dot(const thread Location &other) const { return metal::dot(v, other.v); } inline float magnitude() const { return length(v); } inline float3 _unwrap() const { return v; } inline Location operator + (float o) const { return {v + float3(o, o, o)}; } inline Location operator + (const thread Location &o) const { return {v + o.v}; } inline Location operator * (float o) const { return {v * o}; } inline Location operator / (const thread Location &o) const { return {v / o.v}; } inline Location operator / (float o) const { return {v / o}; } inline Location operator - () const { return {-v}; } inline operator bool() const { return magnitude() > 0.01; } inline bool epsEqual(const thread Location &other) const { return floatEpsEqual(v.x, other.v.x) && floatEpsEqual(v.y, other.v.y) && floatEpsEqual(v.z, other.v.z); } inline float x() const constant { return v.x; } inline float y() const constant { return v.y; } inline float z() const constant { return v.z; } inline Location componentWiseProduct(const constant thread Location &other) const constant { return {v * other.v}; } inline Location cross(const constant thread Location &other) const constant { return {metal::cross(v, other.v)}; } inline float dot(const constant thread Location &other) const constant { return metal::dot(v, other.v); } inline float magnitude() const constant { return length(v); } inline float3 _unwrap() const constant { return v; } inline Location operator + (float o) const constant { return {v + float3(o, o, o)}; } inline Location operator + (const constant thread Location &o) const constant { return {v + o.v}; } inline Location operator * (float o) const constant { return {v * o}; } inline Location operator / (const constant thread Location &o) const constant { return {v / o.v}; } inline Location operator / (float o) const constant { return {v / o}; } inline Location operator - () const constant { return {-v}; } inline operator bool() const constant { return magnitude() > 0.01; } inline bool epsEqual(const constant thread Location &other) const constant { return floatEpsEqual(v.x, other.v.x) && floatEpsEqual(v.y, other.v.y) && floatEpsEqual(v.z, other.v.z); }
 public:
     float3 operator + (Location other) const {
         return v + other.v;
@@ -222,7 +221,7 @@ public:
 // GENERATED CODE DO NOT MODIFY
 class Direction {
     inline Direction(float3 loc) : v(loc.x, loc.y, loc.z) {}
-protected: float3 v; public: inline Direction(float x, float y, float z) : Direction(float3(x, y, z)) {} inline Direction() : v() {} inline float x() const { return v.x; } inline float y() const { return v.y; } inline float z() const { return v.z; } inline static Direction _wrap(float3 v) { return {v}; } inline Direction componentWiseProduct(const thread Direction &other) const { return {v * other.v}; } inline Direction cross(const thread Direction &other) const { return {metal::cross(v, other.v)}; } inline float dot(const thread Direction &other) const { return metal::dot(v, other.v); } inline float magnitude() const { return length(v); } inline float3 _unwrap() const { return v; } inline void normalize() { v = metal::normalize(float3()); } inline Direction operator + (float o) const { return {v + float3(o, o, o)}; } inline Direction operator + (const thread Direction &o) const { return {v + o.v}; } inline void operator += (const thread Direction &o) { v += o.v; } inline Direction operator * (float o) const { return {v * o}; } inline void operator *= (float o) { v *= o; } inline Direction operator / (const thread Direction &o) const { return {v / o.v}; } inline Direction operator / (float o) const { return {v / o}; } inline void operator /= (float o) { v /= o; } inline Direction operator - () const { return {-v}; } inline operator bool() const { return magnitude() > 0.01; } inline bool epsEqual(const thread Direction &other) const { return floatEpsEqual(v.x, other.v.x) && floatEpsEqual(v.y, other.v.y) && floatEpsEqual(v.z, other.v.z); }
+protected: float3 v; public: inline Direction(float x, float y, float z) : Direction(float3(x, y, z)) {} inline Direction() : v() {} inline static Direction _wrap(float3 v) { return {v}; } inline void normalize() { v = metal::normalize(float3()); } inline void operator += (const thread Direction &o) { v += o.v; } inline void operator *= (float o) { v *= o; } inline void operator /= (float o) { v /= o; } inline float x() const { return v.x; } inline float y() const { return v.y; } inline float z() const { return v.z; } inline Direction componentWiseProduct(const thread Direction &other) const { return {v * other.v}; } inline Direction cross(const thread Direction &other) const { return {metal::cross(v, other.v)}; } inline float dot(const thread Direction &other) const { return metal::dot(v, other.v); } inline float magnitude() const { return length(v); } inline float3 _unwrap() const { return v; } inline Direction operator + (float o) const { return {v + float3(o, o, o)}; } inline Direction operator + (const thread Direction &o) const { return {v + o.v}; } inline Direction operator * (float o) const { return {v * o}; } inline Direction operator / (const thread Direction &o) const { return {v / o.v}; } inline Direction operator / (float o) const { return {v / o}; } inline Direction operator - () const { return {-v}; } inline operator bool() const { return magnitude() > 0.01; } inline bool epsEqual(const thread Direction &other) const { return floatEpsEqual(v.x, other.v.x) && floatEpsEqual(v.y, other.v.y) && floatEpsEqual(v.z, other.v.z); } inline float x() const constant { return v.x; } inline float y() const constant { return v.y; } inline float z() const constant { return v.z; } inline Direction componentWiseProduct(const constant thread Direction &other) const constant { return {v * other.v}; } inline Direction cross(const constant thread Direction &other) const constant { return {metal::cross(v, other.v)}; } inline float dot(const constant thread Direction &other) const constant { return metal::dot(v, other.v); } inline float magnitude() const constant { return length(v); } inline float3 _unwrap() const constant { return v; } inline Direction operator + (float o) const constant { return {v + float3(o, o, o)}; } inline Direction operator + (const constant thread Direction &o) const constant { return {v + o.v}; } inline Direction operator * (float o) const constant { return {v * o}; } inline Direction operator / (const constant thread Direction &o) const constant { return {v / o.v}; } inline Direction operator / (float o) const constant { return {v / o}; } inline Direction operator - () const constant { return {-v}; } inline operator bool() const constant { return magnitude() > 0.01; } inline bool epsEqual(const constant thread Direction &other) const constant { return floatEpsEqual(v.x, other.v.x) && floatEpsEqual(v.y, other.v.y) && floatEpsEqual(v.z, other.v.z); }
 public:
     Direction(Location from, Location to) : Direction(to._unwrap() - from._unwrap()) {
         this->normalize();

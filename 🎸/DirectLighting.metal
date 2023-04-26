@@ -20,16 +20,19 @@ struct tri {
     }
 };
 
-Color directLighting(const thread ray &inRay, Direction normal, const thread Material &material, thread SceneState &scene) {
+Color directLighting(const thread ray &inRay, Location location, Direction normal, const thread RawMaterial &material, thread SceneState &scene) {
     Color result = Color::black();
     for (int i = 0; i < scene.emissivesCount; i++) {
         tri t{scene.emissives[i], scene};
 
         for (int j = 0; j < scene.settings.directLightingSamples; j++) {
             const Location target = t.sample(scene.rng);
-            Direction dir = Direction(inRay.origin, target);
+            float3 diff = target - location;
+            diff = normalize(diff);
+            Direction dir = Direction::_wrap(diff);
             if (dir.dot(normal) < 0) continue;
             ray outRay = inRay;
+            outRay.origin = location._unwrap();
             outRay.direction = dir._unwrap();
             auto hit = scene.intersector(outRay);
             if (!hit) continue;

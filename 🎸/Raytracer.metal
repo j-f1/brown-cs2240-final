@@ -122,7 +122,7 @@ inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLe
     Sample sample = getNextDirection(intersection.location(), normal, material, inRay, scene);
     
     if (scene.settings.directLightingOn) {
-        result.illumination = directLighting(inRay, normal, material, scene);
+        result.illumination = directLighting(inRay, intersection.location(), normal, material, scene);
     } else {
         result.illumination = Color::black();
     }

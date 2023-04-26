@@ -13,7 +13,8 @@ class Renderer: ObservableObject {
     nonisolated private let commandQueue: MTLCommandQueue
     nonisolated private let randomTexture: MTLTexture
     nonisolated private let uniformBuffer: MTLBuffer
-    nonisolated private let pipelineState: MTLComputePipelineState
+    nonisolated private let renderPipelineState: MTLComputePipelineState
+    nonisolated private let flattenPipelineState: MTLComputePipelineState
     private var scene: Scene
 
     @Published var rendering = false
@@ -49,7 +50,14 @@ class Renderer: ObservableObject {
 //        }
 
         do {
-            pipelineState = try Renderer.buildRenderPipelineWithDevice(device: device)
+            renderPipelineState = try Renderer.buildRenderPipeline(device: device)
+        } catch {
+            print("Unable to compile render pipeline state.  Error info: \(error)")
+            return nil
+        }
+
+        do {
+            flattenPipelineState = try Renderer.buildFlattenPipeline(device: device)
         } catch {
             print("Unable to compile render pipeline state.  Error info: \(error)")
             return nil
@@ -97,29 +105,38 @@ class Renderer: ObservableObject {
         return randomTexture
     }
 
-    private class func buildOutputTexture(size: CGSize, on device: MTLDevice) -> MTLTexture? {
+    private class func buildOutputTexture(size: CGSize, samples: Int32, on device: MTLDevice) -> MTLTexture? {
         let textureDescriptor = MTLTextureDescriptor()
         textureDescriptor.pixelFormat = .rgba8Uint
-        textureDescriptor.textureType = .type2D
+        textureDescriptor.textureType = .type3D
         textureDescriptor.width = Int(size.width)
         textureDescriptor.height = Int(size.height)
+        textureDescriptor.depth = Int(samples)
         textureDescriptor.usage = [.shaderRead, .shaderWrite]
 
         return device.makeTexture(descriptor: textureDescriptor)
     }
 
-    private class func buildRenderPipelineWithDevice(device: MTLDevice) throws -> MTLComputePipelineState {
-        /// Build a render state pipeline object
+    private class func buildRenderPipeline(device: MTLDevice) throws -> MTLComputePipelineState {
         let library = device.makeDefaultLibrary()
         let pipelineDescriptor = MTLComputePipelineDescriptor()
-        pipelineDescriptor.label = "ComputePipeline"
+        pipelineDescriptor.label = "Compute Pipeline"
         pipelineDescriptor.computeFunction = library?.makeFunction(name: "raytracingKernel")
         pipelineDescriptor.threadGroupSizeIsMultipleOfThreadExecutionWidth = true
         return try device.makeComputePipelineState(descriptor: pipelineDescriptor, options: []).0
     }
 
+    private class func buildFlattenPipeline(device: MTLDevice) throws -> MTLComputePipelineState {
+        let library = device.makeDefaultLibrary()
+        let pipelineDescriptor = MTLComputePipelineDescriptor()
+        pipelineDescriptor.label = "Flatten Pipeline"
+        pipelineDescriptor.computeFunction = library?.makeFunction(name: "flattenKernel")
+        pipelineDescriptor.threadGroupSizeIsMultipleOfThreadExecutionWidth = true
+        return try device.makeComputePipelineState(descriptor: pipelineDescriptor, options: []).0
+    }
+
     func render() {
-        guard let outputTexture = Renderer.buildOutputTexture(size: settings.size, on: device) else {
+        guard let outputTexture = Renderer.buildOutputTexture(size: settings.size, samples: settings.samplesPerPixel, on: device) else {
             print("Unable to create output texture")
             return
         }
@@ -145,11 +162,23 @@ class Renderer: ObservableObject {
                 uniforms[0].settings = settings
                 uniforms[0].emissivesCount = scene.emissivesCount
 
+                /// Launch a rectangular grid of threads on the GPU to perform ray tracing, with one thread per
+                /// pixel. The number of threads needs to be aligned to a multiple of the threadgroup size,
+                /// because earlier, when it created the pipeline objects, it declared that the pipeline
+                /// would always use a threadgroup size that's a multiple of the thread execution width
+                /// (SIMD group size). An 8x8 threadgroup is a safe threadgroup size and small enough to be
+                /// supported on most devices. A more advanced app would choose the threadgroup size dynamically.
+                let threadsPerThreadgroup = MTLSize(width: 8, height: 8, depth: 1)
+                let threadgroups = MTLSize(
+                    width: (width + threadsPerThreadgroup.width - 1) / threadsPerThreadgroup.width,
+                    height: (height + threadsPerThreadgroup.height - 1) / threadsPerThreadgroup.height,
+                    depth: Int(settings.samplesPerPixel)
+                )
+
                 if let computeEncoder = commandBuffer.makeComputeCommandEncoder() {
-                    /// Final pass rendering code here
-                    computeEncoder.label = "Primary Compute Encoder"
+                    computeEncoder.label = "Path Tracer"
                     computeEncoder.pushDebugGroup("Setup")
-                    computeEncoder.setComputePipelineState(pipelineState)
+                    computeEncoder.setComputePipelineState(renderPipelineState)
                     computeEncoder[.uniforms] = uniformBuffer
                     computeEncoder[.random] = randomTexture
                     computeEncoder[.dst] = outputTexture
@@ -162,20 +191,18 @@ class Renderer: ObservableObject {
                     computeEncoder[.intersector] = scene.accelerationStructure
                     computeEncoder.popDebugGroup()
 
-                    // Launch a rectangular grid of threads on the GPU to perform ray tracing, with one thread per
-                    // pixel. The number of threads needs to be aligned to a multiple of the threadgroup size,
-                    // because earlier, when it created the pipeline objects, it declared that the pipeline
-                    // would always use a threadgroup size that's a multiple of the thread execution width
-                    // (SIMD group size). An 8x8 threadgroup is a safe threadgroup size and small enough to be
-                    // supported on most devices. A more advanced app would choose the threadgroup size dynamically.
-                    let threadsPerThreadgroup = MTLSize(width: 8, height: 8, depth: 1)
-                    let threadgroups = MTLSize(
-                        width: (width + threadsPerThreadgroup.width - 1) / threadsPerThreadgroup.width,
-                        height: (height + threadsPerThreadgroup.height - 1) / threadsPerThreadgroup.height,
-                        depth: 1
-                    )
                     computeEncoder.dispatchThreadgroups(threadgroups, threadsPerThreadgroup: threadsPerThreadgroup)
+                    computeEncoder.endEncoding()
+                }
 
+                if let computeEncoder = commandBuffer.makeComputeCommandEncoder() {
+                    computeEncoder.label = "Sample Flattener"
+                    computeEncoder.setComputePipelineState(flattenPipelineState)
+                    computeEncoder[.uniforms] = uniformBuffer
+                    computeEncoder[.dst] = outputTexture
+
+                    let threadgroups = MTLSize(width: threadgroups.width, height: threadgroups.height, depth: 1)
+                    computeEncoder.dispatchThreadgroups(threadgroups, threadsPerThreadgroup: threadsPerThreadgroup)
                     computeEncoder.endEncoding()
                 }
 

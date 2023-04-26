@@ -140,11 +140,11 @@ inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLe
 }
 
 kernel void raytracingKernel(
-                             uint2                               tid                       [[thread_position_in_grid]],
-                             
+                             uint3                               tid                       [[thread_position_in_grid]],
+
                              constant Uniforms &                 uniforms                  [[buffer(BufferIndexUniforms)]],
                              texture2d<unsigned int>             randomTex                 [[texture(TextureIndexRandom)]],
-                             texture2d<uint, access::write>      dstTex                    [[texture(TextureIndexDst)]],
+                             texture3d<uint, access::write>      dstTex                    [[texture(TextureIndexDst)]],
                              constant float                     *positions                 [[buffer(BufferIndexVertexPositions)]],
                              constant ushort                    *vertices                  [[buffer(BufferIndexFaceVertices)]],
                              constant float                     *normals                   [[buffer(BufferIndexFaceNormals)]],
@@ -167,13 +167,13 @@ kernel void raytracingKernel(
     ray ray;
     
     // Pixel coordinates for this thread.
-    float2 pixel = (float2)tid;
+    float2 pixel = (float2)tid.xy;
     
     // Add a random offset to the pixel coordinates for antialiasing.
     pixel += float2(rng(), rng());
-    
+
     // Map pixel coordinates to -1..1.
-    float2 uv = (float2)pixel / float2(settings.imageWidth, settings.imageHeight);
+    float2 uv = pixel / float2(settings.imageWidth, settings.imageHeight);
     uv = uv * 2.0f - 1.0f;
     uv.y = -uv.y;
     
@@ -212,4 +212,18 @@ kernel void raytracingKernel(
     Color color = totalIllumination / pow(settings.russianRoulette, depth);
     
     dstTex.write(uint4(uint3(color.aces_approx()._unwrap() * 255), 1), tid);
+}
+
+kernel void flattenKernel(
+    uint2                               tid                       [[thread_position_in_grid]],
+    constant Uniforms &                 uniforms                  [[buffer(BufferIndexUniforms)]],
+    texture3d<uint, access::read_write> dstTex                    [[texture(TextureIndexDst)]]
+) {
+    if (!uniforms.settings.diffuseOn) return;
+    float4 result = 0.f;
+    for (uint z = 0; z < dstTex.get_depth(); z++) {
+        result += float4(dstTex.read(uint3(tid, z)));
+    }
+    result /= dstTex.get_depth();
+    dstTex.write(uint4(result), uint3(tid, 0));
 }

@@ -13,8 +13,7 @@ const constant constexpr int primeCount = sizeof(primes) / sizeof(primes[0]);
 
 float RandomGenerator::halton(unsigned int i, unsigned int d) {
     assert(d < primeCount);
-    unsigned int base = primes[d % primeCount
-    ];
+    unsigned int base = primes[d % primeCount];
 
     float coeff = 1.0f;
     float invBase = 1.0f / base;

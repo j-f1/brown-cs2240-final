@@ -3,16 +3,13 @@ import UniformTypeIdentifiers
 
 // TODO: fix text field display on iOS
 struct GUIView: View {
-    @Binding var settings: RenderSettings
     @Binding var model: URL?
-    //TODO INITIALIZE THIS BETTER
-    @State private var stateSettings: RenderSettings = RenderSettings.default;
+    @Binding var nextSettings: RenderSettings
     @State private var selectingModel = false
 
-    init(settings: Binding<RenderSettings>, model: Binding<URL?>) {
-        self._settings = settings
+    init(nextSettings: Binding<RenderSettings>, model: Binding<URL?>) {
         self._model = model
-        self._stateSettings = .init(initialValue: settings.wrappedValue)
+        self._nextSettings = nextSettings
     }
 
     private func sectionHeader(_ label: LocalizedStringKey) -> Text {
@@ -51,25 +48,25 @@ struct GUIView: View {
                 Divider()
                 #endif
                 Section(header: sectionHeader("BSSDFs").textCase(nil)) {
-                    Toggle("Diffuse", isOn: $stateSettings.diffuseOn)
-                    Toggle("Mirror", isOn: $stateSettings.mirrorOn)
-                    Toggle("Refract", isOn: $stateSettings.refractionOn)
-                    Toggle("Glossy", isOn: $stateSettings.glossyOn)
-                    Toggle("Subsurface Scattering", isOn: $stateSettings.subsurfaceScatteringOn)
-                    Toggle("Importance Sampling", isOn: $stateSettings.importanceSamplingOn)
+                    Toggle("Diffuse", isOn: $nextSettings.diffuseOn)
+                    Toggle("Mirror", isOn: $nextSettings.mirrorOn)
+                    Toggle("Refract", isOn: $nextSettings.refractionOn)
+                    Toggle("Glossy", isOn: $nextSettings.glossyOn)
+                    Toggle("Subsurface Scattering", isOn: $nextSettings.subsurfaceScatteringOn)
+                    Toggle("Importance Sampling", isOn: $nextSettings.importanceSamplingOn)
                 }
                 #if os(macOS)
                 Divider()
                 #endif
                 Section(header: sectionHeader("Ray-Tracing Behavior Settings")) {
-                    TextField( value: $stateSettings.samplesPerPixel,
+                    TextField( value: $nextSettings.samplesPerPixel,
                                format: .number, prompt: Text("Samples Per Pixel")) {
                         Text("Samples Per Pixel")
                     }
-                    Toggle("Direct Lighting", isOn: $stateSettings.directLightingOn)
-                    Toggle("Glass Transmittance", isOn: $stateSettings.glassTransmittanceOn)
+                    Toggle("Direct Lighting", isOn: $nextSettings.directLightingOn)
+                    Toggle("Glass Transmittance", isOn: $nextSettings.glassTransmittanceOn)
                     TextField(
-                        value: $stateSettings.russianRoulette,
+                        value: $nextSettings.russianRoulette,
                         format: .number, prompt: Text("Russian Roulette"))
                     {
                         Text("Russian Roulette")
@@ -85,22 +82,22 @@ struct GUIView: View {
 
                 Section(header: sectionHeader("Image Settings")) {
 
-                    TextField(value: $stateSettings.toneMap[0], format: .number, prompt: Text("Tone Mapping R")) {
+                    TextField(value: $nextSettings.toneMap[0], format: .number, prompt: Text("Tone Mapping R")) {
                         Text("Tone Mapping R")
                     }
-                    TextField(value: $stateSettings.toneMap[1], format: .number, prompt: Text("Tone Mapping G")) {
+                    TextField(value: $nextSettings.toneMap[1], format: .number, prompt: Text("Tone Mapping G")) {
                         Text("Tone Mapping G")
                     }
-                    TextField(value: $stateSettings.toneMap[2], format: .number, prompt: Text("Tone Mapping B")) {
+                    TextField(value: $nextSettings.toneMap[2], format: .number, prompt: Text("Tone Mapping B")) {
                         Text("Tone Mapping B")
                     }
-                    TextField(value: $stateSettings.gammaCorrection, format: .number, prompt: Text("Gamma Correction")) {
+                    TextField(value: $nextSettings.gammaCorrection, format: .number, prompt: Text("Gamma Correction")) {
                         Text("Gamma Correction")
                     }
-                    TextField(value: $stateSettings.imageWidth, format: .number, prompt: Text("Image width")) {
+                    TextField(value: $nextSettings.imageWidth, format: .number, prompt: Text("Image width")) {
                         Text("Image width")
                     }
-                    TextField(value: $stateSettings.imageHeight, format: .number, prompt: Text("Image height")) {
+                    TextField(value: $nextSettings.imageHeight, format: .number, prompt: Text("Image height")) {
                         Text("Image height")
                     }
 
@@ -118,6 +115,6 @@ struct GUIView: View {
 
 struct GUIView_Previews: PreviewProvider {
     static var previews: some View {
-        GUIView(settings: .constant(RenderSettings()), model: .constant(nil))
+        GUIView(nextSettings: .constant(RenderSettings()), model: .constant(nil))
     }
 }

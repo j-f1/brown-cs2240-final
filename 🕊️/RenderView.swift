@@ -1,9 +1,11 @@
 import SwiftUI
 
 struct RenderView: View {
-    let settings: RenderSettings
+    @Binding var settings: RenderSettings
+    let nextSettings: RenderSettings
     let model: URL?
     @Binding var renderer: Renderer?
+    let rerender: () -> Void
 
     @State private var expand = false
     @Environment(\.displayScale) private var scale
@@ -48,9 +50,9 @@ struct RenderView: View {
 
             Spacer()
             HStack {
-                Button("Rerender") {
-                    renderer?.render()
-                }.disabled(renderer == nil)
+                Button("Rerender", action: rerender)
+                    .disabled(renderer == nil)
+                    .keyboardShortcut(.defaultAction)
 
                 Button {
                     expand.toggle()
@@ -76,7 +78,7 @@ private extension MTLTexture {
     #endif
     var image: ImageType {
         let pixelBytes = UnsafeMutableRawBufferPointer.allocate(byteCount: allocatedSize, alignment: MemoryLayout<UInt8>.alignment)
-        let bytesPerRow = allocatedSize / height
+        let bytesPerRow = 4 * width; precondition(pixelFormat == .rgba8Uint)
         self.getBytes(pixelBytes.baseAddress!, bytesPerRow: bytesPerRow, from: MTLRegion(origin: .zero, size: MTLSize(width: width, height: height, depth: depth)), mipmapLevel: 0)
         let provider = CGDataProvider(dataInfo: nil, data: pixelBytes.baseAddress!, size: pixelBytes.count, releaseData: { _, data, _ in data.deallocate() })
         let cgImage = CGImage(
@@ -96,11 +98,5 @@ private extension MTLTexture {
         #else
         return UIImage(cgImage: cgImage)
         #endif
-    }
-}
-
-struct RenderView_Previews: PreviewProvider {
-    static var previews: some View {
-        RenderView(settings: .init(), model: nil, renderer: .constant(nil))
     }
 }

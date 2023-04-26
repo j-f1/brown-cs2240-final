@@ -217,13 +217,14 @@ kernel void raytracingKernel(
 kernel void flattenKernel(
     uint2                               tid                       [[thread_position_in_grid]],
     constant Uniforms &                 uniforms                  [[buffer(BufferIndexUniforms)]],
-    texture3d<uint, access::read_write> dstTex                    [[texture(TextureIndexDst)]]
+    texture3d<uint, access::read>       srcTex                    [[texture(TextureIndexSrc)]],
+    texture3d<uint, access::write>      dstTex                    [[texture(TextureIndexDst)]]
 ) {
     if (!uniforms.settings.diffuseOn) return;
     float4 result = 0.f;
-    for (uint z = 0; z < dstTex.get_depth(); z++) {
-        result += float4(dstTex.read(uint3(tid, z)));
+    for (uint z = 0; z < srcTex.get_depth(); z++) {
+        result += float4(srcTex.read(uint3(tid, z)));
     }
-    result /= dstTex.get_depth();
+    result /= srcTex.get_depth();
     dstTex.write(uint4(result), uint3(tid, 0));
 }

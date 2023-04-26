@@ -89,8 +89,6 @@ struct RenderView: View {
             }
         }
 
-        typealias T = ShareLink<[Image], Never, Never, Text>
-
         var body: some View {
             if let image = renderer.image {
                 Button("Save") {

@@ -7,7 +7,10 @@ class Scene {
     let faceVertexBuffer: MTLBuffer // uint16
     let materialBuffer: MTLBuffer // Material
     let normalBuffer: MTLBuffer // Float
+    let emissivesBuffer: MTLBuffer // uint16
     let accelerationStructure: MTLAccelerationStructure
+
+    let emissivesCount: Int32
 
     init?(contentsOf url: URL, for device: MTLDevice, commandQueue: MTLCommandQueue) async {
         guard let loader = await runBlocking({ TinyObjLoader(contentsOf: url) }) else { return nil }
@@ -19,8 +22,11 @@ class Scene {
             let faceVertexBuffer = device.makeBuffer(bytes: loader.faceVertices, length: loader.faceCount * 3 * MemoryLayout<UInt16>.stride, options: []),
             let materialBuffer = materials.withUnsafeBytes({ ptr in
                 device.makeBuffer(bytes: ptr.baseAddress!, length: ptr.count, options: [])
-            })
+            }),
+            let emissivesBuffer = device.makeBuffer(bytes: loader.emissiveFaces, length: loader.emissiveFaceCount * MemoryLayout<UInt16>.stride, options: [])
         else { return nil }
+
+        self.emissivesCount = Int32(loader.emissiveFaceCount)
 
         vertexBuffer.label = "Vertex Positions"
         self.vertexBuffer = vertexBuffer
@@ -30,6 +36,8 @@ class Scene {
         self.faceVertexBuffer = faceVertexBuffer
         materialBuffer.label = "Materials"
         self.materialBuffer = materialBuffer
+        emissivesBuffer.label = "Emissive Faces"
+        self.emissivesBuffer = emissivesBuffer
 
         let geometryDescriptor = MTLAccelerationStructureTriangleGeometryDescriptor()
         geometryDescriptor.indexBuffer = faceVertexBuffer

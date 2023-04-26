@@ -18,10 +18,11 @@ simd::float3 to_simd(const tinyobj::real_t val[3]) {
     std::vector<uint16_t> _materialIds;
     std::vector<uint16_t> _faceVertices;
     std::vector<uint16_t> _faceNormals;
+    std::vector<uint16_t> _emissiveFaces;
 }
 
-@dynamic vertexCount, normalCount, materialIdCount;
-@dynamic vertices, normals, faceVertices, faceNormals, materialIds;
+@dynamic vertexCount, normalCount, materialIdCount, emissiveFaceCount;
+@dynamic vertices, normals, faceVertices, faceNormals, materialIds, emissiveFaces;
 @synthesize materials = _materials;
 
 - (instancetype)initWithContentsOfURL:(NSURL *)url {
@@ -43,6 +44,7 @@ simd::float3 to_simd(const tinyobj::real_t val[3]) {
     _materialIds = {};
     _faceVertices = {};
     _faceNormals = {};
+    _emissiveFaces = {};
 
     _materials = [NSMutableArray arrayWithCapacity:materials.size()];
 
@@ -57,6 +59,8 @@ simd::float3 to_simd(const tinyobj::real_t val[3]) {
     }
     _faceVertices.reserve(_faceCount * 3);
     _faceNormals.reserve(_faceCount * 3);
+    _materialIds.reserve(_faceCount);
+    _emissiveFaces.reserve(_faceCount);
 
     for (const tinyobj::shape_t &shape : shapes) {
         size_t index_offset = 0;
@@ -74,6 +78,9 @@ simd::float3 to_simd(const tinyobj::real_t val[3]) {
             index_offset += fv;
 
             _materialIds.push_back(shape.mesh.material_ids[f]);
+            if (materials[shape.mesh.material_ids[f]].emission[0] > 0.01 || materials[shape.mesh.material_ids[f]].emission[1] > 0.01 || materials[shape.mesh.material_ids[f]].emission[2] > 0.01) {
+                _emissiveFaces.push_back(f);
+            }
         }
     }
 
@@ -106,6 +113,10 @@ simd::float3 to_simd(const tinyobj::real_t val[3]) {
     return _materialIds.size();
 }
 
+- (NSInteger)emissiveFaceCount {
+    return _emissiveFaces.size();
+}
+
 - (const float *)vertices {
     return attrib.vertices.data();
 }
@@ -116,6 +127,10 @@ simd::float3 to_simd(const tinyobj::real_t val[3]) {
 
 - (const uint16_t *)materialIds {
     return _materialIds.data();
+}
+
+- (const uint16_t *)emissiveFaces {
+    return _emissiveFaces.data();
 }
 
 - (const uint16_t *)faceVertices {

@@ -100,8 +100,8 @@ struct SceneState {
     const thread    Intersector     &intersector;
           thread    RandomGenerator &rng;
 
-    const constant int *emissives;
-    const int           emissivesCount;
+    const constant ushort  *emissives;
+    const int               emissivesCount;
 };
 
 inline constexpr float3 unpack(constant float *floats, unsigned int idx) {

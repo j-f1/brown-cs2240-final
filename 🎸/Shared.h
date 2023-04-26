@@ -20,7 +20,8 @@ typedef NS_ENUM(EnumBackingType, BufferIndex)
     BufferIndexFaceMaterials      = 3,
     BufferIndexMaterials          = 4,
     BufferIndexIntersector        = 6,
-    BufferIndexUniforms           = 7
+    BufferIndexUniforms           = 7,
+    BufferIndexEmissiveFaces      = 8,
 };
 
 typedef NS_ENUM(EnumBackingType, TextureIndex)
@@ -67,6 +68,7 @@ typedef struct RenderSettings {
 struct Uniforms {
     Camera camera;
     RenderSettings settings;
+    int emissivesCount;
 };
 
 

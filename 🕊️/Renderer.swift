@@ -27,6 +27,7 @@ class Renderer: ObservableObject {
             print("Unable to allocate command queue")
             return nil
         }
+        queue.label = "Main Command Queue"
         self.commandQueue = queue
 
         guard let buffer = self.device.makeBuffer(length: MemoryLayout<Uniforms>.size, options: []) else { return nil }
@@ -137,6 +138,7 @@ class Renderer: ObservableObject {
                 assert(width == settings.imageWidth)
                 assert(height == settings.imageHeight)
                 uniforms[0].settings = settings
+                uniforms[0].emissivesCount = scene.emissivesCount
 
                 if let computeEncoder = commandBuffer.makeComputeCommandEncoder() {
                     /// Final pass rendering code here
@@ -151,6 +153,7 @@ class Renderer: ObservableObject {
                     computeEncoder[.faceNormals] = scene.normalBuffer
                     computeEncoder[.faceMaterials] = scene.materialIdBuffer
                     computeEncoder[.materials] = scene.materialBuffer
+                    computeEncoder[.emissiveFaces] = scene.emissivesBuffer
                     computeEncoder[.intersector] = scene.accelerationStructure
                     computeEncoder.popDebugGroup()
 

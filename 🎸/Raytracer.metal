@@ -113,7 +113,7 @@ inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLe
     
     if (material.emission) {
         result.brdf = Color::black();
-        if (pathLength == 0 && scene.settings.directLightingOn) {
+        if (pathLength == 0 || !scene.settings.directLightingOn) {
             result.illumination = material.emission;
         }
         return result;

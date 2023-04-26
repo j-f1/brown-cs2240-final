@@ -196,7 +196,12 @@ public:
     inline void operator *= (Color other) {
         v *= other.v;
     }
+
+    inline float3 _unwrap() const constant {
+        return v;
+    }
 };
+static_assert(sizeof(Color) == sizeof(float3), "???");
 
 // GENERATED CODE DO NOT MODIFY
 class Location {

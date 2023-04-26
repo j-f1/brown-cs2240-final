@@ -38,8 +38,8 @@ inline Color getBRDF(const thread ray &inRay, const thread Direction &outDir, co
 //
 //            break;
 //    }
-//    return mat.diffuse/M_PI_F; //TODO REMOVE
-    return Color::white();
+    return mat.diffuse/M_PI_F; //TODO REMOVE
+//    return Color::white();
 //    return 0.f;
 }
 

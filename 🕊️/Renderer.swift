@@ -195,16 +195,16 @@ class Renderer: ObservableObject {
                     computeEncoder.endEncoding()
                 }
 
-                if let computeEncoder = commandBuffer.makeComputeCommandEncoder() {
-                    computeEncoder.label = "Sample Flattener"
-                    computeEncoder.setComputePipelineState(flattenPipelineState)
-                    computeEncoder[.uniforms] = uniformBuffer
-                    computeEncoder[.dst] = outputTexture
-
-                    let threadgroups = MTLSize(width: threadgroups.width, height: threadgroups.height, depth: 1)
-                    computeEncoder.dispatchThreadgroups(threadgroups, threadsPerThreadgroup: threadsPerThreadgroup)
-                    computeEncoder.endEncoding()
-                }
+//                if let computeEncoder = commandBuffer.makeComputeCommandEncoder() {
+//                    computeEncoder.label = "Sample Flattener"
+//                    computeEncoder.setComputePipelineState(flattenPipelineState)
+//                    computeEncoder[.uniforms] = uniformBuffer
+//                    computeEncoder[.dst] = outputTexture
+//
+//                    let threadgroups = MTLSize(width: threadgroups.width, height: threadgroups.height, depth: 1)
+//                    computeEncoder.dispatchThreadgroups(threadgroups, threadsPerThreadgroup: threadsPerThreadgroup)
+//                    computeEncoder.endEncoding()
+//                }
 
                 commandBuffer.commit()
                 commandBuffer.waitUntilCompleted()

@@ -35,6 +35,7 @@ class Scene {
         geometryDescriptor.indexBuffer = faceVertexBuffer
         geometryDescriptor.vertexBuffer = vertexBuffer
         geometryDescriptor.indexType = .uint16
+        geometryDescriptor.opaque = true
         geometryDescriptor.triangleCount = loader.faceCount
 
         let faces = loader.faceCount

@@ -117,7 +117,7 @@ class Scene {
             commandBuffer.waitUntilCompleted()
         }
 
-        let compactedSize = compactedSizeBuffer.contents().assumingMemoryBound(to: Int.self).pointee
+        let compactedSize = compactedSizeBuffer.contents().assumingMemoryBound(to: UInt32.self).pointee
 
         guard
             // Allocate a smaller acceleration structure based on the returned size.

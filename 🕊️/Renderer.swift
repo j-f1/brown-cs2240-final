@@ -18,6 +18,11 @@ class Renderer: ObservableObject {
 
     @Published var rendering = false
     @Published var content: MTLTexture?
+#if canImport(AppKit)
+    @Published var image: NSImage?
+#else
+    @Published var image: UIImage?
+#endif
 
     @MainActor
     init?(device: MTLDevice, modelURL: URL, settings: RenderSettings) async {
@@ -179,6 +184,7 @@ class Renderer: ObservableObject {
 
                 DispatchQueue.main.async {
                     self.content = outputTexture
+                    self.image = outputTexture.image
                     self.rendering = false
                 }
             }
@@ -209,4 +215,35 @@ private extension MTLComputeCommandEncoder {
 
 extension MTLOrigin {
     static let zero = MTLOrigin(x: 0, y: 0, z: 0)
+}
+
+private extension MTLTexture {
+#if canImport(AppKit)
+    typealias ImageType = NSImage
+#else
+    typealias ImageType = UIImage
+#endif
+    var image: ImageType {
+        let pixelBytes = UnsafeMutableRawBufferPointer.allocate(byteCount: allocatedSize, alignment: MemoryLayout<UInt8>.alignment)
+        let bytesPerRow = 4 * width; precondition(pixelFormat == .rgba8Uint)
+        self.getBytes(pixelBytes.baseAddress!, bytesPerRow: bytesPerRow, from: MTLRegion(origin: .zero, size: MTLSize(width: width, height: height, depth: 1)), mipmapLevel: 0)
+        let provider = CGDataProvider(dataInfo: nil, data: pixelBytes.baseAddress!, size: pixelBytes.count, releaseData: { _, data, _ in data.deallocate() })
+        let cgImage = CGImage(
+            width: width, height: height,
+            bitsPerComponent: MemoryLayout<UInt8>.size * 8,
+            bitsPerPixel: MemoryLayout<UInt8>.size * 8 * 4,
+            bytesPerRow: bytesPerRow,
+            space: CGColorSpace(name: CGColorSpace.sRGB)!,
+            bitmapInfo: [.init(rawValue: CGImageAlphaInfo.noneSkipLast.rawValue)],
+            provider: provider!,
+            decode: nil,
+            shouldInterpolate: false,
+            intent: .absoluteColorimetric
+        )!
+#if canImport(AppKit)
+        return NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
+#else
+        return UIImage(cgImage: cgImage)
+#endif
+    }
 }

@@ -11,6 +11,13 @@ struct ContentView: View {
 
     @State private var selectedTab = 0
 
+    private func rerender() {
+        nextSettings.frameIndex += 1
+        settings = nextSettings
+        renderer?.settings = nextSettings
+        renderer?.render()
+    }
+
     var content: some View {
         #if os(iOS)
         TabView(selection: $selectedTab) {
@@ -21,18 +28,14 @@ struct ContentView: View {
             .tag(0)
             .tabItem { Label("Setup", systemImage: "gearshape.fill") }
 
-            RenderView(settings: $settings, nextSettings: nextSettings, model: model, renderer: $renderer)
+            RenderView(settings: $settings, nextSettings: nextSettings, model: model, renderer: $renderer, rerender: rerender)
                 .tag(1)
                 .tabItem { Label("Render", systemImage: "photo.fill") }
         }
         #else
         HStack {
             GUIView(nextSettings: $nextSettings, model: $model)
-            RenderView(settings: $settings, nextSettings: nextSettings, model: model, renderer: $renderer) {
-                settings = nextSettings
-                renderer?.settings = nextSettings
-                renderer?.render()
-            }
+            RenderView(settings: $settings, nextSettings: nextSettings, model: model, renderer: $renderer, rerender: rerender)
         }
         .padding()
         #endif

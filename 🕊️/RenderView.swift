@@ -5,7 +5,7 @@ struct RenderView: View {
     let nextSettings: RenderSettings
     let model: URL?
     @Binding var renderer: Renderer?
-    let rerender: () -> Void
+    let rerender: @MainActor () -> Void
 
     @State private var expand = false
     @Environment(\.displayScale) private var scale
@@ -15,11 +15,11 @@ struct RenderView: View {
 
         var body: some View {
             VStack {
-                if let content = renderer.content {
+                if let image = renderer.image {
                     #if canImport(AppKit)
-                    let image = Image(nsImage: content.image)
+                    let image = Image(nsImage: image)
                     #else
-                    let image = Image(uiImage: content.image)
+                    let image = Image(uiImage: image)
                     #endif
                     image
                         .resizable()
@@ -27,7 +27,14 @@ struct RenderView: View {
                 } else {
                     Color.secondary
                 }
-            }.opacity(renderer.rendering ? 0.5 : 1)
+            }.overlay {
+                if renderer.rendering {
+                    ProgressView()
+                        .controlSize(.large)
+                        .colorScheme(.dark)
+                        .transition(.asymmetric(insertion: .opacity.animation(.default.delay(0.1)), removal: .identity))
+                }
+            }
         }
     }
 
@@ -37,7 +44,7 @@ struct RenderView: View {
                 if let renderer {
                     RenderResult(renderer: renderer)
                 } else {
-                    Color.secondary.overlay(ProgressView())
+                    Color.secondary.overlay(ProgressView().controlSize(.large).colorScheme(.dark))
                 }
             }
             .frame(width: expand ? nil : settings.size.width / scale, height: expand ? nil : settings.size.height / scale)
@@ -50,9 +57,11 @@ struct RenderView: View {
 
             Spacer()
             HStack {
-                Button("Rerender", action: rerender)
-                    .disabled(renderer == nil)
-                    .keyboardShortcut(.defaultAction)
+                Button("Rerender") {
+                    rerender()
+                }
+                .disabled(renderer == nil)
+                .keyboardShortcut(.defaultAction)
 
                 Button {
                     expand.toggle()
@@ -67,36 +76,5 @@ struct RenderView: View {
             .padding(.bottom)
             #endif
         }
-    }
-}
-
-private extension MTLTexture {
-    #if canImport(AppKit)
-    typealias ImageType = NSImage
-    #else
-    typealias ImageType = UIImage
-    #endif
-    var image: ImageType {
-        let pixelBytes = UnsafeMutableRawBufferPointer.allocate(byteCount: allocatedSize, alignment: MemoryLayout<UInt8>.alignment)
-        let bytesPerRow = 4 * width; precondition(pixelFormat == .rgba8Uint)
-        self.getBytes(pixelBytes.baseAddress!, bytesPerRow: bytesPerRow, from: MTLRegion(origin: .zero, size: MTLSize(width: width, height: height, depth: depth)), mipmapLevel: 0)
-        let provider = CGDataProvider(dataInfo: nil, data: pixelBytes.baseAddress!, size: pixelBytes.count, releaseData: { _, data, _ in data.deallocate() })
-        let cgImage = CGImage(
-            width: width, height: height,
-            bitsPerComponent: MemoryLayout<UInt8>.size * 8,
-            bitsPerPixel: MemoryLayout<UInt8>.size * 8 * 4,
-            bytesPerRow: bytesPerRow,
-            space: CGColorSpace(name: CGColorSpace.sRGB)!,
-            bitmapInfo: [.init(rawValue: CGImageAlphaInfo.noneSkipLast.rawValue)],
-            provider: provider!,
-            decode: nil,
-            shouldInterpolate: false,
-            intent: .absoluteColorimetric
-        )!
-        #if canImport(AppKit)
-        return NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
-        #else
-        return UIImage(cgImage: cgImage)
-        #endif
     }
 }

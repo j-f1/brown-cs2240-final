@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct RenderView: View {
     @Binding var settings: RenderSettings
@@ -38,6 +39,79 @@ struct RenderView: View {
         }
     }
 
+    private struct SaveButton: View {
+        @ObservedObject var renderer: Renderer
+        @State private var isSaving = false
+
+        private struct File: FileDocument {
+            static var readableContentTypes = [UTType]()
+            static var writableContentTypes = [UTType.png]
+
+            #if canImport(AppKit)
+            let image: NSImage
+            #else
+            let image: UIImage
+            #endif
+
+            init(configuration: ReadConfiguration) throws {
+                fatalError()
+            }
+
+            #if canImport(AppKit)
+            init(image: NSImage) { self.image = image }
+            #else
+            init(image: UIImage) { self.image = image }
+            #endif
+
+            enum Error: Swift.Error {
+                case couldNotCreateCGImage
+                case couldNotCreateData
+            }
+
+            func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
+                #if os(macOS)
+                // https://stackoverflow.com/a/17510651/5244995
+                guard
+                    let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil)
+                else {
+                    throw Error.couldNotCreateCGImage
+                }
+                let newRep = NSBitmapImageRep(cgImage: cgImage)
+                newRep.size = image.size
+                let data = newRep.representation(using: .png, properties: [:])
+                #else
+                #endif
+                if let data {
+                    return FileWrapper(regularFileWithContents: data)
+                } else {
+                    throw Error.couldNotCreateData
+                }
+            }
+        }
+
+        typealias T = ShareLink<[Image], Never, Never, Text>
+
+        var body: some View {
+            if let image = renderer.image {
+                Button("Save") {
+                    isSaving = true
+                }
+                .disabled(renderer.rendering)
+                .keyboardShortcut("s")
+                .fileExporter(
+                    isPresented: $isSaving,
+                    document: File(image: image),
+                    contentType: .png,
+                    defaultFilename: Date().formatted(.iso8601).replacingOccurrences(of: ":", with: ".")
+                ) { result in
+                    print(result)
+                }
+            } else {
+                Button("Save") {}.disabled(true)
+            }
+        }
+    }
+
     var body: some View {
         VStack {
             Group {
@@ -68,6 +142,10 @@ struct RenderView: View {
                 } label: {
                     Image(systemName: expand ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right")
                         .accessibilityLabel("Expand/Collapse Render")
+                }
+
+                if let renderer {
+                    SaveButton(renderer: renderer)
                 }
             }
             #if os(iOS)

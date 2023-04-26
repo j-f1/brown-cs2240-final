@@ -27,7 +27,8 @@ typedef NS_ENUM(EnumBackingType, BufferIndex)
 typedef NS_ENUM(EnumBackingType, TextureIndex)
 {
     TextureIndexRandom = 0,
-    TextureIndexDst    = 1
+    TextureIndexSrc    = 1,
+    TextureIndexDst    = 2,
 };
 
 typedef NS_ENUM(EnumBackingType, FunctionConstantIndex)

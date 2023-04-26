@@ -136,8 +136,18 @@ class Renderer: ObservableObject {
     }
 
     func render() {
-        guard let outputTexture = Renderer.buildOutputTexture(size: settings.size, samples: settings.samplesPerPixel, on: device) else {
+        guard let intermediateTexture = Renderer.buildOutputTexture(size: settings.size, samples: settings.samplesPerPixel, on: device) else {
             print("Unable to create output texture")
+            return
+        }
+
+        let finalTexture: MTLTexture
+        if device.readWriteTextureSupport == .tier2 {
+            finalTexture = intermediateTexture
+        } else if let texture = Renderer.buildOutputTexture(size: settings.size, samples: settings.samplesPerPixel, on: device) {
+            finalTexture = texture
+        } else {
+            print("Unable to create final output texture")
             return
         }
 
@@ -181,7 +191,7 @@ class Renderer: ObservableObject {
                     computeEncoder.setComputePipelineState(renderPipelineState)
                     computeEncoder[.uniforms] = uniformBuffer
                     computeEncoder[.random] = randomTexture
-                    computeEncoder[.dst] = outputTexture
+                    computeEncoder[.dst] = intermediateTexture
                     computeEncoder[.vertexPositions] = scene.vertexBuffer
                     computeEncoder[.faceVertices] = scene.faceVertexBuffer
                     computeEncoder[.faceNormals] = scene.normalBuffer
@@ -199,7 +209,8 @@ class Renderer: ObservableObject {
                     computeEncoder.label = "Sample Flattener"
                     computeEncoder.setComputePipelineState(flattenPipelineState)
                     computeEncoder[.uniforms] = uniformBuffer
-                    computeEncoder[.dst] = outputTexture
+                    computeEncoder[.src] = intermediateTexture
+                    computeEncoder[.dst] = finalTexture
 
                     let threadgroups = MTLSize(width: threadgroups.width, height: threadgroups.height, depth: 1)
                     computeEncoder.dispatchThreadgroups(threadgroups, threadsPerThreadgroup: threadsPerThreadgroup)
@@ -210,8 +221,8 @@ class Renderer: ObservableObject {
                 commandBuffer.waitUntilCompleted()
 
                 DispatchQueue.main.async {
-                    self.content = outputTexture
-                    self.image = outputTexture.image
+                    self.content = finalTexture
+                    self.image = finalTexture.image
                     self.rendering = false
                 }
             }

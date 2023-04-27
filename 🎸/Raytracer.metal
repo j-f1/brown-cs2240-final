@@ -14,81 +14,103 @@ struct RayTraceResult {
 };
 
 //TODO eventually turn the outDir type to Ray because we will be in BSSDF land
-inline Color getBRDF(const thread ray &inRay, const thread Direction &outDir, const thread Material &mat) {
+inline Color getBRDF(const thread ray &inRay, const thread Direction normal, const thread Direction &outDir, const thread Material &mat) {
     //TODO COCO
-//    switch (mat.illum) {
-//        case Illum::refract_fresnel:
-//        case Illum::glass:
-//            // [glass BRDF]
-//            break;
-//        case Illum::diffuse_specular_fresnel:
-//        case Illum::diffuse_specular:
-//            if (mat.specular) {
-//                if (mat.shininess > 100) {
-//                    // [mirror BRDF];
-//                } else {
-//                    // [specular BRDF];
-//                }
-//            } else {
-//                // [diffuse BRDF];
-//                return mat.diffuse/M_PI_F;
-//            }
-//            break;
-//        default:
-//
-//            break;
-//    }
-    return mat.diffuse/M_PI_F; //TODO REMOVE
-//    return Color::white();
-//    return 0.f;
+    switch (mat.illum) {
+        case Illum::refract_fresnel:
+        case Illum::glass:
+            return float3(1.f,1.f,1.f);
+            break;
+        case Illum::diffuse_specular_fresnel:
+        case Illum::diffuse_specular:
+            if (any(mat.specular > 0)) { //todo does this work?
+                if (mat.shininess > 100) {
+                    // [mirror BRDF];
+                    return float3(1.f,1.f,1.f);
+                } else {
+                    // [Phong Glossy Specular BRDF];
+                    float n = mat.shininess;
+                    float3 s = mat.specular;
+                    float3 normalized_color = ((n+2.f)/2.f*M_PI_F)*s;
+                    Direction reflectedVector = inRay.direction - 2.f*dot(inRay.direction, normal)*normal;
+                    float dotProd = dot(reflectedVector, outDir);
+                    if (dotProd < 0) {return 0.f;}
+                    float reflectiveIntensity = pow(dotProd, n);
+                    
+                    return normalized_color*reflectiveIntensity;
+                }
+            } else {
+                // [diffuse BRDF];
+                return mat.diffuse/M_PI_F;
+            }
+            break;
+        default:
+            return 0.f; //TODO REMOVE
+            break;
+    }
+}
+
+inline Sample generateRandomOnHemi(Direction normal, float2 uv) {
+    Sample result = {.direction = Direction(0,0,0), .pdf = 1.f,};
+    float3 randomHemi = sampleCosineWeightedHemisphere(uv); //pick a random direction on the hemisphere
+    float3 worldSpaceRand = alignHemisphereWithNormal(randomHemi, normal); //align the random direction with the normal
+    result.direction = Direction(worldSpaceRand.x, worldSpaceRand.y, worldSpaceRand.z);
+    result.pdf = 1.f/(2.f*M_PI_F);
+    return result;
 }
 
 inline Sample getNextDirection(const thread Location &intersectionPoint, const thread Direction normal, const thread Material &mat, const thread ray &inRay, thread SceneState &scene) {
     
     float e1 = scene.rng(); //random number
     float e2 = scene.rng(); //random number
-    float phi = 2.0 * M_PI_F * e1; //random angle on the hemisphere
-    float theta = acos(1.f-e2); //random angle on the hemisphere
     
     //TODO COCO
     Sample result = {.direction = Direction(0,0,0), .pdf = 1.f,};
-//    if (scene.settings.importanceSamplingOn) {
-//        switch (mat.illum) {
-//            case Illum::refract_fresnel:
-//            case Illum::glass:
-//                // [glass BRDF]
-//                break;
-//            case Illum::diffuse_specular_fresnel:
-//            case Illum::diffuse_specular:
-//                if (mat.specular) {
-//                    if (mat.shininess > 100) {
-//                        // [mirror BRDF];
-//                    } else {
-//                        // [specular BRDF];
-//                    }
-//                } else {
-//                    // [diffuse BRDF];
-//                }
-//                break;
-//            default:
-//                result.direction = Direction(0, 0, 0);
-//                result.pdf = 1;
-//                break;
-//        }
-//    } else {
-//        float3 objSpaceRand = float3(1.*sin(theta)*cos(phi), 1.*cos(theta), 1.*sin(theta)*sin(phi));
-//        float3 worldSpaceRand = alignHemisphereWithNormal(objSpaceRand, float3(0,1,0));
-//        float3 n = normalize(worldSpaceRand);
-//        result.direction = Direction(n.x, n.y, n.z);
-//        result.pdf = 1.0/(2.0*M_PI_F);
-//    }
-    float3 randomHemi = sampleCosineWeightedHemisphere(float2(e1, e2)); //pick a random direction on the hemisphere
-    float3 worldSpaceRand = alignHemisphereWithNormal(randomHemi, normal); //align the random direction with the normal
-    result.direction = Direction(worldSpaceRand.x, worldSpaceRand.y, worldSpaceRand.z);
-    result.pdf = 1.f/(2.f*M_PI_F);
-    
-    return result;
-    
+    switch (mat.illum) {
+        case Illum::refract_fresnel:
+        case Illum::glass:
+            // glass
+            //TODO
+            return generateRandomOnHemi(normal, float2(e1, e2));
+            break;
+        case Illum::diffuse_specular_fresnel:
+        case Illum::diffuse_specular:
+            if (any(mat.specular>0)) {
+                if (mat.shininess > 100) {
+                    // mirror
+                    if (scene.settings.mirrorOn) {
+                        Direction reflectedVector = inRay.direction - 2.f*dot(inRay.direction, normal)*normal;
+                        result.direction = reflectedVector;
+                        result.pdf = 1.f;
+                        return result;
+                    } else {
+                        return generateRandomOnHemi(normal, float2(e1, e2));
+                    }
+                } else {
+                    // specular BRDF;
+                    if (scene.settings.importanceSamplingOn) {
+                        //TODO
+                        return generateRandomOnHemi(normal, float2(e1, e2));
+                    } else {
+                        return generateRandomOnHemi(normal, float2(e1, e2));
+                    }
+                }
+            } else {
+                // diffuse
+                if (scene.settings.importanceSamplingOn) {
+                    //TODO
+                    return generateRandomOnHemi(normal, float2(e1, e2));
+                } else {
+                    return generateRandomOnHemi(normal, float2(e1, e2));
+                }
+            }
+            break;
+        default:
+            result.direction = Direction(0, 0, 0);
+            result.pdf = 1;
+            return result;
+            break;
+    }
 }
 
 inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLength, thread SceneState &scene) {
@@ -127,7 +149,7 @@ inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLe
         result.illumination = Colors::black();
     }
     
-    Color brdf = getBRDF(inRay, sample.direction, material);
+    Color brdf = getBRDF(inRay, normal, sample.direction, material);
     result.brdf = brdf;
     
     

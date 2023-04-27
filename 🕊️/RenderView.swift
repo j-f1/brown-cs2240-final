@@ -80,6 +80,7 @@ struct RenderView: View {
                 newRep.size = image.size
                 let data = newRep.representation(using: .png, properties: [:])
                 #else
+                let data = image.pngData()
                 #endif
                 if let data {
                     return FileWrapper(regularFileWithContents: data)

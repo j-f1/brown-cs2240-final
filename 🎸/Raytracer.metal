@@ -56,8 +56,7 @@ inline Color getBRDF(const thread ray &inRay, const thread Direction normal, con
 inline Sample generateRandomOnHemi(Direction normal, float2 uv) {
     Sample result = {.direction = Direction(0,0,0), .pdf = 1.f,};
     float3 randomHemi = sampleCosineWeightedHemisphere(uv); //pick a random direction on the hemisphere
-    float3 worldSpaceRand = alignHemisphereWithNormal(randomHemi, normal); //align the random direction with the normal
-    result.direction = Direction(worldSpaceRand.x, worldSpaceRand.y, worldSpaceRand.z);
+    result.direction = alignHemisphereWithNormal(randomHemi, normal); //align the random direction with the normal
     result.pdf = 1.f/(2.f*M_PI_F);
     return result;
 }
@@ -68,7 +67,7 @@ inline Sample getNextDirection(const thread Location &intersectionPoint, const t
     float e2 = scene.rng(); //random number
     
     //TODO COCO
-    Sample result = {.direction = Direction(0,0,0), .pdf = 1.f, .reflected = false};
+    Sample result = {.direction = Direction(0,0,0), .pdf = 1.f};
     switch (mat.illum) {
         case Illum::refract_fresnel:
         case Illum::glass:
@@ -110,7 +109,6 @@ inline Sample getNextDirection(const thread Location &intersectionPoint, const t
                     Direction reflectedVector = incomingDir - 2.f*dot(incomingDir,norm)*norm;
                     result.direction = reflectedVector;
                     result.pdf = 1.f;
-                    result.reflected = true;
                 } else {
                     //refract
                     float cosTheta_t = sqrt(sqdCos_t);
@@ -135,7 +133,6 @@ inline Sample getNextDirection(const thread Location &intersectionPoint, const t
                         Direction reflectedVector = inRay.direction - 2.f*dot(inRay.direction, normal)*normal;
                         result.direction = reflectedVector;
                         result.pdf = 1.f;
-                        result.reflected = true;
                         return result;
                     } else {
                         return generateRandomOnHemi(normal, float2(e1, e2));
@@ -144,7 +141,20 @@ inline Sample getNextDirection(const thread Location &intersectionPoint, const t
                     // specular BRDF;
                     if (scene.settings.importanceSamplingOn) {
                         //TODO
-                        return generateRandomOnHemi(normal, float2(e1, e2));
+                        float shine = mat.shininess;
+
+                        float phi = 2.0 * M_PI_F * e1;
+                        float theta = acos(pow(e2, 1/(1+shine)));
+
+                        Direction objSpaceRand = float3(1.*sin(theta)*cos(phi), 1.*cos(theta), 1.*sin(theta)*sin(phi));
+
+                        result.pdf = (shine+2.f)/(2.f*M_PI_F)*(pow(cos(theta),shine));
+
+                        Direction reflectedVector = inRay.direction - 2.f*(dot(inRay.direction,normal))*normal;
+
+                        result.direction = alignHemisphereWithNormal(objSpaceRand, reflectedVector);
+
+                        return result;
                     } else {
                         return generateRandomOnHemi(normal, float2(e1, e2));
                     }
@@ -154,9 +164,9 @@ inline Sample getNextDirection(const thread Location &intersectionPoint, const t
                 if (scene.settings.importanceSamplingOn) {
                     float phi = 2.0 * M_PI_F * e1;
                     float theta = asin(e2);
-                    Direction objSpaceRand = float3(1.*sin(theta)*cos(phi), 1.*cos(theta), 1.*sin(theta)*sin(phi));
-                    result.direction = normalize(alignHemisphereWithNormal(objSpaceRand, normal));
-                    result.pdf = dot(normal,result.direction);
+                    Direction objSpaceRand = normalize(float3(1.*sin(theta)*cos(phi), 1.*cos(theta), 1.*sin(theta)*sin(phi)));
+                    result.direction = normalize(alignHemisphereWithNormal(objSpaceRand, normalize(normal)));
+                    result.pdf = dot(normalize(normal),result.direction);
                     return result;
                 } else {
                     return generateRandomOnHemi(normal, float2(e1, e2));

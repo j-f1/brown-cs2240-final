@@ -68,13 +68,63 @@ inline Sample getNextDirection(const thread Location &intersectionPoint, const t
     float e2 = scene.rng(); //random number
     
     //TODO COCO
-    Sample result = {.direction = Direction(0,0,0), .pdf = 1.f,};
+    Sample result = {.direction = Direction(0,0,0), .pdf = 1.f, .reflected = false};
     switch (mat.illum) {
         case Illum::refract_fresnel:
         case Illum::glass:
             // glass
-            //TODO
-            return generateRandomOnHemi(normal, float2(e1, e2));
+            {
+                float3 norm = normal;
+                float cos_theta_i = dot(norm, inRay.direction);
+                bool passingIntoGlass = cos_theta_i < 0;
+                
+                float ior = mat.ior;//Diffuse color as array of floats
+                float ior_i; //ior that the ray was passing through
+                float ior_t; //ior that the ray is maybe going into
+                
+                //when the ray hits a boundary of a refractive object, it is not obvious whether the ray is entering the object or exiting.
+                //Use normals to determine this (if ray is in the same direction as normal, it is leaving object)
+                //We have guarantee that rays will only pass into refractive objects and then immediately air when passing out
+                if (passingIntoGlass) {
+                    cos_theta_i = abs(cos_theta_i);
+                    ior_i = 1;
+                    ior_t = ior;
+                } else {
+                    norm*=-1;
+                    ior_i = ior;
+                    ior_t = 1;
+                }
+                
+                float sqdCos_t = 1.f-pow((ior_i/ior_t),2)*(1.f-pow(cos_theta_i,2));
+                //if ior is already that of glass, change it back to air
+                
+                //for dielectric splitting (both reflection and refraction) use Schlick's approximation of how much light gets reflected
+                float split = scene.rng();
+                float r_0 = pow((ior_i-ior_t)/(ior_i+ior_t),2.f);
+                float schlicks = r_0 + (1.f-r_0)*pow((1.f-cos_theta_i),5.f);
+                
+                
+                if (split < schlicks || sqdCos_t < 0) { //if Schlicks, or if total internal reflection
+                    //reflect
+                    Direction incomingDir = normalize(inRay.direction);
+                    Direction reflectedVector = incomingDir - 2.f*dot(incomingDir,norm)*norm;
+                    result.direction = reflectedVector;
+                    result.pdf = 1.f;
+                    result.reflected = true;
+                } else {
+                    //refract
+                    float cosTheta_t = sqrt(sqdCos_t);
+                    float ratioIT = ior_i/ior_t;
+                    //if the determinant is non-negative, we do not have total internal reflection
+                    Direction refractedDir = ratioIT * inRay.direction + (ratioIT * cos_theta_i - cosTheta_t)*norm;
+                    
+                    //accumulate the radiance of the next path!
+                    result.direction = refractedDir;
+                    result.pdf = 1.f;
+                    
+                }
+                return result;
+            }
             break;
         case Illum::diffuse_specular_fresnel:
         case Illum::diffuse_specular:
@@ -85,6 +135,7 @@ inline Sample getNextDirection(const thread Location &intersectionPoint, const t
                         Direction reflectedVector = inRay.direction - 2.f*dot(inRay.direction, normal)*normal;
                         result.direction = reflectedVector;
                         result.pdf = 1.f;
+                        result.reflected = true;
                         return result;
                     } else {
                         return generateRandomOnHemi(normal, float2(e1, e2));
@@ -101,8 +152,12 @@ inline Sample getNextDirection(const thread Location &intersectionPoint, const t
             } else {
                 // diffuse
                 if (scene.settings.importanceSamplingOn) {
-                    //TODO
-                    return generateRandomOnHemi(normal, float2(e1, e2));
+                    float phi = 2.0 * M_PI_F * e1;
+                    float theta = asin(e2);
+                    Direction objSpaceRand = float3(1.*sin(theta)*cos(phi), 1.*cos(theta), 1.*sin(theta)*sin(phi));
+                    result.direction = normalize(alignHemisphereWithNormal(objSpaceRand, normal));
+                    result.pdf = dot(normal,result.direction);
+                    return result;
                 } else {
                     return generateRandomOnHemi(normal, float2(e1, e2));
                 }
@@ -144,7 +199,7 @@ inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLe
         return result;
     }
     
-    Sample sample = getNextDirection(intersection.location(), normal, material, inRay, scene);
+    Sample sample = getNextDirection(intersection.location(), normalize(normal), material, inRay, scene);
     
     if (scene.settings.directLightingOn) {
         result.illumination = directLighting(inRay, intersection.location(), normal, material, scene);
@@ -166,7 +221,7 @@ inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLe
 
 kernel void raytracingKernel(
                              uint3                               tid                       [[thread_position_in_grid]],
-
+                             
                              constant Uniforms &                 uniforms                  [[buffer(BufferIndexUniforms)]],
                              texture2d<unsigned int>             randomTex                 [[texture(TextureIndexRandom)]],
                              texture3d<uint, access::write>      dstTex                    [[texture(TextureIndexDst)]],
@@ -196,7 +251,7 @@ kernel void raytracingKernel(
     
     // Add a random offset to the pixel coordinates for antialiasing.
     pixel += float2(rng(), rng());
-
+    
     // Map pixel coordinates to -1..1.
     float2 uv = pixel / float2(settings.imageWidth, settings.imageHeight);
     uv = uv * 2.0f - 1.0f;
@@ -211,10 +266,10 @@ kernel void raytracingKernel(
     ray.direction = normalize(uv.x * camera.right +
                               uv.y * camera.up +
                               camera.forward);
-
+    
     // avoid self-intersection
     ray.min_distance = 0.01;
-
+    
     // Don't limit intersection distance.
     ray.max_distance = INFINITY;
     
@@ -236,21 +291,21 @@ kernel void raytracingKernel(
     
     Color color = totalIllumination / pow(settings.russianRoulette, depth);
     
-//    dstTex.write(uint4(uint3(aces_approx(color) * 255), 1), tid); //TODO make this an optional color mode
+    //    dstTex.write(uint4(uint3(aces_approx(color) * 255), 1), tid); //TODO make this an optional color mode
     dstTex.write(uint4(uint3(tone_map(color, settings.toneMap, settings.gammaCorrection) * 255), 1), tid);
 }
 
 kernel void flattenKernel(
-    uint2                               tid                       [[thread_position_in_grid]],
-    constant Uniforms &                 uniforms                  [[buffer(BufferIndexUniforms)]],
-    texture3d<uint, access::read>       srcTex                    [[texture(TextureIndexSrc)]],
-    texture3d<uint, access::write>      dstTex                    [[texture(TextureIndexDst)]]
-) {
-    if (!uniforms.settings.diffuseOn) return;
-    float4 result = 0.f;
-    for (uint z = 0; z < srcTex.get_depth(); z++) {
-        result += float4(srcTex.read(uint3(tid, z)));
-    }
-    result /= srcTex.get_depth();
-    dstTex.write(uint4(result), uint3(tid, 0));
-}
+                          uint2                               tid                       [[thread_position_in_grid]],
+                          constant Uniforms &                 uniforms                  [[buffer(BufferIndexUniforms)]],
+                          texture3d<uint, access::read>       srcTex                    [[texture(TextureIndexSrc)]],
+                          texture3d<uint, access::write>      dstTex                    [[texture(TextureIndexDst)]]
+                          ) {
+                              if (!uniforms.settings.diffuseOn) return;
+                              float4 result = 0.f;
+                              for (uint z = 0; z < srcTex.get_depth(); z++) {
+                                  result += float4(srcTex.read(uint3(tid, z)));
+                              }
+                              result /= srcTex.get_depth();
+                              dstTex.write(uint4(result), uint3(tid, 0));
+                          }

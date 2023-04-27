@@ -155,7 +155,7 @@ class Scene {
     }
 }
 
-private func runBlocking<T>(qos: DispatchQoS.QoSClass = .userInitiated, _ cb: @escaping () -> T) async -> T {
+func runBlocking<T>(qos: DispatchQoS.QoSClass = .userInitiated, _ cb: @escaping () -> T) async -> T {
     await withCheckedContinuation { continuation in
         DispatchQueue.global(qos: qos).async {
             continuation.resume(returning: cb())

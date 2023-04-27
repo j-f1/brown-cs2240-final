@@ -126,6 +126,7 @@ struct RenderView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .aspectRatio(settings.size.width / settings.size.height, contentMode: .fit)
+            .animation(.default, value: settings.size)
 
             Spacer()
             HStack {

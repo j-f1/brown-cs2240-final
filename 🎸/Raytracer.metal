@@ -83,7 +83,7 @@ inline Sample getNextDirection(const thread Location &intersectionPoint, const t
 //        result.pdf = 1.0/(2.0*M_PI_F);
 //    }
     float3 randomHemi = sampleCosineWeightedHemisphere(float2(e1, e2)); //pick a random direction on the hemisphere
-    float3 worldSpaceRand = alignHemisphereWithNormal(randomHemi, normal._unwrap()); //align the random direction with the normal
+    float3 worldSpaceRand = alignHemisphereWithNormal(randomHemi, normal); //align the random direction with the normal
     result.direction = Direction(worldSpaceRand.x, worldSpaceRand.y, worldSpaceRand.z);
     result.pdf = 1.f/(2.f*M_PI_F);
     
@@ -96,23 +96,23 @@ inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLe
     auto intersection = scene.intersector(inRay);
     
     RayTraceResult result{
-        .ray = ray{intersection.location()._unwrap(), 0.f, inRay.min_distance, inRay.max_distance},
+        .ray = ray{intersection.location(), 0.f, inRay.min_distance, inRay.max_distance},
         // .brdf = [uninitialized],
         // .illumination = [uninitialized]
     };
     
     // Stop if the ray didn't hit anything and has bounced out of the scene.
     if (!intersection) {
-        result.brdf = Color::black();
-        result.illumination = Color::black();
+        result.brdf = Colors::black();
+        result.illumination = Colors::black();
         return result;
     }
     
     Direction normal = unpack<Direction>(scene.normals, intersection.index());
     Material material = scene.materials[scene.materialIds[intersection.index()]];
     
-    if (material.emission) {
-        result.brdf = Color::black();
+    if (!floatEpsEqual(material.emission, 0)) {
+        result.brdf = Colors::black();
         if (pathLength == 0 || !scene.settings.directLightingOn) {
             result.illumination = material.emission;
         }
@@ -124,14 +124,14 @@ inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLe
     if (scene.settings.directLightingOn) {
         result.illumination = directLighting(inRay, intersection.location(), normal, material, scene);
     } else {
-        result.illumination = Color::black();
+        result.illumination = Colors::black();
     }
     
     Color brdf = getBRDF(inRay, sample.direction, material);
     result.brdf = brdf;
     
     
-    float lightProjection = abs(dot(sample.direction, normal._unwrap()));
+    float lightProjection = abs(dot(sample.direction, normal));
     
     result.ray.direction = sample.direction;
     result.brdf *= lightProjection / sample.pdf;
@@ -196,8 +196,8 @@ kernel void raytracingKernel(
     //raytracing loop
     RayTraceResult result;
     int depth = 0;
-    Color totalBRDF = Color::white();
-    Color totalIllumination = Color::black();
+    Color totalBRDF = Colors::white();
+    Color totalIllumination = Colors::black();
     do {
         result = traceRay(ray, depth, state); //depth -> 0
         
@@ -211,7 +211,7 @@ kernel void raytracingKernel(
     
     Color color = totalIllumination / pow(settings.russianRoulette, depth);
     
-    dstTex.write(uint4(uint3(color.aces_approx()._unwrap() * 255), 1), tid);
+    dstTex.write(uint4(uint3(aces_approx(color) * 255), 1), tid);
 }
 
 kernel void flattenKernel(

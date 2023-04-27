@@ -18,30 +18,28 @@ struct tri {
 
     inline Location sample(thread RandomGenerator &rng) const {
         // https://math.stackexchange.com/a/538472/415698
-        return Location::_wrap(v1._unwrap() + rng() * (v2._unwrap() - v1._unwrap()) + rng() * (v3._unwrap() - v1._unwrap()));
+        return v1 + rng() * (v2 - v1) + rng() * (v3 - v1);
     }
 };
 
 Color directLighting(const thread ray &inRay, Location location, Direction normal, const thread Material &material, thread SceneState &scene) {
-    Color result = Color::black();
+    Color result = Colors::black();
     for (int i = 0; i < scene.emissivesCount; i++) {
         tri t{scene.emissives[i], scene};
 
         for (int j = 0; j < scene.settings.directLightingSamples; j++) {
             const Location target = t.sample(scene.rng);
-            float3 diff = target - location;
-            diff = normalize(diff);
-            Direction dir = Direction::_wrap(diff);
-            if (dir.dot(normal) < 0) continue;
+            float3 dir = normalize(target - location);
+            if (dot(dir, normal) < 0) continue;
             ray outRay = inRay;
-            outRay.origin = location._unwrap();
-            outRay.direction = dir._unwrap();
+            outRay.origin = location;
+            outRay.direction = dir;
             auto hit = scene.intersector(outRay);
             if (!hit) continue;
             if (hit.index() != t.idx) continue; // skip if there’s an obstacle
-            if (t.normal.dot(-dir) < 0) continue;
+            if (dot(t.normal, -dir) < 0) continue;
             float area = length(cross((t.v2 - t.v1), (t.v3 - t.v1))) / 2;
-            float distanceFactor = normal.dot(dir) * abs(t.normal.dot(-dir)) / length_squared(target._unwrap() - outRay.origin);
+            float distanceFactor = dot(normal, dir) * abs(dot(t.normal, -dir)) / length_squared(target - outRay.origin);
             float3 brdf = 1.f; // TODO: brdf(-dir, outRay.direction, normal, material);
             float3 contribution = brdf * t.material.emission * area * distanceFactor;
             result += contribution;

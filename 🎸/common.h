@@ -61,7 +61,7 @@ public:
             return i.distance;
         }
         inline Location location() const {
-            return Location::_wrap(inRay.origin + inRay.direction * distance());
+            return inRay.origin + inRay.direction * distance();
         }
     };
 
@@ -109,7 +109,7 @@ inline constexpr float3 unpack(constant float *floats, unsigned int idx) {
 }
 template<typename T>
 inline constexpr T unpack(constant float *floats, unsigned int idx) {
-    return T::_wrap(unpack(floats, idx));
+    return unpack(floats, idx);
 }
 inline constexpr ushort3 unpack(constant ushort *ints, unsigned int idx) {
     return ushort3(ints[idx * 3 + 0], ints[idx * 3 + 1], ints[idx * 3 + 2]);

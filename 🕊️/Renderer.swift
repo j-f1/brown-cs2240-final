@@ -152,7 +152,6 @@ class Renderer: ObservableObject {
             print("Unable to create output texture")
             return
         }
-        print("Created intermediate texture in \((Date.now.timeIntervalSince(start) * 1000).formatted(.number.precision(.significantDigits(...3))))ms")
 
         let finalTexture: MTLTexture
         if device.readWriteTextureSupport == .tier2 {
@@ -242,6 +241,7 @@ class Renderer: ObservableObject {
                 self.content = finalTexture
                 self.image = finalTexture.image
                 self.rendering = false
+                print("Rendered in \(Date().timeIntervalSince(start).formatted(.number.precision(.fractionLength(2))))s")
             }
         }
     }

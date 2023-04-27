@@ -34,3 +34,25 @@ inline Color aces_approx(Color v) {
 
     return {max(0, min(1, pow(corrected, 1 / 2.2)))};
 }
+
+inline Color tone_map(Color c, float3 mapValues, float gammaCorrection) {
+    /**
+     float intensity = 0.299*intensityValues[offset](0)+0.587*intensityValues[offset](1) + 0.114*intensityValues[offset](3);
+     // Tone Map by equation 3 of https://www-old.cs.utah.edu/docs/techreports/2002/pdf/UUCS-02-001.pdf
+     float toneOperator = intensity/(1.0+intensity);
+     float scale = toneOperator / intensity;
+     Vector3f scaledVals = scale * Vector3f(intensityValues[offset](0),intensityValues[offset](1),intensityValues[offset](2));
+     Vector3f clamped = scaledVals.cwiseMin(Vector3f::Ones()).cwiseMax(Vector3f::Zero());
+     Vector3f gamma_vals = clamped.array().pow(GAMMA_CORRECTION);
+
+     Vector3f toneMapped = 255*gamma_vals;
+     imageData[offset] = qRgb(toneMapped(0), toneMapped(1), toneMapped(2));
+     */
+    float intensity = mapValues[0]*c[0]+mapValues[1]*c[1]+mapValues[2]*c[2];
+    float toneOperator = intensity/(1.0+intensity);
+    float scale = toneOperator/intensity;
+    float3 scaledColor = scale*c;
+    float3 clamped = clamp(scaledColor, 0.f,1.f);
+    float3 gammaVals = pow(clamped, gammaCorrection);
+    return gammaVals;
+}

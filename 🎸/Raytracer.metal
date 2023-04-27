@@ -14,7 +14,7 @@ struct RayTraceResult {
 };
 
 //TODO eventually turn the outDir type to Ray because we will be in BSSDF land
-inline Color getBRDF(const thread ray &inRay, const thread Direction normal, const thread Direction &outDir, const thread Material &mat) {
+inline Color getBRDF(const thread ray &inRay, const thread Direction normal, const thread Direction &outDir, const thread Material &mat, thread SceneState &scene) {
     //TODO COCO
     switch (mat.illum) {
         case Illum::refract_fresnel:
@@ -31,17 +31,20 @@ inline Color getBRDF(const thread ray &inRay, const thread Direction normal, con
                     // [Phong Glossy Specular BRDF];
                     float n = mat.shininess;
                     float3 s = mat.specular;
-                    float3 normalized_color = ((n+2.f)/2.f*M_PI_F)*s;
-                    Direction reflectedVector = inRay.direction - 2.f*dot(inRay.direction, normal)*normal;
-                    float dotProd = dot(reflectedVector, outDir);
-                    if (dotProd < 0) {return 0.f;}
+                    float3 normalized_color = ((n+2.f)/(2.f*M_PI_F))*s;
+                    Direction norm = normalize(normal);
+                    Direction reflectedVector = normalize(inRay.direction) - 2.f*dot(normalize(inRay.direction), norm)*norm;
+                    float dotProd = dot(reflectedVector, normalize(outDir));
+                    if (dotProd < 0) {return float3(0.f, 0.f, 0.f);}
                     float reflectiveIntensity = pow(dotProd, n);
                     
                     return normalized_color*reflectiveIntensity;
                 }
             } else {
                 // [diffuse BRDF];
-                return mat.diffuse/M_PI_F;
+                if (scene.settings.diffuseOn) {
+                    return mat.diffuse/M_PI_F;
+                } else {return float3(1.f,1.f,1.f);}
             }
             break;
         default:
@@ -149,7 +152,7 @@ inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLe
         result.illumination = Colors::black();
     }
     
-    Color brdf = getBRDF(inRay, normal, sample.direction, material);
+    Color brdf = getBRDF(inRay, normal, sample.direction, material, scene);
     result.brdf = brdf;
     
     
@@ -233,7 +236,8 @@ kernel void raytracingKernel(
     
     Color color = totalIllumination / pow(settings.russianRoulette, depth);
     
-    dstTex.write(uint4(uint3(aces_approx(color) * 255), 1), tid);
+//    dstTex.write(uint4(uint3(aces_approx(color) * 255), 1), tid); //TODO make this an optional color mode
+    dstTex.write(uint4(uint3(tone_map(color, settings.toneMap, settings.gammaCorrection) * 255), 1), tid);
 }
 
 kernel void flattenKernel(

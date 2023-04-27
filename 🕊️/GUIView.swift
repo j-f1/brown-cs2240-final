@@ -64,6 +64,10 @@ struct GUIView: View {
                         Text("Samples Per Pixel")
                     }
                     Toggle("Direct Lighting", isOn: $nextSettings.directLightingOn)
+                    TextField( value: $nextSettings.directLightingSamples,
+                               format: .number, prompt: Text("Samples Per Light")) {
+                        Text("Samples Per Light")
+                    }
                     Toggle("Glass Transmittance", isOn: $nextSettings.glassTransmittanceOn)
                     TextField(
                         value: $nextSettings.russianRoulette,

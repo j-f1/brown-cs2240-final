@@ -134,7 +134,9 @@ class Renderer: ObservableObject {
     private func growRandomTexture() async -> MTLTexture {
         guard randomTexture.width < settings.imageWidth || randomTexture.height < settings.imageHeight else { return randomTexture }
 
-        let newSize = CGSize(width: randomTexture.width * 2, height: randomTexture.height * 2)
+        var newSize = CGSize(width: randomTexture.width, height: randomTexture.height)
+        while Int(newSize.width) < settings.imageWidth { newSize.width *= 2 }
+        while Int(newSize.height) < settings.imageHeight { newSize.height *= 2 }
         print("Growing random texture to \(newSize)")
         guard let randomTexture = await Renderer.buildRandomTexture(size: newSize, on: device) else {
             print("Unable to create random texture")

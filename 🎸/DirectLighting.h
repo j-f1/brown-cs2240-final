@@ -8,9 +8,9 @@ struct tri {
         v1 = unpack<Location>(scene.positions, vertIndices.x);
         v2 = unpack<Location>(scene.positions, vertIndices.y);
         v3 = unpack<Location>(scene.positions, vertIndices.z);
-        n1 = unpack<Direction>(scene.vertexNormals, vertIndices.x);
-        n2 = unpack<Direction>(scene.vertexNormals, vertIndices.y);
-        n3 = unpack<Direction>(scene.vertexNormals, vertIndices.z);
+//        n1 = unpack<Direction>(scene.vertexNormals, vertIndices.x);
+//        n2 = unpack<Direction>(scene.vertexNormals, vertIndices.y);
+//        n3 = unpack<Direction>(scene.vertexNormals, vertIndices.z);
         faceNormal = unpack<Direction>(scene.normals, idx);
         auto materialId = scene.materialIds[idx];
         material = scene.materials[materialId];
@@ -20,7 +20,7 @@ struct tri {
     Material material;
     Direction faceNormal;
     Location v1, v2, v3;
-    Direction n1, n2, n3;
+//    Direction n1, n2, n3;
 
     inline Location sample(thread RandomGenerator &rng) const {
         // https://math.stackexchange.com/a/538472/415698

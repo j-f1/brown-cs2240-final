@@ -23,7 +23,7 @@ class Scene {
             let materialBuffer = materials.withUnsafeBytes({ ptr in
                 device.makeBuffer(bytes: ptr.baseAddress!, length: ptr.count, options: [])
             }),
-            let emissivesBuffer = device.makeBuffer(bytes: loader.emissiveFaces, length: loader.emissiveFaceCount * MemoryLayout<UInt16>.stride, options: [])
+            let emissivesBuffer = device.makeBuffer(bytes: loader.emissiveFaces, length: max(1, loader.emissiveFaceCount) * MemoryLayout<UInt16>.stride, options: [])
         else { return nil }
 
         self.emissivesCount = Int32(loader.emissiveFaceCount)

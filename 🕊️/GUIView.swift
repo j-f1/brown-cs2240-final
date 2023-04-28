@@ -5,7 +5,6 @@ import UniformTypeIdentifiers
 struct GUIView: View {
     @Binding var model: URL?
     @Binding var nextSettings: RenderSettings
-    @State private var selectingModel = false
 
     init(nextSettings: Binding<RenderSettings>, model: Binding<URL?>) {
         self._model = model
@@ -20,6 +19,53 @@ struct GUIView: View {
         #endif
     }
 
+    struct ModelPicker: View {
+        @Binding var model: URL?
+
+        @State private var selectingModel = false
+
+        private func contents(of directory: URL = Bundle.main.url(forResource: "models", withExtension: nil)!) -> [URL] {
+            try! FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
+                .filter { $0.pathExtension == "obj" || $0.hasDirectoryPath }
+        }
+
+        var body: some View {
+            Menu {
+                Picker("", selection: $model) {
+                    ForEach(contents().filter { !$0.hasDirectoryPath }, id: \.self) { file in
+                        Text(file.lastPathComponent.replacingOccurrences(of: ".obj", with: "")).tag(file as URL?)
+                    }
+                }.labelsHidden()
+                ForEach(contents().filter(\.hasDirectoryPath), id: \.self) { dir in
+                    Picker(dir.lastPathComponent, selection: $model) {
+                        ForEach(contents(of: dir), id: \.self) { file in
+                            Text(
+                                file.lastPathComponent
+                                    .replacingOccurrences(of: dir.lastPathComponent + "-", with: "")
+                                    .replacingOccurrences(of: ".obj", with: "")
+                            ).tag(file as URL?)
+                        }
+                    }
+                }
+            } label: {
+                if let model {
+                    HStack(spacing: 0) {
+                        Image(systemName: "cube.transparent").imageScale(.small)
+                        Text(" \(model.lastPathComponent)")
+                    }
+                } else {
+                    Text("Select File")
+                }
+            } primaryAction: {
+                selectingModel = true
+            }.fileImporter(isPresented: $selectingModel, allowedContentTypes: [.data]) { result in
+                if case .success(let url) = result {
+                    model = url
+                }
+            }.pickerStyle(.inline)
+        }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Form {
@@ -29,20 +75,7 @@ struct GUIView: View {
                 let header = EmptyView()
                 #endif
                 Section(header: header) {
-                    Button(action: { selectingModel = true }) {
-                        if let model {
-                            HStack(spacing: 0) {
-                                Image(systemName: "cube.transparent")
-                                Text(" \(model.lastPathComponent)")
-                            }
-                        } else {
-                            Text("Select File")
-                        }
-                    }.fileImporter(isPresented: $selectingModel, allowedContentTypes: [.data]) { result in
-                        if case .success(let url) = result {
-                            model = url
-                        }
-                    }
+                    ModelPicker(model: $model)
                 }
                 #if os(macOS)
                 Divider()

@@ -264,7 +264,7 @@ kernel void raytracingKernel(
                              texture2d<unsigned int>             randomTex                 [[texture(TextureIndexRandom)]],
                              texture3d<uint, access::write>      dstTex                    [[texture(TextureIndexDst)]],
                              constant float                     *positions                 [[buffer(BufferIndexVertexPositions)]],
-                             constant float                     *vertexNormals             [[buffer(BufferIndexVertexNormals)]],
+                             constant float                     *vertexNormals             [[buffer(BufferIndexVertexNormalAngles)]],
                              constant ushort                    *vertices                  [[buffer(BufferIndexFaceVertices)]],
                              constant float                     *normals                   [[buffer(BufferIndexFaceNormals)]],
                              constant ushort                    *materialIds               [[buffer(BufferIndexFaceMaterials)]],

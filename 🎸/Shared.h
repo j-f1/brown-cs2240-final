@@ -18,6 +18,7 @@ typedef NS_ENUM(EnumBackingType, BufferIndex)
     BufferIndexVertexNormalAngles,
     BufferIndexFaceVertices,
     BufferIndexFaceNormals,
+    BufferIndexFaceVertexNormals,
     BufferIndexFaceMaterials,
     BufferIndexMaterials,
     BufferIndexIntersector,

@@ -208,6 +208,7 @@ class Renderer: ObservableObject {
                 computeEncoder[.dst] = intermediateTexture
                 computeEncoder[.vertexPositions] = scene.vertexPositionsBuffer
                 computeEncoder[.vertexNormalAngles] = scene.normalAnglesBuffer
+                computeEncoder[.faceVertexNormals] = scene.vertexNormalIndexBuffer
                 computeEncoder[.faceVertices] = scene.faceVertexIndexBuffer
                 computeEncoder[.faceNormals] = scene.normalBuffer
                 computeEncoder[.faceMaterials] = scene.materialIndexBuffer

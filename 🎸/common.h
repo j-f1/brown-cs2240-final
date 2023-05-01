@@ -93,6 +93,7 @@ struct SceneState {
     const constant float                                      *positions;
     const constant float                                      *vertexNormalDirections;
     const constant ushort                                     *vertices;
+    const constant ushort                                     *faceVertexNormals;
     const constant float                                      *normals;
     const constant Material                                   *materials;
     const constant ushort                                     *materialIds;

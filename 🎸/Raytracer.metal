@@ -266,6 +266,7 @@ kernel void raytracingKernel(
                              constant float                     *positions                 [[buffer(BufferIndexVertexPositions)]],
                              constant float                     *vertexNormals             [[buffer(BufferIndexVertexNormalAngles)]],
                              constant ushort                    *vertices                  [[buffer(BufferIndexFaceVertices)]],
+                             constant ushort                    *faceVertexNormals         [[buffer(BufferIndexFaceVertexNormals)]],
                              constant float                     *normals                   [[buffer(BufferIndexFaceNormals)]],
                              constant ushort                    *materialIds               [[buffer(BufferIndexFaceMaterials)]],
                              constant ushort                    *emissives                 [[buffer(BufferIndexEmissiveFaces)]],
@@ -275,7 +276,7 @@ kernel void raytracingKernel(
 {
     constant RenderSettings &settings = uniforms.settings;
     RandomGenerator rng{randomTex, tid, settings.frameIndex};
-    SceneState state{positions, vertexNormals, vertices, normals, materials, materialIds, uniforms.settings, Intersector{accelerationStructure}, rng, emissives, uniforms.emissivesCount};
+    SceneState state{positions, vertexNormals, vertices, faceVertexNormals, normals, materials, materialIds, uniforms.settings, Intersector{accelerationStructure}, rng, emissives, uniforms.emissivesCount};
     
     // We align the thread count to the threadgroup size, which means the thread count
     // may be different than the bounds of the texture. Test to make sure this thread

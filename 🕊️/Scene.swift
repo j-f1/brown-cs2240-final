@@ -6,6 +6,7 @@ class Scene {
     let normalAnglesBuffer: MTLBuffer // Float
     let materialIndexBuffer: MTLBuffer // uint16
     let faceVertexIndexBuffer: MTLBuffer // uint16
+    let vertexNormalIndexBuffer: MTLBuffer // uint16
     let materialBuffer: MTLBuffer // Material
     let normalBuffer: MTLBuffer // Float
     let emissivesBuffer: MTLBuffer // uint16
@@ -22,6 +23,7 @@ class Scene {
             let normalAnglesBuffer = device.makeBuffer(bytes: loader.normals, length: loader.normalCount * MemoryLayout<Float>.stride, options: []),
             let materialIdBuffer = device.makeBuffer(bytes: loader.materialIds, length: loader.materialIdCount * MemoryLayout<UInt16>.stride, options: []),
             let faceVertexBuffer = device.makeBuffer(bytes: loader.faceVertices, length: loader.faceCount * 3 * MemoryLayout<UInt16>.stride, options: []),
+            let vertexNormalIndexBuffer = device.makeBuffer(bytes: loader.vertexNormals, length: loader.faceCount * 3 * MemoryLayout<UInt16>.stride, options: []),
             let materialBuffer = materials.withUnsafeBytes({ ptr in
                 device.makeBuffer(bytes: ptr.baseAddress!, length: ptr.count, options: [])
             }),
@@ -38,6 +40,8 @@ class Scene {
         self.materialIndexBuffer = materialIdBuffer
         faceVertexBuffer.label = "Face Vertices"
         self.faceVertexIndexBuffer = faceVertexBuffer
+        vertexNormalIndexBuffer.label = "Vertex Normal IDs"
+        self.vertexNormalIndexBuffer = vertexNormalIndexBuffer
         materialBuffer.label = "Materials"
         self.materialBuffer = materialBuffer
         emissivesBuffer.label = "Emissive Faces"

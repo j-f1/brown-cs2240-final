@@ -91,7 +91,7 @@ public:
 
 struct SceneState {
     const constant float                                      *positions;
-//    const constant float                                      *vertexNormals;
+    const constant float                                      *vertexNormals;
     const constant ushort                                     *vertices;
     const constant float                                      *normals;
     const constant Material                                   *materials;

@@ -4,7 +4,7 @@ import SwiftUI
 struct ContentView: View {
     @State var settings = RenderSettings.default
     @State var nextSettings = RenderSettings.default
-    @State var model = Bundle.main.url(forResource: "CornellBox-Original", withExtension: "obj", subdirectory: "models/CornellBox")
+    @State var model = Bundle.main.url(forResource: "CornellBox-Glossy", withExtension: "obj", subdirectory: "models/CornellBox")
 
     // needs to be kept here since iOS destroys tabs when navigating away from them
     @State private var renderer: Renderer?

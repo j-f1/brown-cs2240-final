@@ -3,6 +3,7 @@ import Metal
 
 class Scene {
     let vertexBuffer: MTLBuffer // Float
+    let vertexNormalsBuffer: MTLBuffer //FLoat
     let materialIdBuffer: MTLBuffer // uint16
     let faceVertexBuffer: MTLBuffer // uint16
     let materialBuffer: MTLBuffer // Material
@@ -18,7 +19,8 @@ class Scene {
         let materials = loader.materials.map(RawMaterial.init)
         guard
             let vertexBuffer = device.makeBuffer(bytes: loader.vertices, length: loader.vertexCount * MemoryLayout<Float>.stride, options: []),
-            let materialIdBuffer = device.makeBuffer(bytes: loader.materialIds, length: loader.materialIdCount * MemoryLayout<UInt16>.stride, options: []),
+            let vertexNormalsBuffer = device.makeBuffer(bytes: loader.normals, length: loader.normalCount * MemoryLayout<Float>.stride, options: []),
+                let materialIdBuffer = device.makeBuffer(bytes: loader.materialIds, length: loader.materialIdCount * MemoryLayout<UInt16>.stride, options: []),
             let faceVertexBuffer = device.makeBuffer(bytes: loader.faceVertices, length: loader.faceCount * 3 * MemoryLayout<UInt16>.stride, options: []),
             let materialBuffer = materials.withUnsafeBytes({ ptr in
                 device.makeBuffer(bytes: ptr.baseAddress!, length: ptr.count, options: [])
@@ -30,6 +32,8 @@ class Scene {
 
         vertexBuffer.label = "Vertex Positions"
         self.vertexBuffer = vertexBuffer
+        vertexNormalsBuffer.label = "Vertex Normals"
+        self.vertexNormalsBuffer = vertexNormalsBuffer
         materialIdBuffer.label = "Face Material IDs"
         self.materialIdBuffer = materialIdBuffer
         faceVertexBuffer.label = "Face Vertices"

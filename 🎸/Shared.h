@@ -14,14 +14,16 @@ typedef NSInteger EnumBackingType;
 
 typedef NS_ENUM(EnumBackingType, BufferIndex)
 {
-    BufferIndexVertexPositions    = 0,
-    BufferIndexFaceVertices       = 1,
-    BufferIndexFaceNormals        = 2,
-    BufferIndexFaceMaterials      = 3,
-    BufferIndexMaterials          = 4,
-    BufferIndexIntersector        = 6,
-    BufferIndexUniforms           = 7,
-    BufferIndexEmissiveFaces      = 8,
+    BufferIndexVertexPositions,
+    BufferIndexVertexNormalAngles,
+    BufferIndexFaceVertices,
+    BufferIndexFaceNormals,
+    BufferIndexFaceVertexNormals,
+    BufferIndexFaceMaterials,
+    BufferIndexMaterials,
+    BufferIndexIntersector,
+    BufferIndexUniforms,
+    BufferIndexEmissiveFaces,
 };
 
 typedef NS_ENUM(EnumBackingType, TextureIndex)

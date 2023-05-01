@@ -13,6 +13,31 @@ struct RayTraceResult {
     Color illumination;
 };
 
+//generate the smooth normal??
+inline Direction generateWeightedNormal(thread Intersector::Intersection intersection, thread SceneState& scene) {
+    tri hit{intersection.index(), scene};
+
+    if (floatEpsEqual(length_squared(hit.n1), 0) || floatEpsEqual(length_squared(hit.n2), 0) || floatEpsEqual(length_squared(hit.n3), 0)) {
+        return hit.faceNormal;
+    }
+
+    Location v0 = hit.v2 - hit.v1;
+    Location v1 = hit.v3 - hit.v1;
+    Location v2 = intersection.location() - hit.v1;
+    float d00 = dot(v0,v0);
+    float d01 = dot(v0,v1);
+    float d11 = dot(v1,v1);
+    float d20 = dot(v2,v0);
+    float d21 = dot(v2,v1);
+    float denom = d00 * d11 - d01 * d01;
+    float v = (d11 * d20 - d01 * d21) / denom;
+    float w = (d00 * d21 - d01 * d20) / denom;
+    float u = 1.f - v - w;
+
+    Direction interpolated_normal = normalize(u * hit.n1 + v * hit.n2 + w * hit.n3);
+    return interpolated_normal;
+}
+
 //TODO eventually turn the outDir type to Ray because we will be in BSSDF land
 inline Color getBRDF(const thread ray &inRay, const thread Direction normal, const thread Direction &outDir, const thread Material &mat, thread SceneState &scene) {
     //TODO COCO
@@ -183,7 +208,7 @@ inline Sample getNextDirection(const thread Location &intersectionPoint, const t
 
 inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLength, thread SceneState &scene) {
     // Check for intersection between the ray and the acceleration structure.
-    auto intersection = scene.intersector(inRay);
+    Intersector::Intersection intersection = scene.intersector(inRay);
     
     RayTraceResult result{
         .ray = ray{intersection.location(), 0.f, inRay.min_distance, inRay.max_distance},
@@ -198,7 +223,8 @@ inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLe
         return result;
     }
     
-    Direction normal = unpack<Direction>(scene.normals, intersection.index());
+    Direction normal = generateWeightedNormal(intersection, scene);
+    normal = normalize(normal);
     Material material = scene.materials[scene.materialIds[intersection.index()]];
     
     if (!floatEpsEqual(material.emission, 0)) {
@@ -236,7 +262,9 @@ kernel void raytracingKernel(
                              texture2d<unsigned int>             randomTex                 [[texture(TextureIndexRandom)]],
                              texture3d<uint, access::write>      dstTex                    [[texture(TextureIndexDst)]],
                              constant float                     *positions                 [[buffer(BufferIndexVertexPositions)]],
+                             constant float                     *vertexNormals             [[buffer(BufferIndexVertexNormalAngles)]],
                              constant ushort                    *vertices                  [[buffer(BufferIndexFaceVertices)]],
+                             constant ushort                    *faceVertexNormals         [[buffer(BufferIndexFaceVertexNormals)]],
                              constant float                     *normals                   [[buffer(BufferIndexFaceNormals)]],
                              constant ushort                    *materialIds               [[buffer(BufferIndexFaceMaterials)]],
                              constant ushort                    *emissives                 [[buffer(BufferIndexEmissiveFaces)]],
@@ -246,7 +274,7 @@ kernel void raytracingKernel(
 {
     constant RenderSettings &settings = uniforms.settings;
     RandomGenerator rng{randomTex, tid, settings.frameIndex};
-    SceneState state{positions, vertices, normals, materials, materialIds, uniforms.settings, Intersector{accelerationStructure}, rng, emissives, uniforms.emissivesCount};
+    SceneState state{positions, vertexNormals, vertices, faceVertexNormals, normals, materials, materialIds, uniforms.settings, Intersector{accelerationStructure}, rng, emissives, uniforms.emissivesCount};
     
     // We align the thread count to the threadgroup size, which means the thread count
     // may be different than the bounds of the texture. Test to make sure this thread

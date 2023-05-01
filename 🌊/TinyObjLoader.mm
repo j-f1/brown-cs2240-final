@@ -17,12 +17,12 @@ simd::float3 to_simd(const tinyobj::real_t val[3]) {
 
     std::vector<uint16_t> _materialIds;
     std::vector<uint16_t> _faceVertices;
-    std::vector<uint16_t> _faceNormals;
+    std::vector<uint16_t> _vertexNormals;
     std::vector<uint16_t> _emissiveFaces;
 }
 
 @dynamic vertexCount, normalCount, materialIdCount, emissiveFaceCount;
-@dynamic vertices, normals, faceVertices, faceNormals, materialIds, emissiveFaces;
+@dynamic vertices, normals, faceVertices, vertexNormals, materialIds, emissiveFaces;
 @synthesize materials = _materials;
 
 - (instancetype)initWithContentsOfURL:(NSURL *)url {
@@ -43,7 +43,7 @@ simd::float3 to_simd(const tinyobj::real_t val[3]) {
 
     _materialIds = {};
     _faceVertices = {};
-    _faceNormals = {};
+    _vertexNormals = {};
     _emissiveFaces = {};
 
     _materials = [NSMutableArray arrayWithCapacity:materials.size()];
@@ -58,7 +58,7 @@ simd::float3 to_simd(const tinyobj::real_t val[3]) {
         #endif
     }
     _faceVertices.reserve(_faceCount * 3);
-    _faceNormals.reserve(_faceCount * 3);
+    _vertexNormals.reserve(_faceCount * 3);
     _materialIds.reserve(_faceCount);
     _emissiveFaces.reserve(_faceCount);
 
@@ -73,7 +73,7 @@ simd::float3 to_simd(const tinyobj::real_t val[3]) {
                 if (idx.vertex_index == ((int)(uint16_t)-1)) abort();
                 _faceVertices.push_back(idx.vertex_index);
                 if (idx.normal_index == ((int)(uint16_t)-1)) abort();
-                _faceNormals.push_back(idx.normal_index);
+                _vertexNormals.push_back(idx.normal_index);
             }
             index_offset += fv;
 
@@ -137,8 +137,8 @@ simd::float3 to_simd(const tinyobj::real_t val[3]) {
     return _faceVertices.data();
 }
 
-- (const uint16_t *)faceNormals {
-    return _faceNormals.data();
+- (const uint16_t *)vertexNormals {
+    return _vertexNormals.data();
 }
 
 - (simd_float3)vertex:(int)off ofFace:(uint16_t)face {

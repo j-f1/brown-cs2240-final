@@ -83,8 +83,8 @@ struct GUIView: View {
                 Section(header: sectionHeader("BSSDFs").textCase(nil)) {
                     Toggle("Diffuse", isOn: $nextSettings.diffuseOn)
                     Toggle("Mirror", isOn: $nextSettings.mirrorOn)
-                    Toggle("Refract", isOn: $nextSettings.refractionOn)
-                    Toggle("Glossy", isOn: $nextSettings.glossyOn)
+                    // Toggle("Refract", isOn: $nextSettings.refractionOn)
+                    // Toggle("Glossy", isOn: $nextSettings.glossyOn)
                     Toggle("Subsurface Scattering", isOn: $nextSettings.subsurfaceScatteringOn)
                     Toggle("Importance Sampling", isOn: $nextSettings.importanceSamplingOn)
                 }
@@ -101,7 +101,7 @@ struct GUIView: View {
                                format: .number, prompt: Text("Samples Per Light")) {
                         Text("Samples Per Light")
                     }
-                    Toggle("Glass Transmittance", isOn: $nextSettings.glassTransmittanceOn)
+                    // Toggle("Glass Transmittance", isOn: $nextSettings.glassTransmittanceOn)
                     TextField(
                         value: $nextSettings.russianRoulette,
                         format: .number, prompt: Text("Russian Roulette"))

@@ -106,14 +106,11 @@ struct SceneState {
     const int               emissivesCount;
 };
 
-inline constexpr float3 unpack(constant float *floats, unsigned int idx) {
+inline constexpr float3 unpack(constant float *floats, ushort idx) {
+    if (idx == (ushort)-1) return 0.f;
     return float3(floats[idx * 3 + 0], floats[idx * 3 + 1], floats[idx * 3 + 2]);
 }
-template<typename T>
-inline constexpr T unpack(constant float *floats, unsigned int idx) {
-    return unpack(floats, idx);
-}
-inline constexpr ushort3 unpack(constant ushort *ints, unsigned int idx) {
+inline constexpr ushort3 unpack(constant ushort *ints, ushort idx) {
+    if (idx == (ushort)-1) return (ushort)-1;
     return ushort3(ints[idx * 3 + 0], ints[idx * 3 + 1], ints[idx * 3 + 2]);
 }
-

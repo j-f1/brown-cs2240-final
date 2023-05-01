@@ -5,13 +5,13 @@ Color directLighting(const thread ray &outRay, Location location, Direction norm
 struct tri {
     inline tri(int idx, const thread SceneState &scene) : idx(idx) {
         ushort3 vertIndices = unpack(scene.vertices, idx);
-        v1 = unpack<Location>(scene.positions, vertIndices.x);
-        v2 = unpack<Location>(scene.positions, vertIndices.y);
-        v3 = unpack<Location>(scene.positions, vertIndices.z);
+        v1 = unpack(scene.positions, vertIndices.x);
+        v2 = unpack(scene.positions, vertIndices.y);
+        v3 = unpack(scene.positions, vertIndices.z);
         ushort3 normalIndices = unpack(scene.faceVertexNormals, idx);
-        n1 = unpack<Direction>(scene.vertexNormalDirections, normalIndices.x);
-        n2 = unpack<Direction>(scene.vertexNormalDirections, normalIndices.y);
-        n3 = unpack<Direction>(scene.vertexNormalDirections, normalIndices.z);
+        n1 = unpack(scene.vertexNormalDirections, normalIndices.x);
+        n2 = unpack(scene.vertexNormalDirections, normalIndices.y);
+        n3 = unpack(scene.vertexNormalDirections, normalIndices.z);
         faceNormal = unpack<Direction>(scene.normals, idx);
         auto materialId = scene.materialIds[idx];
         material = scene.materials[materialId];

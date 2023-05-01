@@ -17,6 +17,10 @@ struct RayTraceResult {
 inline Direction generateWeightedNormal(thread Intersector::Intersection intersection, thread SceneState& scene) {
     tri hit{intersection.index(), scene};
 
+    if (floatEpsEqual(length_squared(hit.n1), 0) || floatEpsEqual(length_squared(hit.n2), 0) || floatEpsEqual(length_squared(hit.n3), 0)) {
+        return hit.faceNormal;
+    }
+
     Location v0 = hit.v2 - hit.v1;
     Location v1 = hit.v3 - hit.v1;
     Location v2 = intersection.location() - hit.v1;
@@ -30,13 +34,8 @@ inline Direction generateWeightedNormal(thread Intersector::Intersection interse
     float w = (d00 * d21 - d01 * d20) / denom;
     float u = 1.f - v - w;
 
-    Direction n = cross(v0,v1);
-//    Direction n1 = floatEpsEqual(length_squared(hit.n1), 0) ? n : hit.n1;
-//    Direction n2 = floatEpsEqual(length_squared(hit.n2), 0) ? n : hit.n2;
-//    Direction n3 = floatEpsEqual(length_squared(hit.n3), 0) ? n : hit.n3;
-//    Direction interpolated_normal = normalize(u * n1 + v * n2 + w * n3);
-//    return interpolated_normal;
-    return n;
+    Direction interpolated_normal = normalize(u * hit.n1 + v * hit.n2 + w * hit.n3);
+    return interpolated_normal;
 }
 
 //TODO eventually turn the outDir type to Ray because we will be in BSSDF land

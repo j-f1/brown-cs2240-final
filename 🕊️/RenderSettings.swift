@@ -13,7 +13,7 @@ extension RenderSettings: Equatable {
         ssG: 0,
         directLightingOn: true,
         directLightingSamples: 5,
-        importanceSamplingOn: true,
+        importanceSamplingOn: false,
         glassTransmittanceOn: true,
         russianRoulette: 0.9,
         samplesPerPixel: 16,

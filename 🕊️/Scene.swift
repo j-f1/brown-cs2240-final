@@ -19,15 +19,15 @@ class Scene {
 
         let materials = loader.materials.map(RawMaterial.init)
         guard
-            let vertexBuffer = device.makeBuffer(bytes: loader.vertices, length: loader.vertexCount * MemoryLayout<Float>.stride, options: []),
-            let normalAnglesBuffer = device.makeBuffer(bytes: loader.normals, length: loader.normalCount * MemoryLayout<Float>.stride, options: []),
-            let materialIdBuffer = device.makeBuffer(bytes: loader.materialIds, length: loader.materialIdCount * MemoryLayout<UInt16>.stride, options: []),
-            let faceVertexBuffer = device.makeBuffer(bytes: loader.faceVertices, length: loader.faceCount * 3 * MemoryLayout<UInt16>.stride, options: []),
-            let vertexNormalIndexBuffer = device.makeBuffer(bytes: loader.vertexNormals, length: loader.faceCount * 3 * MemoryLayout<UInt16>.stride, options: []),
+            let vertexBuffer = device.makeBuffer(array: loader.vertices, count: loader.vertexCount),
+            let normalAnglesBuffer = device.makeBuffer(array: loader.normals, count: loader.normalCount),
+            let materialIdBuffer = device.makeBuffer(array: loader.materialIds, count: loader.materialIdCount),
+            let faceVertexBuffer = device.makeBuffer(array: loader.faceVertices, count: loader.faceCount * 3),
+            let vertexNormalIndexBuffer = device.makeBuffer(array: loader.vertexNormals, count: loader.faceCount * 3),
             let materialBuffer = materials.withUnsafeBytes({ ptr in
                 device.makeBuffer(bytes: ptr.baseAddress!, length: ptr.count, options: [])
             }),
-            let emissivesBuffer = device.makeBuffer(bytes: loader.emissiveFaces, length: max(1, loader.emissiveFaceCount) * MemoryLayout<UInt16>.stride, options: [])
+            let emissivesBuffer = device.makeBuffer(array: loader.emissiveFaces, count: loader.emissiveFaceCount)
         else { return nil }
 
         self.emissivesCount = Int32(loader.emissiveFaceCount)
@@ -161,6 +161,16 @@ class Scene {
         // compacted acceleration structure.
         commandEncoder2.endEncoding()
         commandBuffer2.commit()
+    }
+}
+
+extension MTLDevice {
+    func makeBuffer<T>(array bytes: UnsafePointer<T>, count: Int) -> MTLBuffer? {
+        let length = MemoryLayout<T>.size * max(count, 1)
+        if count == 0 {
+            return makeBuffer(length: length, options: [])
+        }
+        return makeBuffer(bytes: bytes, length: length)
     }
 }
 

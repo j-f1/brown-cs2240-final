@@ -12,7 +12,7 @@ struct tri {
         n1 = unpack(scene.vertexNormalDirections, normalIndices.x);
         n2 = unpack(scene.vertexNormalDirections, normalIndices.y);
         n3 = unpack(scene.vertexNormalDirections, normalIndices.z);
-        faceNormal = unpack<Direction>(scene.normals, idx);
+        faceNormal = unpack(scene.normals, idx);
         auto materialId = scene.materialIds[idx];
         material = scene.materials[materialId];
     }

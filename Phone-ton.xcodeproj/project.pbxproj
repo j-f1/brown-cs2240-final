@@ -19,6 +19,7 @@
 		85BAFF1E29F6F0320019B9E5 /* RenderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85BAFF1D29F6F0320019B9E5 /* RenderView.swift */; };
 		85BAFF2029F6F21E0019B9E5 /* RenderSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85BAFF1F29F6F21E0019B9E5 /* RenderSettings.swift */; };
 		85DD9BE829E4783E0015761E /* Raytracer.metal in Sources */ = {isa = PBXBuildFile; fileRef = 85DD9BE729E4783E0015761E /* Raytracer.metal */; };
+		F09FA7562A004A88007BF259 /* BRDF.metal in Sources */ = {isa = PBXBuildFile; fileRef = F09FA7552A004A88007BF259 /* BRDF.metal */; };
 		F0C29DD729E63FC500488B98 /* GUIView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0C29DD629E63FC500488B98 /* GUIView.swift */; };
 /* End PBXBuildFile section */
 
@@ -47,6 +48,8 @@
 		85BAFF1D29F6F0320019B9E5 /* RenderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenderView.swift; sourceTree = "<group>"; };
 		85BAFF1F29F6F21E0019B9E5 /* RenderSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenderSettings.swift; sourceTree = "<group>"; };
 		85DD9BE729E4783E0015761E /* Raytracer.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Raytracer.metal; sourceTree = "<group>"; };
+		F09FA7542A004A46007BF259 /* BRDF.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BRDF.h; sourceTree = "<group>"; };
+		F09FA7552A004A88007BF259 /* BRDF.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = BRDF.metal; sourceTree = "<group>"; };
 		F0C29DD629E63FC500488B98 /* GUIView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GUIView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -121,6 +124,8 @@
 			children = (
 				859B85D929F034D40002119A /* common.h */,
 				85DD9BE729E4783E0015761E /* Raytracer.metal */,
+				F09FA7542A004A46007BF259 /* BRDF.h */,
+				F09FA7552A004A88007BF259 /* BRDF.metal */,
 				857CC61A29F1B63C009D9214 /* DirectLighting.metal */,
 				857CC61B29F1BC10009D9214 /* DirectLighting.h */,
 				851F052929E84DE7008AFCCA /* Sampler.h */,
@@ -211,6 +216,7 @@
 				859B85E229F18BD70002119A /* RandomGenerator.metal in Sources */,
 				8503424F29DA05A700928641 /* PhoneTonApp.swift in Sources */,
 				85BAFF2029F6F21E0019B9E5 /* RenderSettings.swift in Sources */,
+				F09FA7562A004A88007BF259 /* BRDF.metal in Sources */,
 				85BAFF1E29F6F0320019B9E5 /* RenderView.swift in Sources */,
 				85DD9BE829E4783E0015761E /* Raytracer.metal in Sources */,
 			);

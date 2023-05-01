@@ -11,13 +11,19 @@ class Renderer: ObservableObject {
 
     nonisolated private let device: MTLDevice
     nonisolated private let commandQueue: MTLCommandQueue
-    nonisolated private let randomTexture: MTLTexture
     nonisolated private let uniformBuffer: MTLBuffer
-    nonisolated private let pipelineState: MTLComputePipelineState
+    nonisolated private let renderPipelineState: MTLComputePipelineState
+    nonisolated private let flattenPipelineState: MTLComputePipelineState
+    private var randomTexture: MTLTexture
     private var scene: Scene
 
     @Published var rendering = false
     @Published var content: MTLTexture?
+#if canImport(AppKit)
+    @Published var image: NSImage?
+#else
+    @Published var image: UIImage?
+#endif
 
     @MainActor
     init?(device: MTLDevice, modelURL: URL, settings: RenderSettings) async {
@@ -27,15 +33,23 @@ class Renderer: ObservableObject {
             print("Unable to allocate command queue")
             return nil
         }
+        queue.label = "Main Command Queue"
         self.commandQueue = queue
 
         guard let buffer = self.device.makeBuffer(length: MemoryLayout<Uniforms>.size, options: []) else { return nil }
         uniformBuffer = buffer
-        
+
         self.uniformBuffer.label = "UniformBuffer"
 
         do {
-            pipelineState = try Renderer.buildRenderPipelineWithDevice(device: device)
+            renderPipelineState = try Renderer.buildRenderPipeline(device: device)
+        } catch {
+            print("Unable to compile render pipeline state.  Error info: \(error)")
+            return nil
+        }
+
+        do {
+            flattenPipelineState = try Renderer.buildFlattenPipeline(device: device)
         } catch {
             print("Unable to compile render pipeline state.  Error info: \(error)")
             return nil
@@ -47,10 +61,12 @@ class Renderer: ObservableObject {
         }
         self.scene = mesh
 
-        guard let randomTexture = Renderer.buildRandomTexture(size: settings.size, on: device) else {
+        let start2 = Date()
+        guard let randomTexture = await Renderer.buildRandomTexture(size: settings.size, on: device) else {
             print("Unable to create random texture")
             return nil
         }
+        print("Created random texture in \((Date.now.timeIntervalSince(start2) * 1000).formatted(.number.precision(.significantDigits(...3))))ms")
 
         self.randomTexture = randomTexture
 
@@ -59,7 +75,7 @@ class Renderer: ObservableObject {
         print("Loaded \(modelURL.lastPathComponent) in \((Date.now.timeIntervalSince(start) * 1000).formatted(.number.precision(.significantDigits(...3))))ms")
     }
 
-    private class func buildRandomTexture(size: CGSize, on device: MTLDevice) -> MTLTexture? {
+    private class func buildRandomTexture(size: CGSize, on device: MTLDevice) async -> MTLTexture? {
         let textureDescriptor = MTLTextureDescriptor()
         textureDescriptor.pixelFormat = .rgba32Float
         textureDescriptor.textureType = .type2D
@@ -72,41 +88,78 @@ class Renderer: ObservableObject {
         textureDescriptor.pixelFormat = .r32Uint
         textureDescriptor.usage = .shaderRead
 
-        guard let randomTexture = device.makeTexture(descriptor: textureDescriptor) else { return nil }
-        let randomValues = [UInt32](repeating: 0, count: randomTexture.width * randomTexture.height).map { _ in UInt32.random(in: .min ... .max) }
-        randomTexture.replace(
-            region: .init(origin: .zero, size: .init(width: randomTexture.width, height: randomTexture.height, depth: 1)),
-            mipmapLevel: 0,
-            withBytes: randomValues,
-            bytesPerRow: MemoryLayout<UInt32>.size * randomTexture.width
-        )
-        return randomTexture
+        return await runBlocking {
+            guard let randomTexture = device.makeTexture(descriptor: textureDescriptor) else { return nil }
+            let randomValues = [UInt32](repeating: 0, count: randomTexture.width * randomTexture.height).map { _ in UInt32.random(in: .min ... .max) }
+            randomTexture.replace(
+                region: .init(origin: .zero, size: .init(width: randomTexture.width, height: randomTexture.height, depth: 1)),
+                mipmapLevel: 0,
+                withBytes: randomValues,
+                bytesPerRow: MemoryLayout<UInt32>.size * randomTexture.width
+            )
+            return randomTexture
+        }
     }
 
-    private class func buildOutputTexture(size: CGSize, on device: MTLDevice) -> MTLTexture? {
+    private class func buildOutputTexture(size: CGSize, samples: Int32, on device: MTLDevice) -> MTLTexture? {
         let textureDescriptor = MTLTextureDescriptor()
         textureDescriptor.pixelFormat = .rgba8Uint
-        textureDescriptor.textureType = .type2D
+        textureDescriptor.textureType = .type3D
         textureDescriptor.width = Int(size.width)
         textureDescriptor.height = Int(size.height)
+        textureDescriptor.depth = Int(samples)
         textureDescriptor.usage = [.shaderRead, .shaderWrite]
 
         return device.makeTexture(descriptor: textureDescriptor)
     }
 
-    private class func buildRenderPipelineWithDevice(device: MTLDevice) throws -> MTLComputePipelineState {
-        /// Build a render state pipeline object
+    private class func buildRenderPipeline(device: MTLDevice) throws -> MTLComputePipelineState {
         let library = device.makeDefaultLibrary()
         let pipelineDescriptor = MTLComputePipelineDescriptor()
-        pipelineDescriptor.label = "ComputePipeline"
+        pipelineDescriptor.label = "Compute Pipeline"
         pipelineDescriptor.computeFunction = library?.makeFunction(name: "raytracingKernel")
         pipelineDescriptor.threadGroupSizeIsMultipleOfThreadExecutionWidth = true
         return try device.makeComputePipelineState(descriptor: pipelineDescriptor, options: []).0
     }
 
+    private class func buildFlattenPipeline(device: MTLDevice) throws -> MTLComputePipelineState {
+        let library = device.makeDefaultLibrary()
+        let pipelineDescriptor = MTLComputePipelineDescriptor()
+        pipelineDescriptor.label = "Flatten Pipeline"
+        pipelineDescriptor.computeFunction = library?.makeFunction(name: "flattenKernel")
+        pipelineDescriptor.threadGroupSizeIsMultipleOfThreadExecutionWidth = true
+        return try device.makeComputePipelineState(descriptor: pipelineDescriptor, options: []).0
+    }
+
+    private func growRandomTexture() async -> MTLTexture {
+        guard randomTexture.width < settings.imageWidth || randomTexture.height < settings.imageHeight else { return randomTexture }
+
+        var newSize = CGSize(width: randomTexture.width, height: randomTexture.height)
+        while Int(newSize.width) < settings.imageWidth { newSize.width *= 2 }
+        while Int(newSize.height) < settings.imageHeight { newSize.height *= 2 }
+        print("Growing random texture to \(newSize)")
+        guard let randomTexture = await Renderer.buildRandomTexture(size: newSize, on: device) else {
+            print("Unable to create random texture")
+            return self.randomTexture
+        }
+        self.randomTexture = randomTexture
+        return randomTexture
+    }
+
     func render() {
-        guard let outputTexture = Renderer.buildOutputTexture(size: settings.size, on: device) else {
+        let start = Date()
+        guard let intermediateTexture = Renderer.buildOutputTexture(size: settings.size, samples: settings.samplesPerPixel, on: device) else {
             print("Unable to create output texture")
+            return
+        }
+
+        let finalTexture: MTLTexture
+        if device.readWriteTextureSupport == .tier2 {
+            finalTexture = intermediateTexture
+        } else if let texture = Renderer.buildOutputTexture(size: settings.size, samples: settings.samplesPerPixel, on: device) {
+            finalTexture = texture
+        } else {
+            print("Unable to create final output texture")
             return
         }
 
@@ -114,62 +167,83 @@ class Renderer: ObservableObject {
         rendering = true
         content = nil
 
-        DispatchQueue.global(qos: .userInitiated).async { [self, settings, scene] in
-            if let commandBuffer = commandQueue.makeCommandBuffer() {
-                let uniforms = UnsafeMutableRawPointer(uniformBuffer.contents()).bindMemory(to: Uniforms.self, capacity: 1)
-                uniforms[0].camera = Camera(
-                    position: .init(x: 0, y: 1, z: 3.6),
-                    right: .init(x: 0.4, y: 0, z: 0),
-                    up: .init(x: 0, y: 0.4, z: 0),
-                    forward: .init(x: 0, y: 0, z: -1)
-                )
+        Task.detached(priority: .userInitiated) { [self, settings, scene] in
+            let randomTexture = await growRandomTexture()
 
-                let width = Int(settings.size.width)
-                let height = Int(settings.size.height)
-                assert(width == settings.imageWidth)
-                assert(height == settings.imageHeight)
-                uniforms[0].settings = settings
+            guard let commandBuffer = commandQueue.makeCommandBuffer() else { return }
 
-                if let computeEncoder = commandBuffer.makeComputeCommandEncoder() {
-                    /// Final pass rendering code here
-                    computeEncoder.label = "Primary Compute Encoder"
-                    computeEncoder.pushDebugGroup("Setup")
-                    computeEncoder.setComputePipelineState(pipelineState)
-                    computeEncoder[.uniforms] = uniformBuffer
-                    computeEncoder[.random] = randomTexture
-                    computeEncoder[.dst] = outputTexture
-                    computeEncoder[.vertexPositions] = scene.vertexBuffer
-                    computeEncoder[.faceVertices] = scene.faceVertexBuffer
-                    computeEncoder[.faceNormals] = scene.normalBuffer
-                    computeEncoder[.faceMaterials] = scene.materialIdBuffer
-                    computeEncoder[.materials] = scene.materialBuffer
-                    computeEncoder[.intersector] = scene.accelerationStructure
-                    computeEncoder.popDebugGroup()
+            let uniforms = UnsafeMutableRawPointer(uniformBuffer.contents()).bindMemory(to: Uniforms.self, capacity: 1)
+            uniforms[0].camera = Camera(
+                position: .init(x: 0, y: 1, z: 3.6),
+                right: .init(x: 0.4, y: 0, z: 0),
+                up: .init(x: 0, y: 0.4, z: 0),
+                forward: .init(x: 0, y: 0, z: -1)
+            )
 
-                    // Launch a rectangular grid of threads on the GPU to perform ray tracing, with one thread per
-                    // pixel. The number of threads needs to be aligned to a multiple of the threadgroup size,
-                    // because earlier, when it created the pipeline objects, it declared that the pipeline
-                    // would always use a threadgroup size that's a multiple of the thread execution width
-                    // (SIMD group size). An 8x8 threadgroup is a safe threadgroup size and small enough to be
-                    // supported on most devices. A more advanced app would choose the threadgroup size dynamically.
-                    let threadsPerThreadgroup = MTLSize(width: 8, height: 8, depth: 1)
-                    let threadgroups = MTLSize(
-                        width: (width + threadsPerThreadgroup.width - 1) / threadsPerThreadgroup.width,
-                        height: (height + threadsPerThreadgroup.height - 1) / threadsPerThreadgroup.height,
-                        depth: 1
-                    )
-                    computeEncoder.dispatchThreadgroups(threadgroups, threadsPerThreadgroup: threadsPerThreadgroup)
+            let width = Int(settings.size.width)
+            let height = Int(settings.size.height)
+            assert(width == settings.imageWidth)
+            assert(height == settings.imageHeight)
+            uniforms[0].settings = settings
+            uniforms[0].emissivesCount = scene.emissivesCount
 
-                    computeEncoder.endEncoding()
-                }
+            /// Launch a rectangular grid of threads on the GPU to perform ray tracing, with one thread per
+            /// pixel. The number of threads needs to be aligned to a multiple of the threadgroup size,
+            /// because earlier, when it created the pipeline objects, it declared that the pipeline
+            /// would always use a threadgroup size that's a multiple of the thread execution width
+            /// (SIMD group size). An 8x8 threadgroup is a safe threadgroup size and small enough to be
+            /// supported on most devices. A more advanced app would choose the threadgroup size dynamically.
+            let threadsPerThreadgroup = MTLSize(width: 8, height: 8, depth: 1)
+            let threadgroups = MTLSize(
+                width: (width + threadsPerThreadgroup.width - 1) / threadsPerThreadgroup.width,
+                height: (height + threadsPerThreadgroup.height - 1) / threadsPerThreadgroup.height,
+                depth: Int(settings.samplesPerPixel)
+            )
 
-                commandBuffer.commit()
+            if let computeEncoder = commandBuffer.makeComputeCommandEncoder() {
+                computeEncoder.label = "Path Tracer"
+                computeEncoder.pushDebugGroup("Setup")
+                computeEncoder.setComputePipelineState(renderPipelineState)
+                computeEncoder[.uniforms] = uniformBuffer
+                computeEncoder[.random] = randomTexture
+                computeEncoder[.dst] = intermediateTexture
+                computeEncoder[.vertexPositions] = scene.vertexPositionsBuffer
+                computeEncoder[.vertexNormalAngles] = scene.normalAnglesBuffer
+                computeEncoder[.faceVertexNormals] = scene.vertexNormalIndexBuffer
+                computeEncoder[.faceVertices] = scene.faceVertexIndexBuffer
+                computeEncoder[.faceNormals] = scene.normalBuffer
+                computeEncoder[.faceMaterials] = scene.materialIndexBuffer
+                computeEncoder[.materials] = scene.materialBuffer
+                computeEncoder[.emissiveFaces] = scene.emissivesBuffer
+                computeEncoder[.intersector] = scene.accelerationStructure
+                computeEncoder.popDebugGroup()
+
+                computeEncoder.dispatchThreadgroups(threadgroups, threadsPerThreadgroup: threadsPerThreadgroup)
+                computeEncoder.endEncoding()
+            }
+
+            if let computeEncoder = commandBuffer.makeComputeCommandEncoder() {
+                computeEncoder.label = "Sample Flattener"
+                computeEncoder.setComputePipelineState(flattenPipelineState)
+                computeEncoder[.uniforms] = uniformBuffer
+                computeEncoder[.src] = intermediateTexture
+                computeEncoder[.dst] = finalTexture
+
+                let threadgroups = MTLSize(width: threadgroups.width, height: threadgroups.height, depth: 1)
+                computeEncoder.dispatchThreadgroups(threadgroups, threadsPerThreadgroup: threadsPerThreadgroup)
+                computeEncoder.endEncoding()
+            }
+
+            commandBuffer.commit()
+            await runBlocking {
                 commandBuffer.waitUntilCompleted()
+            }
 
-                DispatchQueue.main.async {
-                    self.content = outputTexture
-                    self.rendering = false
-                }
+            await MainActor.run {
+                self.content = finalTexture
+                self.image = finalTexture.image
+                self.rendering = false
+                print("Rendered in \(Date().timeIntervalSince(start).formatted(.number.precision(.fractionLength(2))))s")
             }
         }
     }
@@ -198,4 +272,35 @@ private extension MTLComputeCommandEncoder {
 
 extension MTLOrigin {
     static let zero = MTLOrigin(x: 0, y: 0, z: 0)
+}
+
+private extension MTLTexture {
+#if canImport(AppKit)
+    typealias ImageType = NSImage
+#else
+    typealias ImageType = UIImage
+#endif
+    var image: ImageType {
+        let pixelBytes = UnsafeMutableRawBufferPointer.allocate(byteCount: allocatedSize, alignment: MemoryLayout<UInt8>.alignment)
+        let bytesPerRow = 4 * width; precondition(pixelFormat == .rgba8Uint)
+        self.getBytes(pixelBytes.baseAddress!, bytesPerRow: bytesPerRow, from: MTLRegion(origin: .zero, size: MTLSize(width: width, height: height, depth: 1)), mipmapLevel: 0)
+        let provider = CGDataProvider(dataInfo: nil, data: pixelBytes.baseAddress!, size: pixelBytes.count, releaseData: { _, data, _ in data.deallocate() })
+        let cgImage = CGImage(
+            width: width, height: height,
+            bitsPerComponent: MemoryLayout<UInt8>.size * 8,
+            bitsPerPixel: MemoryLayout<UInt8>.size * 8 * 4,
+            bytesPerRow: bytesPerRow,
+            space: CGColorSpace(name: CGColorSpace.sRGB)!,
+            bitmapInfo: [.init(rawValue: CGImageAlphaInfo.noneSkipLast.rawValue)],
+            provider: provider!,
+            decode: nil,
+            shouldInterpolate: false,
+            intent: .absoluteColorimetric
+        )!
+#if canImport(AppKit)
+        return NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
+#else
+        return UIImage(cgImage: cgImage)
+#endif
+    }
 }

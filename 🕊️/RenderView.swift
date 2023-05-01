@@ -1,9 +1,12 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct RenderView: View {
-    let settings: RenderSettings
+    @Binding var settings: RenderSettings
+    let nextSettings: RenderSettings
     let model: URL?
     @Binding var renderer: Renderer?
+    let rerender: @MainActor () -> Void
 
     @State private var expand = false
     @Environment(\.displayScale) private var scale
@@ -13,11 +16,11 @@ struct RenderView: View {
 
         var body: some View {
             VStack {
-                if let content = renderer.content {
+                if let image = renderer.image {
                     #if canImport(AppKit)
-                    let image = Image(nsImage: content.image)
+                    let image = Image(nsImage: image)
                     #else
-                    let image = Image(uiImage: content.image)
+                    let image = Image(uiImage: image)
                     #endif
                     image
                         .resizable()
@@ -25,7 +28,86 @@ struct RenderView: View {
                 } else {
                     Color.secondary
                 }
-            }.opacity(renderer.rendering ? 0.5 : 1)
+            }.overlay {
+                if renderer.rendering {
+                    ProgressView()
+                        .controlSize(.large)
+                        .colorScheme(.dark)
+                        .transition(.asymmetric(insertion: .opacity.animation(.default.delay(0.1)), removal: .identity))
+                }
+            }
+        }
+    }
+
+    private struct SaveButton: View {
+        @ObservedObject var renderer: Renderer
+        @State private var isSaving = false
+
+        private struct File: FileDocument {
+            static var readableContentTypes = [UTType]()
+            static var writableContentTypes = [UTType.png]
+
+            #if canImport(AppKit)
+            let image: NSImage
+            #else
+            let image: UIImage
+            #endif
+
+            init(configuration: ReadConfiguration) throws {
+                fatalError()
+            }
+
+            #if canImport(AppKit)
+            init(image: NSImage) { self.image = image }
+            #else
+            init(image: UIImage) { self.image = image }
+            #endif
+
+            enum Error: Swift.Error {
+                case couldNotCreateCGImage
+                case couldNotCreateData
+            }
+
+            func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
+                #if os(macOS)
+                // https://stackoverflow.com/a/17510651/5244995
+                guard
+                    let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil)
+                else {
+                    throw Error.couldNotCreateCGImage
+                }
+                let newRep = NSBitmapImageRep(cgImage: cgImage)
+                newRep.size = image.size
+                let data = newRep.representation(using: .png, properties: [:])
+                #else
+                let data = image.pngData()
+                #endif
+                if let data {
+                    return FileWrapper(regularFileWithContents: data)
+                } else {
+                    throw Error.couldNotCreateData
+                }
+            }
+        }
+
+        var body: some View {
+            if let image = renderer.image {
+                Button("Save") {
+                    isSaving = true
+                }
+                .disabled(renderer.rendering)
+                .keyboardShortcut("s")
+                .fileExporter(
+                    isPresented: $isSaving,
+                    document: File(image: image),
+                    contentType: .png,
+                    defaultFilename: Date().formatted(.iso8601).replacingOccurrences(of: ":", with: ".")
+                ) { result in
+                    print(result)
+                }
+            } else {
+                Button("Save") {}.disabled(true)
+            }
         }
     }
 
@@ -35,7 +117,7 @@ struct RenderView: View {
                 if let renderer {
                     RenderResult(renderer: renderer)
                 } else {
-                    Color.secondary.overlay(ProgressView())
+                    Color.secondary.overlay(ProgressView().controlSize(.large).colorScheme(.dark))
                 }
             }
             .frame(width: expand ? nil : settings.size.width / scale, height: expand ? nil : settings.size.height / scale)
@@ -45,18 +127,25 @@ struct RenderView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .aspectRatio(settings.size.width / settings.size.height, contentMode: .fit)
+            .animation(.default, value: settings.size)
 
             Spacer()
             HStack {
                 Button("Rerender") {
-                    renderer?.render()
-                }.disabled(renderer == nil)
+                    rerender()
+                }
+                .disabled(renderer == nil)
+                .keyboardShortcut(.defaultAction)
 
                 Button {
                     expand.toggle()
                 } label: {
                     Image(systemName: expand ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right")
                         .accessibilityLabel("Expand/Collapse Render")
+                }
+
+                if let renderer {
+                    SaveButton(renderer: renderer)
                 }
             }
             #if os(iOS)
@@ -65,42 +154,5 @@ struct RenderView: View {
             .padding(.bottom)
             #endif
         }
-    }
-}
-
-private extension MTLTexture {
-    #if canImport(AppKit)
-    typealias ImageType = NSImage
-    #else
-    typealias ImageType = UIImage
-    #endif
-    var image: ImageType {
-        let pixelBytes = UnsafeMutableRawBufferPointer.allocate(byteCount: allocatedSize, alignment: MemoryLayout<UInt8>.alignment)
-        let bytesPerRow = allocatedSize / height
-        self.getBytes(pixelBytes.baseAddress!, bytesPerRow: bytesPerRow, from: MTLRegion(origin: .zero, size: MTLSize(width: width, height: height, depth: depth)), mipmapLevel: 0)
-        let provider = CGDataProvider(dataInfo: nil, data: pixelBytes.baseAddress!, size: pixelBytes.count, releaseData: { _, data, _ in data.deallocate() })
-        let cgImage = CGImage(
-            width: width, height: height,
-            bitsPerComponent: MemoryLayout<UInt8>.size * 8,
-            bitsPerPixel: MemoryLayout<UInt8>.size * 8 * 4,
-            bytesPerRow: bytesPerRow,
-            space: CGColorSpace(name: CGColorSpace.sRGB)!,
-            bitmapInfo: [.init(rawValue: CGImageAlphaInfo.noneSkipLast.rawValue)],
-            provider: provider!,
-            decode: nil,
-            shouldInterpolate: false,
-            intent: .absoluteColorimetric
-        )!
-        #if canImport(AppKit)
-        return NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
-        #else
-        return UIImage(cgImage: cgImage)
-        #endif
-    }
-}
-
-struct RenderView_Previews: PreviewProvider {
-    static var previews: some View {
-        RenderView(settings: .init(), model: nil, renderer: .constant(nil))
     }
 }

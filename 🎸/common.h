@@ -61,7 +61,7 @@ public:
             return i.distance;
         }
         inline Location location() const {
-            return Location::_wrap(inRay.origin + inRay.direction * distance());
+            return inRay.origin + inRay.direction * distance();
         }
     };
 
@@ -91,7 +91,9 @@ public:
 
 struct SceneState {
     const constant float                                      *positions;
+    const constant float                                      *vertexNormalDirections;
     const constant ushort                                     *vertices;
+    const constant ushort                                     *faceVertexNormals;
     const constant float                                      *normals;
     const constant Material                                   *materials;
     const constant ushort                                     *materialIds;
@@ -100,8 +102,8 @@ struct SceneState {
     const thread    Intersector     &intersector;
           thread    RandomGenerator &rng;
 
-    const constant int *emissives;
-    const int           emissivesCount;
+    const constant ushort  *emissives;
+    const int               emissivesCount;
 };
 
 inline constexpr float3 unpack(constant float *floats, unsigned int idx) {
@@ -109,7 +111,7 @@ inline constexpr float3 unpack(constant float *floats, unsigned int idx) {
 }
 template<typename T>
 inline constexpr T unpack(constant float *floats, unsigned int idx) {
-    return T::_wrap(unpack(floats, idx));
+    return unpack(floats, idx);
 }
 inline constexpr ushort3 unpack(constant ushort *ints, unsigned int idx) {
     return ushort3(ints[idx * 3 + 0], ints[idx * 3 + 1], ints[idx * 3 + 2]);

@@ -15,8 +15,8 @@ struct RayTraceResult {
 
 //generate the smooth normal??
 inline Direction generateWeightedNormal(thread Intersector::Intersection intersection, thread SceneState& scene) {
-    tri hit{scene.vertices[intersection.index()], scene};
-    
+    tri hit{intersection.index(), scene};
+
     Location v0 = hit.v2 - hit.v1;
     Location v1 = hit.v3 - hit.v1;
     Location v2 = intersection.location() - hit.v1;
@@ -224,8 +224,7 @@ inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLe
         return result;
     }
     
-    Direction normal = unpack<Direction>(scene.normals, intersection.index());
-//    Direction normal = generateWeightedNormal(intersection, scene);
+    Direction normal = generateWeightedNormal(intersection, scene);
     normal = normalize(normal);
     Material material = scene.materials[scene.materialIds[intersection.index()]];
     

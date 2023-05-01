@@ -8,9 +8,10 @@ struct tri {
         v1 = unpack<Location>(scene.positions, vertIndices.x);
         v2 = unpack<Location>(scene.positions, vertIndices.y);
         v3 = unpack<Location>(scene.positions, vertIndices.z);
-        n1 = unpack<Direction>(scene.vertexNormals, vertIndices.x);
-        n2 = unpack<Direction>(scene.vertexNormals, vertIndices.y);
-        n3 = unpack<Direction>(scene.vertexNormals, vertIndices.z);
+        ushort3 normalIndices = unpack(scene.faceVertexNormals, idx);
+        n1 = unpack<Direction>(scene.vertexNormalDirections, normalIndices.x);
+        n2 = unpack<Direction>(scene.vertexNormalDirections, normalIndices.y);
+        n3 = unpack<Direction>(scene.vertexNormalDirections, normalIndices.z);
         faceNormal = unpack<Direction>(scene.normals, idx);
         auto materialId = scene.materialIds[idx];
         material = scene.materials[materialId];

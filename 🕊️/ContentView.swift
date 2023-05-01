@@ -45,7 +45,7 @@ struct ContentView: View {
         content
             .onAppear {
                 if model == nil {
-                    model = Bundle.main.url(forResource: "CornellBox-Original", withExtension: "obj", subdirectory: "models/CornellBox")
+                    model = Bundle.main.url(forResource: "CornellBox-Sphere2", withExtension: "obj", subdirectory: "models/CornellBox")
                 }
             }
             .task(id: model) {

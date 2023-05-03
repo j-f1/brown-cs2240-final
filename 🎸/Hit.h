@@ -1,4 +1,5 @@
-#include "common.h"
+#import "common.h"
+#import "tri.h"
 
 struct Hit {
     Hit(const thread Intersector::Intersection &intersection, const thread SceneState &scene, const thread ray &inRay);

@@ -3,9 +3,7 @@
 
 Color directLighting(const thread Hit &hit, thread SceneState &scene) {
     Color result = Colors::black();
-    for (int i = 0; i < scene.emissivesCount; i++) {
-        tri t{scene.emissives[i], scene};
-
+    for (tri t : scene.emissives) {
         for (int j = 0; j < scene.settings.directLightingSamples; j++) {
             const Location target = t.sample(scene.rng);
             float3 dir = normalize(target - hit.location);

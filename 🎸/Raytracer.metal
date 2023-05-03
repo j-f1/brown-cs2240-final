@@ -84,7 +84,9 @@ kernel void raytracingKernel(
 {
     constant RenderSettings &settings = uniforms.settings;
     RandomGenerator rng{randomTex, tid, settings.frameIndex};
-    SceneState state{positions, vertexNormals, vertices, faceVertexNormals, normals, materials, materialIds, uniforms.settings, Intersector{accelerationStructure}, rng, emissives, uniforms.emissivesCount};
+    EmissiveList emissiveList{emissives, uniforms.emissivesCount};
+    SceneState state{positions, vertexNormals, vertices, faceVertexNormals, normals, materials, materialIds, uniforms.settings, Intersector{accelerationStructure}, emissiveList, rng};
+    emissiveList.scene = &state;
     
     // We align the thread count to the threadgroup size, which means the thread count
     // may be different than the bounds of the texture. Test to make sure this thread

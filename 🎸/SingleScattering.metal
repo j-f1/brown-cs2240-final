@@ -9,7 +9,7 @@ Color singleScatter(const thread Hit &hit, const thread ScatterMaterial &mat, co
     float sPrimeOut = log(1.f - scene.rng()) / mat.σt;
     Location scatterPos = hit.inRay.origin + hit.inRay.direction * sPrimeOut;
     // TODO: skip if pos is outside of object?
-    tri light{scene.emissives[int(scene.rng() * scene.emissivesCount)], scene};
+    tri light = scene.emissives.random();
 
     Location sample = light.sample(scene.rng);
     Direction lightDir = normalize(sample - scatterPos);

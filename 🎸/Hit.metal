@@ -1,4 +1,5 @@
 #import "Hit.h"
+#import "common.h"
 
 //generate the smooth normal??
 Direction generateWeightedNormal(const thread tri &hit, Location location, const thread SceneState &scene) {

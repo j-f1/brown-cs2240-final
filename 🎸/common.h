@@ -4,6 +4,7 @@ using namespace raytracing;
 
 #import "RandomGenerator.h"
 #import "VectorWrapper.h"
+#import "Intersector.h"
 
 #import "Shared.h"
 
@@ -39,56 +40,6 @@ constexpr constant int shadow_only = 10;
 
 static_assert(sizeof(Material) == sizeof(RawMaterial), "Material and RawMaterial must be memory compatible");
 static_assert(alignof(Material) == alignof(RawMaterial), "Material and RawMaterial must be memory compatible");
-
-struct Intersector {
-private:
-    intersector<triangle_data> i;
-    const thread primitive_acceleration_structure &accelerationStructure;
-public:
-    struct Intersection {
-        friend struct Intersector;
-    protected:
-        Intersection(ray inRay, intersector<triangle_data>::result_type i) : inRay(inRay), i(i) {}
-        ray inRay;
-        intersector<triangle_data>::result_type i;
-    public:
-        inline operator bool() const {
-            return i.type != intersection_type::none;
-        }
-        inline int index() const {
-            return i.primitive_id;
-        }
-        inline float distance() const {
-            return i.distance;
-        }
-        inline Location location() const {
-            return inRay.origin + inRay.direction * distance();
-        }
-    };
-
-    Intersector(const thread primitive_acceleration_structure &accelerationStructure)
-    : i(), accelerationStructure(accelerationStructure)
-    {
-        // not using intersection functions, so some hints to Metal for better performance.
-        i.assume_geometry_type(geometry_type::triangle);
-        i.force_opacity(forced_opacity::opaque);
-
-        // Get the closest intersection, not the first intersection.
-        // (this is the default)
-        i.accept_any_intersection(false);
-    }
-
-    Intersection operator()(const thread ray &ray) const {
-        return {ray, i.intersect(ray, accelerationStructure)};
-    }
-
-    //    Intersection test(const thread ray &ray) {
-    //        // Get the first intersection, not the closest intersection.
-    //        i.accept_any_intersection(true);
-    //
-    //        return i.intersect(ray, accelerationStructure);
-    //    }
-};
 
 struct SceneState {
     const constant float                                      *positions;

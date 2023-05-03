@@ -34,13 +34,12 @@ inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLe
         return result;
     }
 
-    Material material = scene.materials[scene.materialIds[intersection.index()]];
     Hit hit{intersection, scene, inRay};
     
-    if (!floatEpsEqual(material.emission, 0)) {
+    if (!floatEpsEqual(hit.tri.material.emission, 0)) {
         result.brdf = Colors::black();
         if (pathLength == 0 || !scene.settings.directLightingOn) {
-            result.illumination = material.emission;
+            result.illumination = hit.tri.material.emission;
         }
         return result;
     }

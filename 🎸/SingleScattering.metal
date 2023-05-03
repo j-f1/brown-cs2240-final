@@ -1,21 +1,28 @@
 #import "SingleScattering.h"
 
-float estimateRefractedDistance(const thread ScatterMaterial &mat, Direction dir, Direction normal) {
+float estimateRefractedInefficiency(const thread ScatterMaterial &mat, Direction dir, Direction normal) {
     float factor = abs(dot(dir, normal));
     return factor / sqrt(1 - mat.mat.ior * mat.mat.ior * (1 - factor * factor));
 }
 
-ScatterResult singleScatter(const thread Hit &hit, const thread ScatterMaterial &mat, const thread SceneState &state) {
-    float sPrimeOut = log(1.f - state.rng()) / mat.σt;
+Color singleScatter(const thread Hit &hit, const thread ScatterMaterial &mat, const thread SceneState &scene) {
+    float sPrimeOut = log(1.f - scene.rng()) / mat.σt;
     Location scatterPos = hit.inRay.origin + hit.inRay.direction * sPrimeOut;
     // TODO: skip if pos is outside of object?
-    tri light{state.emissives[int(state.rng() * state.emissivesCount)], state};
+    tri light{scene.emissives[int(scene.rng() * scene.emissivesCount)], scene};
 
-    Location sample = light.sample(state.rng);
-    Direction lightDir = normalize(sample - hit.location);
-    //WIP!
+    Location sample = light.sample(scene.rng);
+    Direction lightDir = normalize(sample - scatterPos);
 
-    float sPrimeIn = estimateRefractedDistance(mat, lightDir, hit.normal);
+    ray surfaceTest = hit.inRay;
+    surfaceTest.origin = scatterPos;
+    surfaceTest.direction = lightDir;
+    auto surface = scene.intersector(surfaceTest);
+    if (!surface) {
+        // ???
+        return Colors::pink();
+    }
 
-    return {};
+    float sPrimeIn = surface.distance() * estimateRefractedInefficiency(mat, lightDir, hit.normal);
+    return surface.material(scene).emission;
 }

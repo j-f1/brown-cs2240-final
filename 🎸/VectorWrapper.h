@@ -1,4 +1,6 @@
-#import <metal_stdlib>
+#include <metal_stdlib>
+using namespace metal;
+using namespace raytracing;
 
 const constant float FLOAT_EPSILON = 1e-4f;
 

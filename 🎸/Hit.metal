@@ -25,7 +25,7 @@ Direction generateWeightedNormal(const thread tri &hit, Location location, const
 
 
 Hit::Hit(const thread Intersector::Intersection &intersection, const thread SceneState &scene, const thread ray &inRay)
-: tri{intersection.index(), scene}
+: tri(intersection.tri(scene))
 , location(intersection.location())
 , normal(generateWeightedNormal(tri, location, scene))
 , inRay(inRay)

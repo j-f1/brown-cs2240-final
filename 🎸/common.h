@@ -117,7 +117,8 @@ inline constexpr ushort3 unpack(constant ushort *ints, ushort idx) {
 }
 
 struct tri {
-    inline tri(int idx, const thread SceneState &scene) : idx(idx) {
+    inline tri(int idx, const thread SceneState &scene)
+    : idx(idx), material(scene.materials[scene.materialIds[idx]]) {
         ushort3 vertIndices = unpack(scene.vertices, idx);
         v1 = unpack(scene.positions, vertIndices.x);
         v2 = unpack(scene.positions, vertIndices.y);
@@ -127,12 +128,10 @@ struct tri {
         n2 = unpack(scene.vertexNormalDirections, normalIndices.y);
         n3 = unpack(scene.vertexNormalDirections, normalIndices.z);
         faceNormal = unpack(scene.normals, idx);
-        auto materialId = scene.materialIds[idx];
-        material = scene.materials[materialId];
     }
 
     int idx;
-    Material material;
+    const constant Material &material;
     Direction faceNormal;
     Location v1, v2, v3;
     Direction n1, n2, n3;

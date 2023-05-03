@@ -1,4 +1,5 @@
 #import "common.h"
+#import "Hit.h"
 
-Color directLighting(const thread ray &outRay, Location location, Direction normal, const thread Material &material, thread SceneState &scene);
+Color directLighting(const thread Hit &hit, thread SceneState &scene);
 

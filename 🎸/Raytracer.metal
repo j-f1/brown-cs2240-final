@@ -33,10 +33,9 @@ inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLe
         result.illumination = Colors::black();
         return result;
     }
-    
-    Direction normal = generateWeightedNormal(intersection, scene);
-    normal = normalize(normal);
+
     Material material = scene.materials[scene.materialIds[intersection.index()]];
+    Hit hit{intersection, scene, inRay};
     
     if (!floatEpsEqual(material.emission, 0)) {
         result.brdf = Colors::black();
@@ -46,20 +45,20 @@ inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLe
         return result;
     }
     
-    Sample sample = getNextDirection(intersection.location(), normalize(normal), material, inRay, scene);
+    Sample sample = getNextDirection(hit, scene);
     result.reflection = sample.reflection;
     
     if (scene.settings.directLightingOn) {
-        result.illumination = directLighting(inRay, intersection.location(), normal, material, scene);
+        result.illumination = directLighting(hit, scene);
     } else {
         result.illumination = Colors::black();
     }
     
-    Color brdf = getBRDF(inRay, normal, sample.direction, material, scene);
+    Color brdf = getBRDF(hit, sample.direction, scene);
     result.brdf = brdf;
     
     
-    float lightProjection = abs(dot(sample.direction, normal));
+    float lightProjection = abs(dot(sample.direction, hit.normal));
     
     result.ray.direction = sample.direction;
     result.brdf *= lightProjection / sample.pdf;

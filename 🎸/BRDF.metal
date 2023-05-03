@@ -9,7 +9,6 @@ Color getBRDF(const thread ray &inRay, const thread Direction normal, const thre
         case Illum::refract_fresnel:
         case Illum::glass:
             return float3(1.f,1.f,1.f);
-//            return mat.transmittance;
             break;
         case Illum::diffuse_specular_fresnel:
         case Illum::diffuse_specular:
@@ -49,7 +48,7 @@ Sample getNextDirection(const thread Location &intersectionPoint, const thread D
     float e2 = scene.rng(); //random number
     
     //TODO COCO
-    Sample result = {.direction = Direction(0,0,0), .pdf = 1.f};
+    Sample result = {.direction = Direction(0,0,0), .pdf = 1.f, .reflection = false,};
     switch (mat.illum) {
         case Illum::refract_fresnel:
         case Illum::glass:
@@ -91,6 +90,7 @@ Sample getNextDirection(const thread Location &intersectionPoint, const thread D
                     Direction reflectedVector = incomingDir - 2.f*dot(incomingDir,norm)*norm;
                     result.direction = reflectedVector;
                     result.pdf = 1.f;
+                    result.reflection = true;
                 } else {
                     //refract
                     float cosTheta_t = sqrt(sqdCos_t);
@@ -115,6 +115,7 @@ Sample getNextDirection(const thread Location &intersectionPoint, const thread D
                         Direction reflectedVector = inRay.direction - 2.f*dot(inRay.direction, normal)*normal;
                         result.direction = reflectedVector;
                         result.pdf = 1.f;
+                        result.reflection = true;
                         return result;
                     } else {
                         return generateRandomOnHemi(normal, float2(e1, e2));

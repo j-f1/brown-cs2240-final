@@ -20,6 +20,7 @@ struct Material {
 struct Sample {
     Direction direction;
     float pdf;
+    bool reflection;
 };
 
 namespace Illum {

@@ -11,6 +11,9 @@ struct RayTraceResult {
     Color brdf;
     // total light (emission + direct lighting)
     Color illumination;
+    
+    //if a reflection event happened
+    bool reflection;
 };
 
 inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLength, thread SceneState &scene) {
@@ -19,6 +22,7 @@ inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLe
     
     RayTraceResult result{
         .ray = ray{intersection.location(), 0.f, inRay.min_distance, inRay.max_distance},
+        .reflection = false,
         // .brdf = [uninitialized],
         // .illumination = [uninitialized]
     };
@@ -43,6 +47,7 @@ inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLe
     }
     
     Sample sample = getNextDirection(intersection.location(), normalize(normal), material, inRay, scene);
+    result.reflection = sample.reflection;
     
     if (scene.settings.directLightingOn) {
         result.illumination = directLighting(inRay, intersection.location(), normal, material, scene);
@@ -132,6 +137,7 @@ kernel void raytracingKernel(
         if (all(result.ray.direction == 0.f)) break;
         ray = result.ray;
         depth++;
+        if (result.reflection) depth = 0; //if it's a reflection event, count the illumination
     } while (rng() < settings.russianRoulette);
     
     Color color = totalIllumination / pow(settings.russianRoulette, depth);

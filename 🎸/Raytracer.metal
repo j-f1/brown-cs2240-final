@@ -72,7 +72,7 @@ kernel void raytracingKernel(
                              
                              constant Uniforms &                 uniforms                  [[buffer(BufferIndexUniforms)]],
                              texture2d<unsigned int>             randomTex                 [[texture(TextureIndexRandom)]],
-                             texture3d<uint, access::write>      dstTex                    [[texture(TextureIndexDst)]],
+                             texture3d<float, access::write>     dstTex                    [[texture(TextureIndexDst)]],
                              constant float                     *positions                 [[buffer(BufferIndexVertexPositions)]],
                              constant float                     *vertexNormals             [[buffer(BufferIndexVertexNormalAngles)]],
                              constant ushort                    *vertices                  [[buffer(BufferIndexFaceVertices)]],
@@ -141,22 +141,25 @@ kernel void raytracingKernel(
     } while (rng() < settings.russianRoulette);
     
     Color color = totalIllumination / pow(settings.russianRoulette, depth);
-    
-    //    dstTex.write(uint4(uint3(aces_approx(color) * 255), 1), tid); //TODO make this an optional color mode
-    dstTex.write(uint4(uint3(tone_map(color, settings.toneMap, settings.gammaCorrection) * 255), 1), tid);
+
+    dstTex.write(float4(color, 1), tid);
 }
 
 kernel void flattenKernel(
-                          uint2                               tid                       [[thread_position_in_grid]],
-                          constant Uniforms &                 uniforms                  [[buffer(BufferIndexUniforms)]],
-                          texture3d<uint, access::read>       srcTex                    [[texture(TextureIndexSrc)]],
-                          texture3d<uint, access::write>      dstTex                    [[texture(TextureIndexDst)]]
-                          ) {
-                              if (!uniforms.settings.diffuseOn) return;
-                              float4 result = 0.f;
-                              for (uint z = 0; z < srcTex.get_depth(); z++) {
-                                  result += float4(srcTex.read(uint3(tid, z)));
-                              }
-                              result /= srcTex.get_depth();
-                              dstTex.write(uint4(result), uint3(tid, 0));
-                          }
+    uint2                               tid                       [[thread_position_in_grid]],
+    constant Uniforms &                 uniforms                  [[buffer(BufferIndexUniforms)]],
+    texture3d<float, access::read>      srcTex                    [[texture(TextureIndexSrc)]],
+    texture2d<uint, access::write>      dstTex                    [[texture(TextureIndexDst)]]
+) {
+    if (!uniforms.settings.diffuseOn) return;
+    float3 result = 0.f;
+    for (uint z = 0; z < srcTex.get_depth(); z++) {
+        result += srcTex.read(uint3(tid, z)).rgb;
+    }
+    result /= srcTex.get_depth();
+    float3 toneMapped = tone_map(result, uniforms.settings.toneMap, uniforms.settings.gammaCorrection);
+    // TODO: make this an optional color mode
+    // float3 toneMapped = aces_approx(result)
+    uint3 crunched = uint3(toneMapped * 255);
+    dstTex.write(uint4(crunched, 255), tid);
+}

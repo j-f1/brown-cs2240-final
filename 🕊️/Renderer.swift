@@ -101,14 +101,27 @@ class Renderer: ObservableObject {
         }
     }
 
-    private class func buildOutputTexture(size: CGSize, samples: Int32, on device: MTLDevice) -> MTLTexture? {
+    private class func buildIntermediateTexture(size: CGSize, samples: Int32, on device: MTLDevice) -> MTLTexture? {
         let textureDescriptor = MTLTextureDescriptor()
-        textureDescriptor.pixelFormat = .rgba8Uint
+        textureDescriptor.pixelFormat = .rgba32Float
         textureDescriptor.textureType = .type3D
         textureDescriptor.width = Int(size.width)
         textureDescriptor.height = Int(size.height)
         textureDescriptor.depth = Int(samples)
         textureDescriptor.usage = [.shaderRead, .shaderWrite]
+        textureDescriptor.storageMode = .private
+
+        return device.makeTexture(descriptor: textureDescriptor)
+    }
+
+    private class func buildOutputTexture(size: CGSize, on device: MTLDevice) -> MTLTexture? {
+        let textureDescriptor = MTLTextureDescriptor()
+        textureDescriptor.pixelFormat = .rgba8Uint
+        textureDescriptor.textureType = .type2D
+        textureDescriptor.width = Int(size.width)
+        textureDescriptor.height = Int(size.height)
+        textureDescriptor.usage = [.shaderRead, .shaderWrite]
+        textureDescriptor.storageMode = .shared
 
         return device.makeTexture(descriptor: textureDescriptor)
     }
@@ -148,18 +161,11 @@ class Renderer: ObservableObject {
 
     func render() {
         let start = Date()
-        guard let intermediateTexture = Renderer.buildOutputTexture(size: settings.size, samples: settings.samplesPerPixel, on: device) else {
-            print("Unable to create output texture")
-            return
-        }
-
-        let finalTexture: MTLTexture
-        if device.readWriteTextureSupport == .tier2 {
-            finalTexture = intermediateTexture
-        } else if let texture = Renderer.buildOutputTexture(size: settings.size, samples: settings.samplesPerPixel, on: device) {
-            finalTexture = texture
-        } else {
-            print("Unable to create final output texture")
+        guard
+            let intermediateTexture = Renderer.buildIntermediateTexture(size: settings.size, samples: settings.samplesPerPixel, on: device),
+            let finalTexture = Renderer.buildOutputTexture(size: settings.size, on: device)
+        else {
+            print("Unable to create render textures")
             return
         }
 

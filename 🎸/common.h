@@ -43,6 +43,7 @@ static_assert(sizeof(Material) == sizeof(RawMaterial), "Material and RawMaterial
 static_assert(alignof(Material) == alignof(RawMaterial), "Material and RawMaterial must be memory compatible");
 
 struct SceneState {
+    SceneState(const thread SceneState &) = delete;
     const constant float                                      *positions;
     const constant float                                      *vertexNormalDirections;
     const constant ushort                                     *vertices;

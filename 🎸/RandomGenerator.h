@@ -7,6 +7,7 @@ public:
         : offset(randomTex.read(tid.xy).x * (1 + frameIndex * 2 + tid.z * 3)), samplesTaken(0) {}
 
     thread RandomGenerator &operator=(const thread RandomGenerator &) = delete;
+    RandomGenerator(const thread RandomGenerator &) = delete;
 
     inline float operator()() {
         return RandomGenerator::halton(offset, samplesTaken++);

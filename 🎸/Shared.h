@@ -51,6 +51,8 @@ typedef struct RenderSettings {
     // bool refractionOn;
     // bool glossyOn;
     bool subsurfaceScatteringOn;
+    bool singleSSOn;
+    bool diffusionSSOn;
     float ssSigma_s;
     simd_float3 ssSigma_a;
     float ssEta;

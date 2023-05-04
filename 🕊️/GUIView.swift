@@ -86,6 +86,10 @@ struct GUIView: View {
                     // Toggle("Refract", isOn: $nextSettings.refractionOn)
                     // Toggle("Glossy", isOn: $nextSettings.glossyOn)
                     Toggle("Subsurface Scattering", isOn: $nextSettings.subsurfaceScatteringOn)
+                    Toggle("Single Scattering", isOn: $nextSettings.singleSSOn)
+                        .padding(.leading)
+                    Toggle("Simulated Diffusion", isOn: $nextSettings.diffusionSSOn)
+                        .padding(.leading)
                     Toggle("Importance Sampling", isOn: $nextSettings.importanceSamplingOn)
                 }
                 #if os(macOS)

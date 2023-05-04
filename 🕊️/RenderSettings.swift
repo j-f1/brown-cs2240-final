@@ -7,6 +7,8 @@ extension RenderSettings: Equatable {
         // refractionOn: true,
         // glossyOn: true,
         subsurfaceScatteringOn: true,
+        singleSSOn: true,
+        diffusionSSOn: true,
         ssSigma_s: 1.0,
         ssSigma_a: SIMD3<Float>(0.01, 0.1, 1.0),
         ssEta: 1,

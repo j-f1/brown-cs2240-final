@@ -11,5 +11,5 @@ tri EmissiveList::operator[](int i) const {
 }
 
 tri EmissiveList::random() const {
-    return (*this)[scene->rng() * count];
+    return (*this)[int(scene->rng() * (count - 1))];
 }

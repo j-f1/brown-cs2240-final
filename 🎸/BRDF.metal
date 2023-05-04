@@ -1,6 +1,7 @@
 #import "BRDF.h"
 #import "common.h"
 #import "Sampler.h"
+#import "SingleScattering.h"
 
 //TODO eventually turn the outDir type to Ray because we will be in BSSDF land
 Color getBRDF(const thread Hit &hit, const thread Direction &outDir, thread SceneState &scene) {
@@ -10,7 +11,10 @@ Color getBRDF(const thread Hit &hit, const thread Direction &outDir, thread Scen
         case Illum::glass:
             return float3(1.f,1.f,1.f);
             break;
-        case Illum::diffuse_specular_fresnel:
+        case Illum::diffuse_specular_fresnel: {
+            ScatterMaterial mat {scene.settings, hit.tri.material};
+            return singleScatter(hit, mat, scene);
+        }
         case Illum::diffuse_specular:
             if (any(hit.tri.material.specular > 0)) { //todo does this work?
                 if (hit.tri.material.shininess > 100) {
@@ -48,7 +52,7 @@ Sample getNextDirection(const thread Hit &hit, thread SceneState &scene) {
     float e2 = scene.rng(); //random number
     
     //TODO COCO
-    Sample result = {.direction = Direction(0,0,0), .pdf = 1.f, .reflection = false,};
+    Sample result = {.direction = Direction(0,0,0), .location = hit.location, .pdf = 1.f, .reflection = false,};
     switch (hit.tri.material.illum) {
         case Illum::refract_fresnel:
         case Illum::glass:
@@ -107,6 +111,11 @@ Sample getNextDirection(const thread Hit &hit, thread SceneState &scene) {
             }
             break;
         case Illum::diffuse_specular_fresnel:
+            // subsurface scattering
+            // TODO: something here?
+            result.direction = Direction(0, 0, 0);
+            result.pdf = 1;
+            return result;
         case Illum::diffuse_specular:
             if (any(hit.tri.material.specular>0)) {
                 if (hit.tri.material.shininess > 100) {
@@ -160,7 +169,6 @@ Sample getNextDirection(const thread Hit &hit, thread SceneState &scene) {
             result.direction = Direction(0, 0, 0);
             result.pdf = 1;
             return result;
-            break;
     }
 }
 

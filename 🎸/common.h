@@ -21,6 +21,7 @@ struct Material {
 
 struct Sample {
     Direction direction;
+    Location location;
     float pdf;
     bool reflection;
 };

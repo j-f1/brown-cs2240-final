@@ -3,7 +3,7 @@
 #import "tri.h"
 
 tri EmissiveList::Iterator::operator*() const {
-    return {i, scene};
+    return {emissives[i], scene};
 }
 
 tri EmissiveList::operator[](int i) const {

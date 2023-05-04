@@ -34,7 +34,7 @@ inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLe
         return result;
     }
 
-    Hit hit{intersection, scene, inRay};
+    Hit hit{intersection, scene};
     
     if (!floatEpsEqual(hit.tri.material.emission, 0)) {
         result.brdf = Colors::black();

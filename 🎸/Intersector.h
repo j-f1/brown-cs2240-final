@@ -30,6 +30,7 @@ public:
         inline Location location() const {
             return inRay.origin + inRay.direction * distance();
         }
+        inline const thread ray &ray() const { return inRay; };
     };
 
     Intersector(const thread primitive_acceleration_structure &accelerationStructure)

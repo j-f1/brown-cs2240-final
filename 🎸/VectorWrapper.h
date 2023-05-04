@@ -12,6 +12,7 @@ namespace Colors {
 static inline const Color black() { return {0, 0, 0}; }
 static inline const Color white() { return {1, 1, 1}; }
 static inline const Color pink() { return {1, 0, 1}; }
+static inline const Color purple() { return {0.4, 0.2, 0.6}; }
 static inline const Color gray(float c) { return {c, c, c}; }
 }
 

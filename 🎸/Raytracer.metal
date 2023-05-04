@@ -56,11 +56,14 @@ inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLe
     Color brdf = getBRDF(hit, sample.direction, scene);
     result.brdf = brdf;
     
-    
-    float lightProjection = abs(dot(sample.direction, hit.normal));
-    
     result.ray.direction = sample.direction;
-    result.brdf *= lightProjection / sample.pdf;
+    if (floatEpsEqual(sample.direction, 0)) {
+        result.illumination = result.brdf;
+        result.brdf = Colors::white();
+    } else {
+        float lightProjection = abs(dot(sample.direction, hit.normal));
+        result.brdf *= lightProjection / sample.pdf;
+    }
     
     return result;
 }
@@ -151,12 +154,16 @@ kernel void flattenKernel(
     texture3d<float, access::read>      srcTex                    [[texture(TextureIndexSrc)]],
     texture2d<uint, access::write>      dstTex                    [[texture(TextureIndexDst)]]
 ) {
-    if (!uniforms.settings.diffuseOn) return;
-    float3 result = 0.f;
+    Color result = 0.f;
     for (uint z = 0; z < srcTex.get_depth(); z++) {
-        result += srcTex.read(uint3(tid, z)).rgb;
+        Color sample = srcTex.read(uint3(tid, z)).rgb;
+        if (any(isnan(sample))) {
+            sample = abs(int(tid.x) % 6 - int(tid.y) % 6) < 2 ? Colors::pink() : Colors::purple();
+        }
+        result += sample;
     }
     result /= srcTex.get_depth();
+
     float3 toneMapped = tone_map(result, uniforms.settings.toneMap, uniforms.settings.gammaCorrection);
     // TODO: make this an optional color mode
     // float3 toneMapped = aces_approx(result)

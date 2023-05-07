@@ -111,8 +111,49 @@ struct RenderView: View {
         }
     }
 
+    private struct RenderDuration: View {
+        @ObservedObject var renderer: Renderer
+
+        var body: some View {
+            if let duration: Double = renderer.renderDuration {
+                Text("Rendered in \(duration, format: .number.precision(.fractionLength(2)))s")
+               } else {
+                  Text("Rendering...")
+
+            }
+
+        }
+    }
+
+    private struct RenderButton: View {
+        @ObservedObject var renderer: Renderer
+        let rerender: @MainActor () -> Void
+
+        var body: some View {
+            Button(renderer.rendering ? "Rendering…" : "Rerender") {
+                rerender()
+            }
+            .disabled(renderer.rendering)
+            .keyboardShortcut(.defaultAction)
+            .keyboardShortcut("r")
+        }
+    }
+
     var body: some View {
         VStack {
+            if let renderer {
+                RenderDuration(renderer: renderer)
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .foregroundColor(.secondary)
+            } else {
+                Text("Waiting to render…")
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .foregroundColor(.secondary)
+            }
+            Spacer()
+
             Group {
                 if let renderer {
                     RenderResult(renderer: renderer)
@@ -131,11 +172,11 @@ struct RenderView: View {
 
             Spacer()
             HStack {
-                Button("Rerender") {
-                    rerender()
+                if let renderer {
+                    RenderButton(renderer: renderer, rerender: rerender)
+                } else {
+                    Button("Rerender") {}.disabled(true)
                 }
-                .disabled(renderer == nil)
-                .keyboardShortcut(.defaultAction)
 
                 Button {
                     expand.toggle()

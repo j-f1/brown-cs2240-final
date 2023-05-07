@@ -18,6 +18,7 @@ class Renderer: ObservableObject {
     private var scene: Scene
 
     @Published var rendering = false
+    @Published var renderDuration: TimeInterval?
     @Published var content: MTLTexture?
 #if canImport(AppKit)
     @Published var image: NSImage?
@@ -249,6 +250,7 @@ class Renderer: ObservableObject {
                 self.content = finalTexture
                 self.image = finalTexture.image
                 self.rendering = false
+                self.renderDuration = Date().timeIntervalSince(start)
                 print("Rendered in \(Date().timeIntervalSince(start).formatted(.number.precision(.fractionLength(2))))s")
             }
         }

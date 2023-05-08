@@ -2,6 +2,7 @@
 
 struct tri {
     int idx;
+    int materialIdx;
     const constant Material &material;
     Direction faceNormal;
     Location v1, v2, v3;
@@ -17,6 +18,7 @@ struct tri {
 protected:
     inline tri(int idx, const thread SceneState &scene)
     : idx(idx), material(scene.materials[scene.materialIds[idx]]) {
+        materialIdx = scene.materialIds[idx];
         ushort3 vertIndices = unpack(scene.vertices, idx);
         v1 = unpack(scene.positions, vertIndices.x);
         v2 = unpack(scene.positions, vertIndices.y);

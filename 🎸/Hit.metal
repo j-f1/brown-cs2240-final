@@ -30,5 +30,6 @@ Hit::Hit(const thread Intersector::Intersection &intersection, const thread Scen
 , location(intersection.location())
 , normal(generateWeightedNormal(tri, location, scene))
 , inRay(intersection.ray())
+, intersection(intersection)
 {}
 

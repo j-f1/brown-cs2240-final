@@ -122,7 +122,7 @@ class Renderer: ObservableObject {
         textureDescriptor.width = Int(size.width)
         textureDescriptor.height = Int(size.height)
         textureDescriptor.usage = [.shaderRead, .shaderWrite]
-        textureDescriptor.storageMode = .shared
+        textureDescriptor.storageMode = .managed
 
         return device.makeTexture(descriptor: textureDescriptor)
     }

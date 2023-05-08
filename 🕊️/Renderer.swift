@@ -241,6 +241,11 @@ class Renderer: ObservableObject {
                 computeEncoder.endEncoding()
             }
 
+            if let blitEncoder = commandBuffer.makeBlitCommandEncoder() {
+                blitEncoder.synchronize(resource: finalTexture)
+                blitEncoder.endEncoding()
+            }
+
             commandBuffer.commit()
             await runBlocking {
                 commandBuffer.waitUntilCompleted()

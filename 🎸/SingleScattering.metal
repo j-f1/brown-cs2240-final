@@ -39,6 +39,10 @@ Scatter sampleSurface(const thread Hit &hit, float scale, const thread tri &ligh
         return { .ok = false, .surface = surface };
     }
 
+    if (dot(surfaceHit.normal, lightDir) < 0) {
+        return { .ok = false, .surface = surface };
+    }
+
     return {
         .ok = true,
         .surface = surface,

@@ -160,7 +160,11 @@ kernel void flattenKernel(
     for (uint z = 0; z < srcTex.get_depth(); z++) {
         Color sample = srcTex.read(uint3(tid, z)).rgb;
         if (any(isnan(sample))) {
+            /* \\\\ = nan */
             sample = abs(int(tid.x) % 6 - int(tid.y) % 6) < 2 ? Colors::pink() : Colors::purple();
+        } else if (any(sample < 0)) {
+            /* //// = < 0 */
+            sample = abs(int(uniforms.settings.imageWidth - tid.x) % 6 - int(tid.y) % 6) < 2 ? Colors::pink() : Colors::purple();
         }
         result += sample;
     }

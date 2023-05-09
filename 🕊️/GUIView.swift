@@ -42,6 +42,7 @@ struct GUIView: View {
         private func contents(of directory: URL = Bundle.main.url(forResource: "models", withExtension: nil)!) -> [URL] {
             try! FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
                 .filter { $0.pathExtension == "obj" || $0.hasDirectoryPath }
+                .sorted(using: KeyPathComparator(\.lastPathComponent.localizedLowercase))
         }
 
         var body: some View {

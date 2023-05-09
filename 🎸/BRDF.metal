@@ -5,7 +5,9 @@
 
 //TODO eventually turn the outDir type to Ray because we will be in BSSDF land
 Color getBRDF(const thread Hit &hit, const thread Direction &outDir, thread SceneState &scene) {
-    //TODO COCO
+    const thread Direction &inRay = hit.inRay.direction;
+    const thread Direction normal = normalize(hit.normal);
+    const constant Material &mat = hit.tri.material;
     switch (hit.tri.material.illum) {
         case Illum::diffuse: {
             ScatterMaterial mat {scene.settings, hit.tri.material};
@@ -13,21 +15,28 @@ Color getBRDF(const thread Hit &hit, const thread Direction &outDir, thread Scen
         }
         case Illum::refract_fresnel:
         case Illum::glass:
-            return float3(1.f,1.f,1.f);
-            break;
+            if (floatEpsEqual(refract(inRay, -normal, mat.ior), outDir)
+                || floatEpsEqual(refract(inRay, normal, 1/mat.ior), outDir)
+                || floatEpsEqual(reflect(inRay, normal), outDir)) {
+                return Colors::gray(1 / dot(inRay, normal));
+            }
+            return Colors::black();
         case Illum::diffuse_specular_fresnel:
         case Illum::diffuse_specular:
-            if (any(hit.tri.material.specular > 0)) { //todo does this work?
-                if (hit.tri.material.shininess > 100) {
-                    // [mirror BRDF];
-                    return float3(1.f,1.f,1.f);
+            if (any(mat.specular > 0)) { //todo does this work?
+                if (mat.shininess > 100) {
+                    if (floatEpsEqual(reflect(inRay, normal), outDir)) {
+                        return mat.specular / abs(dot(inRay, normal));
+                    } else {
+                        return Colors::black();
+                    }
                 } else {
                     // [Phong Glossy Specular BRDF];
-                    float n = hit.tri.material.shininess;
-                    float3 s = hit.tri.material.specular;
+                    float n = mat.shininess;
+                    float3 s = mat.specular;
                     float3 normalized_color = ((n+2.f)/(2.f*M_PI_F))*s;
-                    Direction norm = normalize(hit.normal);
-                    Direction reflectedVector = normalize(hit.inRay.direction) - 2.f*dot(normalize(hit.inRay.direction), norm)*norm;
+                    Direction norm = normalize(normal);
+                    Direction reflectedVector = normalize(inRay) - 2.f*dot(normalize(inRay), norm)*norm;
                     float dotProd = dot(reflectedVector, normalize(outDir));
                     if (dotProd < 0) {return float3(0.f, 0.f, 0.f);}
                     float reflectiveIntensity = pow(dotProd, n);
@@ -37,13 +46,14 @@ Color getBRDF(const thread Hit &hit, const thread Direction &outDir, thread Scen
             } else {
                 // [diffuse BRDF];
                 if (scene.settings.diffuseOn) {
-                    return hit.tri.material.diffuse/M_PI_F;
-                } else {return float3(1.f,1.f,1.f);}
+                    return mat.diffuse/M_PI_F;
+                } else {
+                    return Colors::white();
+                }
             }
             break;
         default:
             return 0.f; //TODO REMOVE
-            break;
     }
 }
 

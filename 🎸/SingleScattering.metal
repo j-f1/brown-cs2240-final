@@ -60,7 +60,7 @@ Color singleScatter(const thread Hit &hit, const thread ScatterMaterial &mat, co
     int i = 0;
     float scale = 1;
     while (!scatter.ok) {
-        if (i++ > DEPTH_RESAMPLE_MAX_STEPS) return Colors::pink() * 30;
+        if (i++ > DEPTH_RESAMPLE_MAX_STEPS) return Colors::black();
         scatter = sampleSurface(hit, scale, light, mat, scene);
         scale /= DEPTH_DOWNSCALE_FACTOR;
     }

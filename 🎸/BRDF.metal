@@ -5,7 +5,7 @@
 
 //TODO eventually turn the outDir type to Ray because we will be in BSSDF land
 Color getBRDF(const thread Hit &hit, const thread Direction &outDir, thread SceneState &scene) {
-    const thread Direction &inRay = hit.inRay.direction;
+    const thread Direction &inDir = hit.inRay.direction;
     const thread Direction normal = normalize(hit.normal);
     const constant Material &mat = hit.tri.material;
     switch (hit.tri.material.illum) {
@@ -15,18 +15,18 @@ Color getBRDF(const thread Hit &hit, const thread Direction &outDir, thread Scen
         }
         case Illum::refract_fresnel:
         case Illum::glass:
-            if (floatEpsEqual(refract(inRay, -normal, mat.ior), outDir)
-                || floatEpsEqual(refract(inRay, normal, 1/mat.ior), outDir)
-                || floatEpsEqual(reflect(inRay, normal), outDir)) {
-                return Colors::gray(1 / dot(inRay, normal));
+            if (floatEpsEqual(refract(inDir, -normal, mat.ior), outDir)
+                || floatEpsEqual(refract(inDir, normal, 1/mat.ior), outDir)
+                || floatEpsEqual(-reflect(inDir, normal), outDir)) {
+                return 1 / abs(dot(inDir, normal));
             }
             return Colors::black();
         case Illum::diffuse_specular_fresnel:
         case Illum::diffuse_specular:
-            if (any(mat.specular > 0)) { //todo does this work?
+            if (any(mat.specular > 0)) {
                 if (mat.shininess > 100) {
-                    if (floatEpsEqual(reflect(inRay, normal), outDir)) {
-                        return mat.specular / abs(dot(inRay, normal));
+                    if (floatEpsEqual(reflect(inDir, normal), outDir)) {
+                        return mat.specular / abs(dot(inDir, normal));
                     } else {
                         return Colors::black();
                     }
@@ -36,7 +36,7 @@ Color getBRDF(const thread Hit &hit, const thread Direction &outDir, thread Scen
                     float3 s = mat.specular;
                     float3 normalized_color = ((n+2.f)/(2.f*M_PI_F))*s;
                     Direction norm = normalize(normal);
-                    Direction reflectedVector = normalize(inRay) - 2.f*dot(normalize(inRay), norm)*norm;
+                    Direction reflectedVector = normalize(inDir) - 2.f*dot(normalize(inDir), norm)*norm;
                     float dotProd = dot(reflectedVector, normalize(outDir));
                     if (dotProd < 0) {return float3(0.f, 0.f, 0.f);}
                     float reflectiveIntensity = pow(dotProd, n);

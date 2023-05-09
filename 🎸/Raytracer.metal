@@ -166,9 +166,9 @@ kernel void flattenKernel(
     }
     result /= srcTex.get_depth();
 
-    float3 toneMapped = tone_map(result, uniforms.settings.toneMap, uniforms.settings.gammaCorrection);
+//    float3 toneMapped = tone_map(result, uniforms.settings.toneMap, uniforms.settings.gammaCorrection);
     // TODO: make this an optional color mode
-    // float3 toneMapped = aces_approx(result)
+    float3 toneMapped = aces_approx(result);
     uint3 crunched = uint3(toneMapped * 255);
     dstTex.write(uint4(crunched, 255), tid);
 }

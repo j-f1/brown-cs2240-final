@@ -72,7 +72,7 @@ newmtl shortBox
 newmtl tallBox
   Ns 1000
   Ni 1.0000
-  illum 5
+  illum 1
   Ka 0.725 0.71 0.68 # White
   Kd 0.725 0.71 0.68
   Ks 0.950 0.95 0.95

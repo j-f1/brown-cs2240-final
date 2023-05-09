@@ -7,14 +7,15 @@
 Color getBRDF(const thread Hit &hit, const thread Direction &outDir, thread SceneState &scene) {
     //TODO COCO
     switch (hit.tri.material.illum) {
+        case Illum::diffuse: {
+            ScatterMaterial mat {scene.settings, hit.tri.material};
+            return singleScatter(hit, mat, scene);
+        }
         case Illum::refract_fresnel:
         case Illum::glass:
             return float3(1.f,1.f,1.f);
             break;
-        case Illum::diffuse_specular_fresnel: {
-            ScatterMaterial mat {scene.settings, hit.tri.material};
-            return singleScatter(hit, mat, scene);
-        }
+        case Illum::diffuse_specular_fresnel:
         case Illum::diffuse_specular:
             if (any(hit.tri.material.specular > 0)) { //todo does this work?
                 if (hit.tri.material.shininess > 100) {
@@ -54,6 +55,12 @@ Sample getNextDirection(const thread Hit &hit, thread SceneState &scene) {
     //TODO COCO
     Sample result = {.direction = Direction(0,0,0), .location = hit.location, .pdf = 1.f, .reflection = false,};
     switch (hit.tri.material.illum) {
+        case Illum::diffuse:
+            // subsurface scattering
+            // TODO: something here?
+            result.direction = Direction(0, 0, 0);
+            result.pdf = 1;
+            return result;
         case Illum::refract_fresnel:
         case Illum::glass:
             // glass
@@ -111,11 +118,6 @@ Sample getNextDirection(const thread Hit &hit, thread SceneState &scene) {
             }
             break;
         case Illum::diffuse_specular_fresnel:
-            // subsurface scattering
-            // TODO: something here?
-            result.direction = Direction(0, 0, 0);
-            result.pdf = 1;
-            return result;
         case Illum::diffuse_specular:
             if (any(hit.tri.material.specular>0)) {
                 if (hit.tri.material.shininess > 100) {

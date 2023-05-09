@@ -129,6 +129,7 @@ kernel void raytracingKernel(
     //raytracing loop
     RayTraceResult result;
     int depth = 0;
+    int totalDepth = 0;
     Color totalBRDF = Colors::white();
     Color totalIllumination = Colors::black();
     do {
@@ -140,10 +141,11 @@ kernel void raytracingKernel(
         if (all(result.ray.direction == 0.f)) break;
         ray = result.ray;
         depth++;
+        totalDepth++;
         if (result.reflection) depth = 0; //if it's a reflection event, count the illumination
     } while (rng() < settings.russianRoulette);
     
-    Color color = totalIllumination / pow(settings.russianRoulette, depth);
+    Color color = totalIllumination / pow(settings.russianRoulette, totalDepth - 1);
 
     dstTex.write(float4(color, 1), tid);
 }

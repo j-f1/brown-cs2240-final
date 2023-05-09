@@ -20,7 +20,7 @@ extension RenderSettings: Equatable {
         russianRoulette: 0.7,
         samplesPerPixel: 14,
         toneMap: SIMD3<Float>(0.299, 0.587, 0.114),
-        gammaCorrection: 1,
+        gammaCorrection: 1 / 2.2,
         imageWidth: 512,
         imageHeight: 512,
         frameIndex: 0

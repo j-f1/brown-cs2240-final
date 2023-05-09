@@ -112,6 +112,7 @@ Sample getNextDirection(const thread Hit &hit, thread SceneState &scene) {
                     //accumulate the radiance of the next path!
                     result.direction = refractedDir;
                     result.pdf = 1.f;
+                    result.reflection = true;
                     
                 }
                 return result;

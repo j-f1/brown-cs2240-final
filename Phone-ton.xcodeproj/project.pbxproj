@@ -23,6 +23,7 @@
 		85BAFF1E29F6F0320019B9E5 /* RenderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85BAFF1D29F6F0320019B9E5 /* RenderView.swift */; };
 		85BAFF2029F6F21E0019B9E5 /* RenderSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85BAFF1F29F6F21E0019B9E5 /* RenderSettings.swift */; };
 		85DD9BE829E4783E0015761E /* Raytracer.metal in Sources */ = {isa = PBXBuildFile; fileRef = 85DD9BE729E4783E0015761E /* Raytracer.metal */; };
+		F02B34B92A0B523900E44095 /* Diffusion.metal in Sources */ = {isa = PBXBuildFile; fileRef = F02B34B82A0B523900E44095 /* Diffusion.metal */; };
 		F09FA7562A004A88007BF259 /* BRDF.metal in Sources */ = {isa = PBXBuildFile; fileRef = F09FA7552A004A88007BF259 /* BRDF.metal */; };
 		F0C29DD729E63FC500488B98 /* GUIView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0C29DD629E63FC500488B98 /* GUIView.swift */; };
 /* End PBXBuildFile section */
@@ -62,6 +63,7 @@
 		85BAFF1F29F6F21E0019B9E5 /* RenderSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenderSettings.swift; sourceTree = "<group>"; };
 		85DD9BE729E4783E0015761E /* Raytracer.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Raytracer.metal; sourceTree = "<group>"; };
 		F02B34B72A0ACFD800E44095 /* Diffusion.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Diffusion.h; sourceTree = "<group>"; };
+		F02B34B82A0B523900E44095 /* Diffusion.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Diffusion.metal; sourceTree = "<group>"; };
 		F09FA7542A004A46007BF259 /* BRDF.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BRDF.h; sourceTree = "<group>"; };
 		F09FA7552A004A88007BF259 /* BRDF.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = BRDF.metal; sourceTree = "<group>"; };
 		F0C29DD629E63FC500488B98 /* GUIView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GUIView.swift; sourceTree = "<group>"; };
@@ -143,6 +145,7 @@
 				85DD9BE729E4783E0015761E /* Raytracer.metal */,
 				F09FA7542A004A46007BF259 /* BRDF.h */,
 				F09FA7552A004A88007BF259 /* BRDF.metal */,
+				F02B34B82A0B523900E44095 /* Diffusion.metal */,
 				85100D2F2A030EAB002EC207 /* Hit.h */,
 				85100D302A030EAB002EC207 /* Hit.metal */,
 				85100D2C2A02FFBA002EC207 /* SingleScattering.h */,
@@ -247,6 +250,7 @@
 				85100D342A03263A002EC207 /* Intersector.metal in Sources */,
 				85BAFF1E29F6F0320019B9E5 /* RenderView.swift in Sources */,
 				85DD9BE829E4783E0015761E /* Raytracer.metal in Sources */,
+				F02B34B92A0B523900E44095 /* Diffusion.metal in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

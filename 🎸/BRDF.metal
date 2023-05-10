@@ -11,9 +11,11 @@ Color getBRDF(const thread Hit &hit, const thread Direction &outDir, thread Scen
     const constant Material &mat = hit.tri.material;
     switch (hit.tri.material.illum) {
         case Illum::diffuse: {
-            if (!scene.settings.singleSSOn || !scene.settings.diffusionSSOn) {
+            if (!scene.settings.subsurfaceScatteringOn) {
+                return float3(0.f,0.f,0.f);
+            } else if (!scene.settings.singleSSOn || !scene.settings.diffusionSSOn) {
                 ScatterMaterial mat {scene.settings, hit.tri.material};
-                
+
                 //if only one or neither option is checked
                 if (scene.settings.singleSSOn) {
                     return singleScatter(hit, mat, scene);
@@ -23,6 +25,7 @@ Color getBRDF(const thread Hit &hit, const thread Direction &outDir, thread Scen
                     return float3(0.f,0.f,0.f);
                 }
             } else {
+                //if both subsurface scattering options are checked, monte carlo the two types of scattering
                 ScatterMaterial mat {scene.settings, hit.tri.material};
                 float random = scene.rng();
                 if (random>0.5) {
@@ -59,7 +62,7 @@ Color getBRDF(const thread Hit &hit, const thread Direction &outDir, thread Scen
                     float dotProd = dot(reflectedVector, normalize(outDir));
                     if (dotProd < 0) {return float3(0.f, 0.f, 0.f);}
                     float reflectiveIntensity = pow(dotProd, n);
-                    
+
                     return normalized_color*reflectiveIntensity;
                 }
             } else {
@@ -77,10 +80,10 @@ Color getBRDF(const thread Hit &hit, const thread Direction &outDir, thread Scen
 }
 
 Sample getNextDirection(const thread Hit &hit, thread SceneState &scene) {
-    
+
     float e1 = scene.rng(); //random number
     float e2 = scene.rng(); //random number
-    
+
     //TODO COCO
     Sample result = {.direction = Direction(0,0,0), .location = hit.location, .pdf = 1.f, .reflection = false,};
     switch (hit.tri.material.illum) {
@@ -97,11 +100,11 @@ Sample getNextDirection(const thread Hit &hit, thread SceneState &scene) {
                 float3 norm = hit.normal;
                 float cos_theta_i = dot(norm, hit.inRay.direction);
                 bool passingIntoGlass = cos_theta_i < 0;
-                
+
                 float ior = hit.tri.material.ior;//Diffuse color as array of floats
                 float ior_i; //ior that the ray was passing through
                 float ior_t; //ior that the ray is maybe going into
-                
+
                 //when the ray hits a boundary of a refractive object, it is not obvious whether the ray is entering the object or exiting.
                 //Use normals to determine this (if ray is in the same direction as normal, it is leaving object)
                 //We have guarantee that rays will only pass into refractive objects and then immediately air when passing out
@@ -114,16 +117,16 @@ Sample getNextDirection(const thread Hit &hit, thread SceneState &scene) {
                     ior_i = ior;
                     ior_t = 1;
                 }
-                
+
                 float sqdCos_t = 1.f-pow((ior_i/ior_t),2)*(1.f-pow(cos_theta_i,2));
                 //if ior is already that of glass, change it back to air
-                
+
                 //for dielectric splitting (both reflection and refraction) use Schlick's approximation of how much light gets reflected
                 float split = scene.rng();
                 float r_0 = pow((ior_i-ior_t)/(ior_i+ior_t),2.f);
                 float schlicks = r_0 + (1.f-r_0)*pow((1.f-cos_theta_i),5.f);
-                
-                
+
+
                 if (split < schlicks || sqdCos_t < 0) { //if Schlicks, or if total internal reflection
                     //reflect
                     Direction incomingDir = normalize(hit.inRay.direction);
@@ -137,12 +140,12 @@ Sample getNextDirection(const thread Hit &hit, thread SceneState &scene) {
                     float ratioIT = ior_i/ior_t;
                     //if the determinant is non-negative, we do not have total internal reflection
                     Direction refractedDir = ratioIT * hit.inRay.direction + (ratioIT * cos_theta_i - cosTheta_t)*norm;
-                    
+
                     //accumulate the radiance of the next path!
                     result.direction = refractedDir;
                     result.pdf = 1.f;
                     result.reflection = true;
-                    
+
                 }
                 return result;
             }

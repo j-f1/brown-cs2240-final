@@ -1,5 +1,6 @@
 #import "RandomGenerator.h"
 
+// https://t5k.org/lists/small/10000.txt
 static constexpr constant unsigned int primes[] = {
       2,      3,      5,      7,     11,     13,     17,     19,     23,     29,
      31,     37,     41,     43,     47,     53,     59,     61,     67,     71,

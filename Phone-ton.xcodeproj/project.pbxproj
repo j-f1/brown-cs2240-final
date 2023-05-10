@@ -61,6 +61,7 @@
 		85BAFF1D29F6F0320019B9E5 /* RenderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenderView.swift; sourceTree = "<group>"; };
 		85BAFF1F29F6F21E0019B9E5 /* RenderSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenderSettings.swift; sourceTree = "<group>"; };
 		85DD9BE729E4783E0015761E /* Raytracer.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Raytracer.metal; sourceTree = "<group>"; };
+		F02B34B72A0ACFD800E44095 /* Diffusion.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Diffusion.h; sourceTree = "<group>"; };
 		F09FA7542A004A46007BF259 /* BRDF.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BRDF.h; sourceTree = "<group>"; };
 		F09FA7552A004A88007BF259 /* BRDF.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = BRDF.metal; sourceTree = "<group>"; };
 		F0C29DD629E63FC500488B98 /* GUIView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GUIView.swift; sourceTree = "<group>"; };
@@ -145,6 +146,7 @@
 				85100D2F2A030EAB002EC207 /* Hit.h */,
 				85100D302A030EAB002EC207 /* Hit.metal */,
 				85100D2C2A02FFBA002EC207 /* SingleScattering.h */,
+				F02B34B72A0ACFD800E44095 /* Diffusion.h */,
 				85100D2D2A02FFBA002EC207 /* SingleScattering.metal */,
 				85100D362A03288C002EC207 /* EmissiveList.h */,
 				85100D372A03288C002EC207 /* EmissiveList.metal */,

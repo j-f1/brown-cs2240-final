@@ -2,6 +2,7 @@
 #import "common.h"
 #import "Sampler.h"
 #import "SingleScattering.h"
+#import "Diffusion.h"
 
 //TODO eventually turn the outDir type to Ray because we will be in BSSDF land
 Color getBRDF(const thread Hit &hit, const thread Direction &outDir, thread SceneState &scene) {
@@ -10,8 +11,26 @@ Color getBRDF(const thread Hit &hit, const thread Direction &outDir, thread Scen
     const constant Material &mat = hit.tri.material;
     switch (hit.tri.material.illum) {
         case Illum::diffuse: {
-            ScatterMaterial mat {scene.settings, hit.tri.material};
-            return singleScatter(hit, mat, scene);
+            if (!scene.settings.singleSSOn || !scene.settings.diffusionSSOn) {
+                ScatterMaterial mat {scene.settings, hit.tri.material};
+                
+                //if only one or neither option is checked
+                if (scene.settings.singleSSOn) {
+                    return singleScatter(hit, mat, scene);
+                } else if (scene.settings.diffusionSSOn) {
+                    return diffuseApproximation(hit, mat, scene);
+                } else {
+                    return float3(0.f,0.f,0.f);
+                }
+            } else {
+                ScatterMaterial mat {scene.settings, hit.tri.material};
+                float random = scene.rng();
+                if (random>0.5) {
+                    return singleScatter(hit, mat, scene)/0.5f;
+                } else {
+                    return diffuseApproximation(hit, mat, scene)/0.5f;
+                }
+            }
         }
         case Illum::refract_fresnel:
         case Illum::glass:

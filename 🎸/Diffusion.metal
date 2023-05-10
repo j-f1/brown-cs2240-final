@@ -20,6 +20,8 @@ Hit sampleSurface(const thread Hit &originalHit, const thread SceneState &scene)
 }
 
 Color diffuseReflectance(const thread Hit &inHit, const thread Hit &outHit) {
+    float albedo = 0.5; //marble TODO SHOULD THIS BE A CONSTANT??
+   
     return float3(0.f,0.f,0.f);
 }
 

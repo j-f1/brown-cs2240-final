@@ -36,7 +36,6 @@ Color getBRDF(const thread Hit &hit, const thread Direction &outDir, thread Scen
         }
         case Illum::refract_fresnel:
         case Illum::glass:
-            return NAN;
             if (floatEpsEqual(refract(inDir, -normal, mat.ior), outDir)
                 || floatEpsEqual(refract(inDir, normal, 1/mat.ior), outDir)
                 || floatEpsEqual(-reflect(inDir, normal), outDir)) {

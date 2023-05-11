@@ -74,6 +74,33 @@ struct GUIView: View {
         }
     }
 
+    struct FakeLabel<Label: View, Content: View>: View {
+        let label: Label
+        let content: Content
+
+        init(_ label: LocalizedStringKey, @ViewBuilder content: () -> Content) where Label == Text {
+            self.label = Text(label)
+            self.content = content()
+        }
+        init(@ViewBuilder content: () -> Content, @ViewBuilder label: () -> Label) {
+            self.label = label()
+            self.content = content()
+        }
+
+        var body: some View {
+            LabeledContent {
+                HStack(spacing: 0) {
+                    label.frame(width: 100, alignment: .trailing)
+                    content.textFieldStyle(.squareBorder)
+                }.padding(.leading, -48)
+            } label: {}
+        }
+    }
+
+    func variable(_ name: LocalizedStringKey, `subscript` s: LocalizedStringKey) -> some View {
+        (Text(name) + Text(s).baselineOffset(-5).font(.footnote).italic())
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Form {
@@ -145,16 +172,54 @@ struct GUIView: View {
                 Divider()
                 #endif
 
-                Section(header: sectionHeader("Image Settings")) {
+                Section(header: sectionHeader("Subsurface Material Settings")) {
+                    Menu("Presets") {
+                        ForEach(Array(SubsurfaceMaterial.all).sorted(using: KeyPathComparator(\.key)), id: \.key) { name, material in
+                            Button(name) {
+                                nextSettings.ss = material
+                            }
+                        }
+                    }
+                    FakeLabel {
+                        HStack(spacing: 0) {
+                            TextField("", value: $nextSettings.ss.sigma_s_prime.x, format: .number)
+                            TextField("", value: $nextSettings.ss.sigma_s_prime.y, format: .number)
+                            TextField("", value: $nextSettings.ss.sigma_s_prime.z, format: .number)
+                        }.frame(width: 180)
+                    } label: {
+                        variable("σ", subscript: "s")
+                    }
+                    FakeLabel {
+                        HStack(spacing: 0) {
+                            TextField("", value: $nextSettings.ss.sigma_a.x, format: .number)
+                            TextField("", value: $nextSettings.ss.sigma_a.y, format: .number)
+                            TextField("", value: $nextSettings.ss.sigma_a.z, format: .number)
+                        }.frame(width: 180)
+                    } label: {
+                        variable("σ", subscript: "a")
+                    }
+                    TextField(value: $nextSettings.ss.eta, format: .number, prompt: Text("Index of Refraction")) {
+                        Text("Index of Refraction")
+                    }
+                    TextField(value: $nextSettings.ss.g, format: .number, prompt: Text("g").italic()) {
+                        Text("g").italic()
+                    }
+                }
+                #if os(macOS)
+                .textFieldStyle(.roundedBorder)
+                #endif
 
-                    TextField(value: $nextSettings.toneMap[0], format: .number, prompt: Text("Tone Mapping R")) {
-                        Text("Tone Mapping R")
-                    }
-                    TextField(value: $nextSettings.toneMap[1], format: .number, prompt: Text("Tone Mapping G")) {
-                        Text("Tone Mapping G")
-                    }
-                    TextField(value: $nextSettings.toneMap[2], format: .number, prompt: Text("Tone Mapping B")) {
-                        Text("Tone Mapping B")
+                #if os(macOS)
+                Divider()
+                #endif
+
+                Section(header: sectionHeader("Image Settings")) {
+                    FakeLabel("Tone Mapping") {
+                        HStack(spacing: 0) {
+                            TextField("", value: $nextSettings.toneMap.x, format: .number)
+                            TextField("", value: $nextSettings.toneMap.y, format: .number)
+                            TextField("", value: $nextSettings.toneMap.z, format: .number)
+                        }.frame(width: 180)
                     }
                     TextField(value: $nextSettings.gammaCorrection, format: .number, prompt: Text("Gamma Correction")) {
                         Text("Gamma Correction")

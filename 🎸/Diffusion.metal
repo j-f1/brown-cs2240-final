@@ -42,16 +42,16 @@ Hit sampleSurface(const thread Hit &originalHit, const thread SceneState &scene)
     Intersector::Intersection intersection = scene.intersector(nextDir);
     
     //todo does this make everything go forever?
-//    while (!intersection) { //if it doesn't hit anything (perhaps we went too far down)
-//        float2 uv (scene.rng(), scene.rng());
-//        float3 randomHemi = sampleCosineWeightedHemisphere(uv); //pick a random direction on the hemisphere
-//        Direction rayDirection = alignHemisphereWithNormal(randomHemi, originalHit.normal); //align the random direction with the normal
-//
-//        ray nextDir = ray{shootRayOrigin, 0.f, 0.0, INFINITY};
-//        nextDir.direction = rayDirection;
-//
-//        intersection = scene.intersector(nextDir);
-//    }
+    while (!intersection) { //if it doesn't hit anything (perhaps we went too far down)
+        float2 uv (scene.rng(), scene.rng());
+        float3 randomHemi = sampleCosineWeightedHemisphere(uv); //pick a random direction on the hemisphere
+        Direction rayDirection = alignHemisphereWithNormal(randomHemi, originalHit.normal); //align the random direction with the normal
+
+        ray nextDir = ray{shootRayOrigin, 0.f, 0.0, INFINITY};
+        nextDir.direction = rayDirection;
+
+        intersection = scene.intersector(nextDir);
+    }
     
     return Hit(intersection, scene);
 }
@@ -65,8 +65,14 @@ Color diffuseReflectance(const thread Hit &inHit, const thread ScatterMaterial &
     float3 D = (1.f/(3.f*mat.σt_prime));
     float3 z_v = z_r + 4.f*A*D; //also d_v, right??
     
-    float3 leftTerm = (σ_tr*z_r+1.f)*(exp(-σ_tr*z_r)/(mat.σt_prime*pow(z_r,3)));
-    float3 rightTerm = z_v*(σ_tr*z_v+1.f)*(exp(-σ_tr*z_v)/(mat.σt_prime*pow(z_v,3)));
+    Location virtualLight = normalize(inHit.normal)*z_v + inHit.location; //put the virtual light z_v above the surface
+    Location realLight = -normalize(inHit.normal)*z_r + inHit.location; //put the real light z_r under the surface
+    
+    float d_v = length(outHit.location-virtualLight);
+    float d_r = length(outHit.location-realLight);
+    
+    float3 leftTerm = (σ_tr*d_r+1.f)*(exp(-σ_tr*d_r)/(mat.σt_prime*pow(d_r,3)));
+    float3 rightTerm = z_v*(σ_tr*d_v+1.f)*(exp(-σ_tr*d_v)/(mat.σt_prime*pow(d_v,3)));
     float3 reflectance = (albedo_prime/(4.f*M_PI_F))*(leftTerm + rightTerm);
     
     return reflectance;
@@ -83,8 +89,9 @@ float3 calculateDensity (const thread Hit &inHit, const thread ScatterMaterial &
 Color diffuseApproximation(const thread Hit &outHit, const thread ScatterMaterial &mat, const thread SceneState &scene) {
     Hit inHit = sampleSurface(outHit, scene);
     Color R_d = diffuseReflectance(inHit, mat, outHit);
-    float fresnelIn = fresnel(mat.ior, inHit.normal, inHit.inRay);
+    float fresnelIn = fresnel(mat.ior, -inHit.normal, inHit.inRay);
     float fresnelOut = fresnel(mat.ior, outHit.normal, outHit.inRay);
+//    fresnelIn = 0.5;
     
     float3 pdf = calculateDensity(inHit, mat, outHit); //TODO
     

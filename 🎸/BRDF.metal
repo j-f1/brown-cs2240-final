@@ -39,7 +39,7 @@ Color getBRDF(const thread Hit &hit, const thread Direction &outDir, thread Scen
         case Illum::glass:
             if (floatEpsEqual(refract(inDir, -normal, mat.ior), outDir)
                 || floatEpsEqual(refract(inDir, normal, 1/mat.ior), outDir)
-                || floatEpsEqual(-reflect(inDir, normal), outDir)) {
+                || floatEpsEqual(reflect(inDir, normal), outDir)) {
                 return 1 / abs(dot(inDir, normal));
             }
             return Colors::black();

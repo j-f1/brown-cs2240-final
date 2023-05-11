@@ -122,7 +122,11 @@ class Renderer: ObservableObject {
         textureDescriptor.width = Int(size.width)
         textureDescriptor.height = Int(size.height)
         textureDescriptor.usage = [.shaderRead, .shaderWrite]
+        #if os(iOS)
+        textureDescriptor.storageMode = .shared
+        #else
         textureDescriptor.storageMode = .managed
+        #endif
 
         return device.makeTexture(descriptor: textureDescriptor)
     }
@@ -241,10 +245,12 @@ class Renderer: ObservableObject {
                 computeEncoder.endEncoding()
             }
 
+            #if !os(iOS)
             if let blitEncoder = commandBuffer.makeBlitCommandEncoder() {
                 blitEncoder.synchronize(resource: finalTexture)
                 blitEncoder.endEncoding()
             }
+            #endif
 
             commandBuffer.commit()
             await runBlocking {

@@ -80,12 +80,11 @@ Color singleScatter(const thread Hit &hit, const thread ScatterMaterial &mat, co
 
     float sPrimeIn = scatter.distance * estimateRefractedInefficiency(mat, scatter.lightDir, hit.normal);
     float σtc = σt * (1 + abs(dot(surfaceHit.normal, hit.inRay.direction)) / abs(dot(hit.normal, surfaceHit.inRay.direction)));
-    // TODO(jed): fresnel
-    float fresnel = 5; // fresnelTransmittance(mat.mat.ior, surfaceHit.inRay.direction) * fresnelTransmittance(mat.mat.ior, hit.inRay.direction);
+    float fresnelValue = fresnel(mat.mat.ior, surfaceHit.normal, surfaceHit.inRay) * fresnel(mat.mat.ior, -hit.normal, hit.inRay);
     float phase = mat.phase(surfaceHit.inRay.direction, hit.inRay.direction);
     float attenuation = exp(-σt * (sPrimeIn + scatter.sPrimeOut));
     float area = length(cross((hit.tri.v2 - hit.tri.v1), (hit.tri.v3 - hit.tri.v1))) / 2;
     float distanceFactor = dot(surfaceHit.normal, scatter.lightDir) * abs(dot(light.faceNormal, -scatter.lightDir)) / length_squared(scatter.lightPos - surfaceHit.location);
     float3 color = area * distanceFactor * attenuation * light.material.emission;
-    return σs / σtc * fresnel * phase * attenuation * color;
+    return σs / σtc * fresnelValue * phase * attenuation * color;
 }

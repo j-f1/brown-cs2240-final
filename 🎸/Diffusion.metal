@@ -1,4 +1,4 @@
-
+#import "common.h"
 #import "Diffusion.h"
 #import "Sampler.h"
 
@@ -10,18 +10,6 @@
  const thread ray &inRay;
  const thread Intersector::Intersection &intersection;
  */
-
-float fresnel(const thread float ior, const thread Direction normal, const thread ray inRay) {
-    //Schlick's approximation:
-    float ior_air = 1.0003;
-    float R_0 = (ior-ior_air)/(ior+ior_air);
-    Direction n = normalize(normal);
-    Direction r = normalize(inRay.direction);
-    float cosAngle = dot(n, -r);
-    float schlicks = R_0 + (1.f-R_0)*pow(1.f-cosAngle, 5);
-    return schlicks;
-//    return 0.5;
-}
 
 Hit sampleSurface(const thread Hit &originalHit, const thread SceneState &scene) {
     //go down along the normal an average of the distance to each point (this is arbitrary but just to keep it at the scale of the tris)
@@ -79,11 +67,10 @@ Color diffuseReflectance(const thread Hit &inHit, const thread ScatterMaterial &
 }
 
 float3 calculateDensity (const thread Hit &inHit, const thread ScatterMaterial &mat, const thread Hit &outHit) {
-//    float3 σ_tr = sqrt(3.f*mat.σa*(mat.σt_prime));
-//    float dist = length(inHit.location-outHit.location);
-//    float3 density = σ_tr*exp(-σ_tr*dist); //euclidian distance might not be ideal for this but ¯\_(ツ)_/¯
-//    return density;
-    return 1.f;
+    float3 σ_tr = sqrt(3.f*mat.σa*(mat.σt_prime));
+    float dist = length(inHit.location-outHit.location);
+    float3 density = σ_tr*exp(-σ_tr*dist); //euclidian distance might not be ideal for this but ¯\_(ツ)_/¯
+    return density;
 }
 
 Color diffuseApproximation(const thread Hit &outHit, const thread ScatterMaterial &mat, const thread SceneState &scene) {

@@ -86,3 +86,15 @@ struct ScatterMaterial {
     float phase(Direction out, Direction in) const { return phase(dot(out, in)); }
     float phase(float cosine) const { return M_1_PI_F / 4; }
 };
+
+inline float fresnel(const thread float ior, const thread Direction normal, const thread ray inRay) {
+    //Schlick's approximation:
+    float ior_air = 1.0003;
+    float R_0 = (ior-ior_air)/(ior+ior_air);
+    Direction n = normalize(normal);
+    Direction r = normalize(inRay.direction);
+    float cosAngle = dot(n, -r);
+    float schlicks = R_0 + (1.f-R_0)*pow(1.f-cosAngle, 5);
+    return schlicks;
+    //    return 0.5;
+}

@@ -45,6 +45,13 @@ typedef struct Camera {
     vector_float3 forward;
 } Camera;
 
+typedef struct SubsurfaceMaterial {
+    simd_float3 sigma_s_prime;
+    simd_float3 sigma_a;
+    float eta;
+    float g;
+} SubsurfaceMaterial;
+
 typedef struct RenderSettings {
     bool diffuseOn;
     bool mirrorOn;
@@ -53,10 +60,7 @@ typedef struct RenderSettings {
     bool subsurfaceScatteringOn;
     bool singleSSOn;
     bool diffusionSSOn;
-    simd_float3 ssSigma_s_prime;
-    simd_float3 ssSigma_a;
-    float ssEta;
-    float ssG;
+    SubsurfaceMaterial ss;
     bool directLightingOn;
     int directLightingSamples;
     bool importanceSamplingOn;

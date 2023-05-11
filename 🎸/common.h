@@ -70,10 +70,10 @@ inline constexpr ushort3 unpack(constant ushort *ints, ushort idx) {
 
 struct ScatterMaterial {
     inline ScatterMaterial(const constant RenderSettings &settings, const constant Material &mat)
-        : σs_prime(settings.ssSigma_s_prime)
-        , σa(settings.ssSigma_a)
-        , σt_prime(settings.ssSigma_s_prime + settings.ssSigma_a)
-        , ior(settings.ssEta)
+        : σs_prime(settings.ss.sigma_s_prime)
+        , σa(settings.ss.sigma_a)
+        , σt_prime(settings.ss.sigma_s_prime + settings.ss.sigma_a)
+        , ior(settings.ss.eta)
         , mat(mat)
     {}
     float3 σs_prime;

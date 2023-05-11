@@ -9,7 +9,8 @@ extension RenderSettings: Equatable {
         subsurfaceScatteringOn: true,
         singleSSOn: true,
         diffusionSSOn: true,
-        ssSigma_s: 5.47,
+        // cream:
+        ssSigma_s_prime: SIMD3<Float>(7.38, 5.47, 3.15),
         ssSigma_a: SIMD3<Float>(0.0002, 0.0028, 0.0163),//SIMD3<Float>(0.01, 0.1, 1.0),
         ssEta: 1.3,
         ssG: 0,

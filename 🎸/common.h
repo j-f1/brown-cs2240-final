@@ -72,7 +72,7 @@ struct ScatterMaterial {
     inline ScatterMaterial(const constant RenderSettings &settings, const constant Material &mat)
         : σs_prime(settings.ssSigma_s_prime)
         , σa(settings.ssSigma_a)
-        , σt_prime(settings.ssSigma_s_prime-settings.ssSigma_a)
+        , σt_prime(settings.ssSigma_s_prime + settings.ssSigma_a)
         , ior(settings.ssEta)
         , mat(mat)
     {}

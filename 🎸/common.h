@@ -68,11 +68,13 @@ inline constexpr ushort3 unpack(constant ushort *ints, ushort idx) {
     return ushort3(ints[idx * 3 + 0], ints[idx * 3 + 1], ints[idx * 3 + 2]);
 }
 
+#define DOWNSCALE 5
+
 struct ScatterMaterial {
     inline ScatterMaterial(const constant RenderSettings &settings, const constant Material &mat)
-        : σs_prime(settings.ss.sigma_s_prime)
-        , σa(settings.ss.sigma_a)
-        , σt_prime(settings.ss.sigma_s_prime + settings.ss.sigma_a)
+        : σs_prime(settings.ss.sigma_s_prime/DOWNSCALE)
+        , σa(settings.ss.sigma_a/DOWNSCALE)
+        , σt_prime((settings.ss.sigma_s_prime + settings.ss.sigma_a)/DOWNSCALE)
         , ior(settings.ss.eta)
         , mat(mat)
     {}

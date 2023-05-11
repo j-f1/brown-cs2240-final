@@ -32,7 +32,7 @@ inline float4 stripe(uint2 tid, bool flip, const constant Uniforms &uniforms, in
 inline void accumulate(const thread float4 &sample, thread float4 &accumulator, uint2 tid, const constant Uniforms &uniforms) {
     if (accumulator.a > 0) return;
 
-    if (any(isnan(sample))) {
+    if (any(isnan(sample) || isinf(sample))) {
         /* \\\\ = nan */
         accumulator = stripe(tid, false, uniforms);
     } else if (any(sample < 0)) {

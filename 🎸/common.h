@@ -95,6 +95,7 @@ inline float fresnel(const thread float ior, const thread Direction normal, cons
     Direction r = normalize(inRay.direction);
     float cosAngle = dot(n, -r);
     float schlicks = R_0 + (1.f-R_0)*pow(1.f-cosAngle, 5);
+//    return clamp(1-schlicks, 0.f, 1.f);
     return schlicks;
-    //    return 0.5;
+//        return 0.5;
 }

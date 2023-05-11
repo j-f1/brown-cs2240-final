@@ -8,7 +8,7 @@ struct RenderView: View {
     @Binding var renderer: Renderer?
     let rerender: @MainActor () -> Void
 
-    @State private var expand = false
+    @State private var expand = true
     @Environment(\.displayScale) private var scale
 
     private struct RenderResult: View {

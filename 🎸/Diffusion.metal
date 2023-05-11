@@ -66,8 +66,8 @@ Color diffuseReflectance(const thread Hit &inHit, const thread ScatterMaterial &
 Color diffuseApproximation(const thread Hit &outHit, const thread ScatterMaterial &mat, const thread SceneState &scene) {
     Hit inHit = densityBasedSample(outHit, mat, scene);
     Color R_d = diffuseReflectance(inHit, mat, outHit);
-    float fresnelIn = fresnel(mat.ior, inHit.normal, inHit.inRay);
-    float fresnelOut = fresnel(mat.ior, -outHit.normal, outHit.inRay);
+    float fresnelIn = fresnel(mat.ior, inHit.normal, inHit.inRay.direction);
+    float fresnelOut = fresnel(mat.ior, outHit.normal, -outHit.inRay.direction);
 
     return clamp((1.f/M_PI_F)*fresnelIn*R_d*fresnelOut, 0.f, 1.f);//
     

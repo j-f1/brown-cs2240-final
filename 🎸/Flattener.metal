@@ -22,22 +22,28 @@ inline Color tone_map(Color c, float3 mapValues, float gammaCorrection) {
     return gammaVals;
 }
 
-inline float4 stripe(uint2 tid, bool flip, const constant Uniforms &uniforms, int interval = 6, int width = 2) {
-    bool isStripe = flip
+inline bool diagonalStripe(uint2 tid, bool flip, const constant Uniforms &uniforms, int interval = 6, int width = 2) {
+    return flip
         ? abs(int(tid.x) % interval - int(tid.y) % interval) < width
         : abs(int(uniforms.settings.imageWidth - tid.x) % interval - int(tid.y) % interval) < width;
+}
+
+inline float4 applyStripe(bool isStripe) {
     return float4(isStripe ? Colors::pink() * 0.8 : Colors::purple() * 1.1, 1);
 }
 
 inline void accumulate(const thread float4 &sample, thread float4 &accumulator, uint2 tid, const constant Uniforms &uniforms) {
     if (accumulator.a > 0) return;
 
-    if (any(isnan(sample) || isinf(sample))) {
+    if (any(isnan(sample))) {
         /* \\\\ = nan */
-        accumulator = stripe(tid, false, uniforms);
+        accumulator = applyStripe(diagonalStripe(tid, true, uniforms));
+    } else if (any(isinf(sample))) {
+        /* |||| = inf */
+        accumulator = applyStripe(abs(int(tid.x) % 6) < 2);
     } else if (any(sample < 0)) {
         /* //// = < 0 */
-        accumulator = stripe(tid, true, uniforms);
+        accumulator = applyStripe(diagonalStripe(tid, false, uniforms));
     } else {
         accumulator.rgb += sample.rgb;
     }

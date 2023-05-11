@@ -2,40 +2,23 @@
 #import "Diffusion.h"
 #import "Sampler.h"
 
-Hit densityBasedSample (const thread Hit &originalHit, const thread ScatterMaterial &mat, const thread SceneState &scene) {
-    Location point = originalHit.location;
-    
+inline Intersector::Intersection densityBasedSample(const thread Hit &originalHit, const thread ScatterMaterial &mat, const thread SceneState &scene) {
+    float avgDist = 0.0001;
+    Location shootRayOrigin = originalHit.location - originalHit.normal*avgDist;
+
     float E1 = scene.rng();
     float E2 = scene.rng();
-    
-    float avgDist = 0.0001;
-    Location shootRayOrigin = point-originalHit.normal*avgDist;
-    
-    
     float3 σ_tr = sqrt(3.f*mat.σa*(mat.σt_prime));
     float σ_tr_avg = (σ_tr.x+σ_tr.y+σ_tr.z)/3.f;
     float θ = atan(-log(E1)/(avgDist*σ_tr_avg));
     float φ = E2*2*M_PI_F;
+
     Direction densityHemi = float3(sin(θ)*cos(φ),cos(θ),sin(θ)*sin(φ));
-    
     Direction rayDirection = alignHemisphereWithNormal(densityHemi, originalHit.normal); //align the random direction with the normal
+
     ray nextDir = ray{shootRayOrigin, 0.f, 0.0, INFINITY};
     nextDir.direction = rayDirection;
-    
-    Intersector::Intersection intersection = scene.intersector(nextDir);
-    
-    //todo does this make everything go forever?
-    while (!intersection) { //if it doesn't hit anything (perhaps we went too far down)
-        float2 uv (scene.rng(), scene.rng());
-        float3 randomHemi = sampleCosineWeightedHemisphere(uv); //pick a random direction on the hemisphere
-        Direction rayDirection = alignHemisphereWithNormal(randomHemi, originalHit.normal); //align the random direction with the normal
-
-        ray nextDir = ray{shootRayOrigin, 0.f, 0.0, INFINITY};
-        nextDir.direction = rayDirection;
-        intersection = scene.intersector(nextDir);
-    }
-    
-    return Hit(intersection, scene);
+    return scene.intersector(nextDir);
 }
 
 Color diffuseReflectance(const thread Hit &inHit, const thread ScatterMaterial &mat, const thread Hit &outHit) {
@@ -64,11 +47,20 @@ Color diffuseReflectance(const thread Hit &inHit, const thread ScatterMaterial &
 }
 
 Color diffuseApproximation(const thread Hit &outHit, const thread ScatterMaterial &mat, const thread SceneState &scene) {
-    Hit inHit = densityBasedSample(outHit, mat, scene);
+    int tries = 0;
+    auto intersection = densityBasedSample(outHit, mat, scene);
+    while ((!intersection || scene.materialIds[intersection.index()] != outHit.tri.materialIdx) && tries < 5) {
+        intersection = densityBasedSample(outHit, mat, scene);
+        tries++;
+    }
+    if (!intersection) return Colors::pink();
+    Hit inHit{intersection, scene};
+
     Color R_d = diffuseReflectance(inHit, mat, outHit);
     float fresnelIn = fresnel(mat.ior, inHit.normal, inHit.inRay.direction);
     float fresnelOut = fresnel(mat.ior, outHit.normal, -outHit.inRay.direction);
 
-    return clamp((1.f/M_PI_F)*fresnelIn*R_d*fresnelOut, 0.f, 1.f);//
-    
+    if (fresnelIn > 1 || fresnelOut > 1) return {1, 0, 0};
+
+    return M_1_PI_F * fresnelIn * R_d * fresnelOut;
 }

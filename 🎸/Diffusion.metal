@@ -2,58 +2,12 @@
 #import "Diffusion.h"
 #import "Sampler.h"
 
-/**
- HIT:
- tri tri;
- Location location;
- Direction normal;
- const thread ray &inRay;
- const thread Intersector::Intersection &intersection;
- */
-
-Hit sampleSurface(const thread Hit &originalHit, const thread SceneState &scene) {
-    //go down along the normal an average of the distance to each point (this is arbitrary but just to keep it at the scale of the tris)
-    Location point = originalHit.location;
-    float dist1 = length(point-originalHit.tri.v1);
-    float dist2 = length(point-originalHit.tri.v2);
-    float dist3 = length(point-originalHit.tri.v3);
-    float avgDist = (dist1+dist2+dist3)/3.f;
-    Location shootRayOrigin = point-originalHit.normal*avgDist;
-    
-    float2 uv (scene.rng(), scene.rng());
-    float3 randomHemi = sampleCosineWeightedHemisphere(uv); //pick a random direction on the hemisphere
-    Direction rayDirection = alignHemisphereWithNormal(randomHemi, originalHit.normal); //align the random direction with the normal
-    
-    ray nextDir = ray{shootRayOrigin, 0.f, 0.0, INFINITY};
-    nextDir.direction = rayDirection;
-    
-    Intersector::Intersection intersection = scene.intersector(nextDir);
-    
-    //todo does this make everything go forever?
-    while (!intersection) { //if it doesn't hit anything (perhaps we went too far down)
-        float2 uv (scene.rng(), scene.rng());
-        float3 randomHemi = sampleCosineWeightedHemisphere(uv); //pick a random direction on the hemisphere
-        Direction rayDirection = alignHemisphereWithNormal(randomHemi, originalHit.normal); //align the random direction with the normal
-
-        ray nextDir = ray{shootRayOrigin, 0.f, 0.0, INFINITY};
-        nextDir.direction = rayDirection;
-
-        intersection = scene.intersector(nextDir);
-    }
-    
-    return Hit(intersection, scene);
-}
-
 Hit densityBasedSample (const thread Hit &originalHit, const thread ScatterMaterial &mat, const thread SceneState &scene) {
     Location point = originalHit.location;
     
     float E1 = scene.rng();
     float E2 = scene.rng();
     
-//    float dist1 = length(point-originalHit.tri.v1);
-//    float dist2 = length(point-originalHit.tri.v2);
-//    float dist3 = length(point-originalHit.tri.v3);
-//    float avgDist = (dist1+dist2+dist3)/3.f;
     float avgDist = 0.0001;
     Location shootRayOrigin = point-originalHit.normal*avgDist;
     

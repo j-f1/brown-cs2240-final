@@ -16,7 +16,35 @@ float fresnel(const thread float ior, const thread Direction normal, const threa
 }
 
 Hit sampleSurface(const thread Hit &originalHit, const thread SceneState &scene) {
-    return originalHit; //TODO fill out this method with the random hemisphere sampling
+    //go down along the normal an average of the distance to each point (this is arbitrary but just to keep it at the scale of the tris)
+    Location point = originalHit.location;
+    float dist1 = length(point-originalHit.tri.v1);
+    float dist2 = length(point-originalHit.tri.v2);
+    float dist3 = length(point-originalHit.tri.v3);
+    float avgDist = (dist1+dist2+dist3)/3.f;
+    Location shootRayOrigin = point-originalHit.normal*avgDist;
+    
+    float2 uv (scene.rng(), scene.rng());
+    float3 randomHemi = sampleCosineWeightedHemisphere(uv); //pick a random direction on the hemisphere
+    Direction rayDirection = alignHemisphereWithNormal(randomHemi, originalHit.normal); //align the random direction with the normal
+    
+    ray nextDir = ray{shootRayOrigin, 0.f, 0.0, INFINITY};
+    nextDir.direction = rayDirection;
+    
+    Intersector::Intersection intersection = scene.intersector(nextDir);
+    
+    while (!intersection) { //if it doesn't hit anything (perhaps we went too far down)
+        float2 uv (scene.rng(), scene.rng());
+        float3 randomHemi = sampleCosineWeightedHemisphere(uv); //pick a random direction on the hemisphere
+        Direction rayDirection = alignHemisphereWithNormal(randomHemi, originalHit.normal); //align the random direction with the normal
+        
+        ray nextDir = ray{shootRayOrigin, 0.f, 0.0, INFINITY};
+        nextDir.direction = rayDirection;
+        
+        intersection = scene.intersector(nextDir);
+    }
+    
+    return Hit(intersection, scene); 
 }
 
 Color diffuseReflectance(const thread Hit &inHit, const thread ScatterMaterial &mat, const thread Hit &outHit) {
@@ -32,7 +60,7 @@ Color diffuseReflectance(const thread Hit &inHit, const thread ScatterMaterial &
     float3 rightTerm = z_v*(σ_tr*z_v+1.f)*(exp(-σ_tr*z_v)/(mat.σt_prime*pow(z_v,3)));
     float3 reflectance = (albedo_prime/(4.f*M_PI_F))*(leftTerm + rightTerm);
     
-    return float3(0.f,0.f,0.f);
+    return reflectance;
 }
 
 Color diffuseApproximation(const thread Hit &outHit, const thread ScatterMaterial &mat, const thread SceneState &scene) {

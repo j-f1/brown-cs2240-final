@@ -12,7 +12,7 @@ class Renderer: ObservableObject {
     nonisolated private let device: MTLDevice
     nonisolated private let commandQueue: MTLCommandQueue
     nonisolated private let uniformBuffer: MTLBuffer
-    nonisolated private let renderPipelineState: MTLComputePipelineState
+    nonisolated private let pathTracePipelineState: MTLComputePipelineState
     nonisolated private let flattenPipelineState: MTLComputePipelineState
     private var randomTexture: MTLTexture
     private var scene: Scene
@@ -43,7 +43,7 @@ class Renderer: ObservableObject {
         self.uniformBuffer.label = "UniformBuffer"
 
         do {
-            renderPipelineState = try Renderer.buildRenderPipeline(device: device)
+            pathTracePipelineState = try Renderer.buildPathTracePipeline(device: device)
         } catch {
             print("Unable to compile render pipeline state.  Error info: \(error)")
             return nil
@@ -127,11 +127,11 @@ class Renderer: ObservableObject {
         return device.makeTexture(descriptor: textureDescriptor)
     }
 
-    private class func buildRenderPipeline(device: MTLDevice) throws -> MTLComputePipelineState {
+    private class func buildPathTracePipeline(device: MTLDevice) throws -> MTLComputePipelineState {
         let library = device.makeDefaultLibrary()
         let pipelineDescriptor = MTLComputePipelineDescriptor()
-        pipelineDescriptor.label = "Compute Pipeline"
-        pipelineDescriptor.computeFunction = library?.makeFunction(name: "raytracingKernel")
+        pipelineDescriptor.label = "Render Pipeline"
+        pipelineDescriptor.computeFunction = library?.makeFunction(name: "pathTraceKernel")
         pipelineDescriptor.threadGroupSizeIsMultipleOfThreadExecutionWidth = true
         return try device.makeComputePipelineState(descriptor: pipelineDescriptor, options: []).0
     }
@@ -210,7 +210,7 @@ class Renderer: ObservableObject {
             if let computeEncoder = commandBuffer.makeComputeCommandEncoder() {
                 computeEncoder.label = "Path Tracer"
                 computeEncoder.pushDebugGroup("Setup")
-                computeEncoder.setComputePipelineState(renderPipelineState)
+                computeEncoder.setComputePipelineState(pathTracePipelineState)
                 computeEncoder[.uniforms] = uniformBuffer
                 computeEncoder[.random] = randomTexture
                 computeEncoder[.dst] = intermediateTexture

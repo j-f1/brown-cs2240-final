@@ -19,10 +19,11 @@
 		854AFCC629DDD1470054D4D9 /* TinyObjLoader.mm in Sources */ = {isa = PBXBuildFile; fileRef = 854AFCC529DDD1470054D4D9 /* TinyObjLoader.mm */; };
 		854AFCC929DDE3990054D4D9 /* Scene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 854AFCC829DDE3990054D4D9 /* Scene.swift */; };
 		857CC61C29F1BCBA009D9214 /* DirectLighting.metal in Sources */ = {isa = PBXBuildFile; fileRef = 857CC61A29F1B63C009D9214 /* DirectLighting.metal */; };
+		857FA06D2A0D21810014C7C6 /* Flattener.metal in Sources */ = {isa = PBXBuildFile; fileRef = 857FA06C2A0D21810014C7C6 /* Flattener.metal */; };
 		859B85E229F18BD70002119A /* RandomGenerator.metal in Sources */ = {isa = PBXBuildFile; fileRef = 859B85E129F18BD70002119A /* RandomGenerator.metal */; };
 		85BAFF1E29F6F0320019B9E5 /* RenderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85BAFF1D29F6F0320019B9E5 /* RenderView.swift */; };
 		85BAFF2029F6F21E0019B9E5 /* RenderSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85BAFF1F29F6F21E0019B9E5 /* RenderSettings.swift */; };
-		85DD9BE829E4783E0015761E /* Raytracer.metal in Sources */ = {isa = PBXBuildFile; fileRef = 85DD9BE729E4783E0015761E /* Raytracer.metal */; };
+		85DD9BE829E4783E0015761E /* PathTracer.metal in Sources */ = {isa = PBXBuildFile; fileRef = 85DD9BE729E4783E0015761E /* PathTracer.metal */; };
 		F02B34B92A0B523900E44095 /* Diffusion.metal in Sources */ = {isa = PBXBuildFile; fileRef = F02B34B82A0B523900E44095 /* Diffusion.metal */; };
 		F09FA7562A004A88007BF259 /* BRDF.metal in Sources */ = {isa = PBXBuildFile; fileRef = F09FA7552A004A88007BF259 /* BRDF.metal */; };
 		F0C29DD729E63FC500488B98 /* GUIView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0C29DD629E63FC500488B98 /* GUIView.swift */; };
@@ -43,7 +44,7 @@
 		85100D302A030EAB002EC207 /* Hit.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Hit.metal; sourceTree = "<group>"; };
 		85100D322A03263A002EC207 /* Intersector.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Intersector.h; sourceTree = "<group>"; };
 		85100D332A03263A002EC207 /* Intersector.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Intersector.metal; sourceTree = "<group>"; };
-		85100D352A032828002EC207 /* tri.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = tri.h; sourceTree = "<group>"; };
+		85100D352A032828002EC207 /* Tri.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Tri.h; sourceTree = "<group>"; };
 		85100D362A03288C002EC207 /* EmissiveList.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EmissiveList.h; sourceTree = "<group>"; };
 		85100D372A03288C002EC207 /* EmissiveList.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = EmissiveList.metal; sourceTree = "<group>"; };
 		851F052929E84DE7008AFCCA /* Sampler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Sampler.h; sourceTree = "<group>"; };
@@ -55,13 +56,14 @@
 		854AFCC829DDE3990054D4D9 /* Scene.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Scene.swift; sourceTree = "<group>"; };
 		857CC61A29F1B63C009D9214 /* DirectLighting.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = DirectLighting.metal; sourceTree = "<group>"; };
 		857CC61B29F1BC10009D9214 /* DirectLighting.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DirectLighting.h; sourceTree = "<group>"; };
+		857FA06C2A0D21810014C7C6 /* Flattener.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Flattener.metal; sourceTree = "<group>"; };
 		859B85D929F034D40002119A /* common.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = common.h; sourceTree = "<group>"; };
 		859B85DA29F035880002119A /* VectorWrapper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VectorWrapper.h; sourceTree = "<group>"; };
 		859B85DF29F186060002119A /* RandomGenerator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RandomGenerator.h; sourceTree = "<group>"; };
 		859B85E129F18BD70002119A /* RandomGenerator.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = RandomGenerator.metal; sourceTree = "<group>"; };
 		85BAFF1D29F6F0320019B9E5 /* RenderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenderView.swift; sourceTree = "<group>"; };
 		85BAFF1F29F6F21E0019B9E5 /* RenderSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenderSettings.swift; sourceTree = "<group>"; };
-		85DD9BE729E4783E0015761E /* Raytracer.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Raytracer.metal; sourceTree = "<group>"; };
+		85DD9BE729E4783E0015761E /* PathTracer.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = PathTracer.metal; sourceTree = "<group>"; };
 		F02B34B72A0ACFD800E44095 /* Diffusion.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Diffusion.h; sourceTree = "<group>"; };
 		F02B34B82A0B523900E44095 /* Diffusion.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Diffusion.metal; sourceTree = "<group>"; };
 		F09FA7542A004A46007BF259 /* BRDF.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BRDF.h; sourceTree = "<group>"; };
@@ -138,30 +140,71 @@
 		854AFCD029DDEABC0054D4D9 /* 🎸 */ = {
 			isa = PBXGroup;
 			children = (
+				857FA06E2A0D219F0014C7C6 /* BRDF */,
+				859B85D929F034D40002119A /* common.h */,
+				857FA06C2A0D21810014C7C6 /* Flattener.metal */,
+				85DD9BE729E4783E0015761E /* PathTracer.metal */,
+				851F052929E84DE7008AFCCA /* Sampler.h */,
+				857FA0722A0D22240014C7C6 /* Scene */,
+				8503426C29DA19F200928641 /* Shared.h */,
+				857FA0702A0D21BD0014C7C6 /* Raytracer */,
+				857FA0732A0D22B50014C7C6 /* Utils */,
+			);
+			path = "🎸";
+			sourceTree = "<group>";
+		};
+		857FA06E2A0D219F0014C7C6 /* BRDF */ = {
+			isa = PBXGroup;
+			children = (
 				F09FA7542A004A46007BF259 /* BRDF.h */,
 				F09FA7552A004A88007BF259 /* BRDF.metal */,
-				859B85D929F034D40002119A /* common.h */,
-				F02B34B72A0ACFD800E44095 /* Diffusion.h */,
-				F02B34B82A0B523900E44095 /* Diffusion.metal */,
 				857CC61B29F1BC10009D9214 /* DirectLighting.h */,
 				857CC61A29F1B63C009D9214 /* DirectLighting.metal */,
-				85100D362A03288C002EC207 /* EmissiveList.h */,
-				85100D372A03288C002EC207 /* EmissiveList.metal */,
+				857FA06F2A0D21A90014C7C6 /* Scattering */,
+			);
+			name = BRDF;
+			sourceTree = "<group>";
+		};
+		857FA06F2A0D21A90014C7C6 /* Scattering */ = {
+			isa = PBXGroup;
+			children = (
+				F02B34B72A0ACFD800E44095 /* Diffusion.h */,
+				F02B34B82A0B523900E44095 /* Diffusion.metal */,
+				85100D2C2A02FFBA002EC207 /* SingleScattering.h */,
+				85100D2D2A02FFBA002EC207 /* SingleScattering.metal */,
+			);
+			name = Scattering;
+			sourceTree = "<group>";
+		};
+		857FA0702A0D21BD0014C7C6 /* Raytracer */ = {
+			isa = PBXGroup;
+			children = (
 				85100D2F2A030EAB002EC207 /* Hit.h */,
 				85100D302A030EAB002EC207 /* Hit.metal */,
 				85100D322A03263A002EC207 /* Intersector.h */,
 				85100D332A03263A002EC207 /* Intersector.metal */,
+			);
+			name = Raytracer;
+			sourceTree = "<group>";
+		};
+		857FA0722A0D22240014C7C6 /* Scene */ = {
+			isa = PBXGroup;
+			children = (
+				85100D362A03288C002EC207 /* EmissiveList.h */,
+				85100D372A03288C002EC207 /* EmissiveList.metal */,
+				85100D352A032828002EC207 /* Tri.h */,
+			);
+			name = Scene;
+			sourceTree = "<group>";
+		};
+		857FA0732A0D22B50014C7C6 /* Utils */ = {
+			isa = PBXGroup;
+			children = (
 				859B85DF29F186060002119A /* RandomGenerator.h */,
 				859B85E129F18BD70002119A /* RandomGenerator.metal */,
-				85DD9BE729E4783E0015761E /* Raytracer.metal */,
-				851F052929E84DE7008AFCCA /* Sampler.h */,
-				8503426C29DA19F200928641 /* Shared.h */,
-				85100D2C2A02FFBA002EC207 /* SingleScattering.h */,
-				85100D2D2A02FFBA002EC207 /* SingleScattering.metal */,
-				85100D352A032828002EC207 /* tri.h */,
 				859B85DA29F035880002119A /* VectorWrapper.h */,
 			);
-			path = "🎸";
+			name = Utils;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -239,6 +282,7 @@
 				8503426F29DA19F200928641 /* Renderer.swift in Sources */,
 				F0C29DD729E63FC500488B98 /* GUIView.swift in Sources */,
 				854AFCC929DDE3990054D4D9 /* Scene.swift in Sources */,
+				857FA06D2A0D21810014C7C6 /* Flattener.metal in Sources */,
 				8503425129DA05A700928641 /* ContentView.swift in Sources */,
 				85100D2E2A02FFBA002EC207 /* SingleScattering.metal in Sources */,
 				854AFCC629DDD1470054D4D9 /* TinyObjLoader.mm in Sources */,
@@ -249,7 +293,7 @@
 				85100D312A030EAB002EC207 /* Hit.metal in Sources */,
 				85100D342A03263A002EC207 /* Intersector.metal in Sources */,
 				85BAFF1E29F6F0320019B9E5 /* RenderView.swift in Sources */,
-				85DD9BE829E4783E0015761E /* Raytracer.metal in Sources */,
+				85DD9BE829E4783E0015761E /* PathTracer.metal in Sources */,
 				F02B34B92A0B523900E44095 /* Diffusion.metal in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

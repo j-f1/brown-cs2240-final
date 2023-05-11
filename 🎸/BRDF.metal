@@ -4,7 +4,6 @@
 #import "SingleScattering.h"
 #import "Diffusion.h"
 
-//TODO eventually turn the outDir type to Ray because we will be in BSSDF land
 Color getBRDF(const thread Hit &hit, const thread Direction &outDir, thread SceneState &scene) {
     const thread Direction &inDir = hit.inRay.direction;
     const thread Direction normal = normalize(hit.normal);
@@ -37,6 +36,7 @@ Color getBRDF(const thread Hit &hit, const thread Direction &outDir, thread Scen
         }
         case Illum::refract_fresnel:
         case Illum::glass:
+            return NAN;
             if (floatEpsEqual(refract(inDir, -normal, mat.ior), outDir)
                 || floatEpsEqual(refract(inDir, normal, 1/mat.ior), outDir)
                 || floatEpsEqual(-reflect(inDir, normal), outDir)) {

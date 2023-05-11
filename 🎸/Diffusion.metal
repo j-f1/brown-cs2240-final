@@ -54,7 +54,7 @@ Hit densityBasedSample (const thread Hit &originalHit, const thread ScatterMater
 //    float dist2 = length(point-originalHit.tri.v2);
 //    float dist3 = length(point-originalHit.tri.v3);
 //    float avgDist = (dist1+dist2+dist3)/3.f;
-    float avgDist = 0.01;
+    float avgDist = 0.0001;
     Location shootRayOrigin = point-originalHit.normal*avgDist;
     
     
@@ -110,11 +110,11 @@ Color diffuseReflectance(const thread Hit &inHit, const thread ScatterMaterial &
 }
 
 Color diffuseApproximation(const thread Hit &outHit, const thread ScatterMaterial &mat, const thread SceneState &scene) {
-    Hit inHit = sampleSurface(outHit, scene);
+    Hit inHit = densityBasedSample(outHit, mat, scene);
     Color R_d = diffuseReflectance(inHit, mat, outHit);
-    float fresnelIn = fresnel(mat.ior, -inHit.normal, inHit.inRay);
-    float fresnelOut = fresnel(mat.ior, outHit.normal, outHit.inRay);
-    
+    float fresnelIn = fresnel(mat.ior, inHit.normal, inHit.inRay);
+    float fresnelOut = fresnel(mat.ior, -outHit.normal, outHit.inRay);
+
     return clamp((1.f/M_PI_F)*fresnelIn*R_d*fresnelOut, 0.f, 1.f);//
     
 }

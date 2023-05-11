@@ -189,6 +189,7 @@ struct RenderView: View {
                     SaveButton(renderer: renderer)
                 }
             }
+            .fixedSize()
             #if os(iOS)
             .fontWeight(.medium)
             .buttonStyle(.bordered)

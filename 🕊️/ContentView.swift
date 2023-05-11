@@ -33,11 +33,17 @@ struct ContentView: View {
                 .tabItem { Label("Render", systemImage: "photo.fill") }
         }
         #else
-        HStack {
+        HStack(alignment: .top) {
             GUIView(nextSettings: $nextSettings, model: $model)
+                .padding()
+                .fixedSize(horizontal: true, vertical: false)
+            Divider()
+            Spacer(minLength: 0)
             RenderView(settings: $settings, nextSettings: nextSettings, model: model, renderer: $renderer, rerender: rerender)
+                .padding()
+                .layoutPriority(1)
+            Spacer(minLength: 0)
         }
-        .padding()
         #endif
     }
 

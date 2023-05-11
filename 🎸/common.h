@@ -91,6 +91,7 @@ inline float fresnel(const thread float ior, const thread Direction normal, cons
     //Schlick's approximation:
     float ior_air = 1.0003;
     float R_0 = (ior-ior_air)/(ior+ior_air);
+    R_0 *= R_0;
     Direction n = normalize(normal);
     Direction r = normalize(inDir);
     float cosAngle = dot(n, r);

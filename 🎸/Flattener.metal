@@ -35,18 +35,18 @@ inline float4 applyStripe(bool isStripe) {
 inline void accumulate(const thread float4 &sample, thread float4 &accumulator, uint2 tid, const constant Uniforms &uniforms) {
     if (accumulator.a > 0) return;
 
-    if (any(isnan(sample))) {
-        /* \\\\ = nan */
-        accumulator = applyStripe(diagonalStripe(tid, true, uniforms));
-    } else if (any(isinf(sample))) {
-        /* |||| = inf */
-        accumulator = applyStripe(abs(int(tid.x) % 6) < 2);
-    } else if (any(sample < 0)) {
-        /* //// = < 0 */
-        accumulator = applyStripe(diagonalStripe(tid, false, uniforms));
-    } else {
+//    if (any(isnan(sample))) {
+//        /* \\\\ = nan */
+//        accumulator = applyStripe(diagonalStripe(tid, true, uniforms));
+//    } else if (any(isinf(sample))) {
+//        /* |||| = inf */
+//        accumulator = applyStripe(abs(int(tid.x) % 6) < 2);
+//    } else if (any(sample < -0.01)) {
+//        /* //// = < 0 */
+//        accumulator = applyStripe(diagonalStripe(tid, false, uniforms));
+//    } else {
         accumulator.rgb += sample.rgb;
-    }
+//    }
 }
 
 kernel void flattenKernel(
@@ -66,9 +66,9 @@ kernel void flattenKernel(
     }
 
     result /= srcTex.get_depth();
-    float3 toneMapped = tone_map(result.rgb, uniforms.settings.toneMap, uniforms.settings.gammaCorrection);
+//    float3 toneMapped = tone_map(result.rgb, uniforms.settings.toneMap, uniforms.settings.gammaCorrection);
     // TODO: make this an optional color mode
     // float3 toneMapped = aces_approx(result.rgb);
-    uint3 crunched = uint3(toneMapped * 255);
+    uint3 crunched = uint3((result.rgb + 1) / 2 * 255);
     dstTex.write(uint4(crunched, 255), tid);
 }

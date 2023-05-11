@@ -12,7 +12,15 @@
  */
 
 float fresnel(const thread float ior, const thread Direction normal, const thread ray inRay) {
-    return 0.f;
+    //Schlick's approximation:
+    float ior_air = 1.0003;
+    float R_0 = (ior-ior_air)/(ior+ior_air);
+    Direction n = normalize(normal);
+    Direction r = normalize(inRay.direction);
+    float cosAngle = dot(n, -r);
+    float schlicks = R_0 + (1.f-R_0)*pow(1.f-cosAngle, 5);
+    return schlicks;
+//    return 0.5;
 }
 
 Hit sampleSurface(const thread Hit &originalHit, const thread SceneState &scene) {
@@ -33,18 +41,19 @@ Hit sampleSurface(const thread Hit &originalHit, const thread SceneState &scene)
     
     Intersector::Intersection intersection = scene.intersector(nextDir);
     
-    while (!intersection) { //if it doesn't hit anything (perhaps we went too far down)
-        float2 uv (scene.rng(), scene.rng());
-        float3 randomHemi = sampleCosineWeightedHemisphere(uv); //pick a random direction on the hemisphere
-        Direction rayDirection = alignHemisphereWithNormal(randomHemi, originalHit.normal); //align the random direction with the normal
-        
-        ray nextDir = ray{shootRayOrigin, 0.f, 0.0, INFINITY};
-        nextDir.direction = rayDirection;
-        
-        intersection = scene.intersector(nextDir);
-    }
+    //todo does this make everything go forever?
+//    while (!intersection) { //if it doesn't hit anything (perhaps we went too far down)
+//        float2 uv (scene.rng(), scene.rng());
+//        float3 randomHemi = sampleCosineWeightedHemisphere(uv); //pick a random direction on the hemisphere
+//        Direction rayDirection = alignHemisphereWithNormal(randomHemi, originalHit.normal); //align the random direction with the normal
+//
+//        ray nextDir = ray{shootRayOrigin, 0.f, 0.0, INFINITY};
+//        nextDir.direction = rayDirection;
+//
+//        intersection = scene.intersector(nextDir);
+//    }
     
-    return Hit(intersection, scene); 
+    return Hit(intersection, scene);
 }
 
 Color diffuseReflectance(const thread Hit &inHit, const thread ScatterMaterial &mat, const thread Hit &outHit) {
@@ -63,13 +72,22 @@ Color diffuseReflectance(const thread Hit &inHit, const thread ScatterMaterial &
     return reflectance;
 }
 
+float3 calculateDensity (const thread Hit &inHit, const thread ScatterMaterial &mat, const thread Hit &outHit) {
+//    float3 σ_tr = sqrt(3.f*mat.σa*(mat.σt_prime));
+//    float dist = length(inHit.location-outHit.location);
+//    float3 density = σ_tr*exp(-σ_tr*dist); //euclidian distance might not be ideal for this but ¯\_(ツ)_/¯
+//    return density;
+    return 1.f;
+}
+
 Color diffuseApproximation(const thread Hit &outHit, const thread ScatterMaterial &mat, const thread SceneState &scene) {
     Hit inHit = sampleSurface(outHit, scene);
     Color R_d = diffuseReflectance(inHit, mat, outHit);
     float fresnelIn = fresnel(mat.ior, inHit.normal, inHit.inRay);
     float fresnelOut = fresnel(mat.ior, outHit.normal, outHit.inRay);
     
-    float pdf = 1.f; //TODO
+    float3 pdf = calculateDensity(inHit, mat, outHit); //TODO
     
     return (1.f/M_PI_F)*fresnelIn*R_d*fresnelOut/pdf;
+    
 }

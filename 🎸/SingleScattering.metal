@@ -17,7 +17,9 @@ struct Scatter {
 };
 
 Scatter sampleSurface(const thread Hit &hit, float scale, const thread tri &light, const thread ScatterMaterial &mat, const thread SceneState &scene) {
-    float σt = (mat.σt_prime.x + mat.σt_prime.y + mat.σt_prime.z) / 3; // TODO: fix
+    // correct if material is isotropic
+    float σt = (mat.σt_prime.x + mat.σt_prime.y + mat.σt_prime.z) / 3;
+
     float sPrimeOut = -log(1.f - scene.rng() * scale) / σt;
     
     // TODO: skip if pos is outside of object?
@@ -72,8 +74,9 @@ Color singleScatter(const thread Hit &hit, const thread ScatterMaterial &mat, co
     }
     Hit surfaceHit{scatter.surface, scene};
 
-    float σt = (mat.σt_prime.x + mat.σt_prime.y + mat.σt_prime.z) / 3; // TODO: fix
-    float3 σs = mat.σs_prime; // TODO: fix
+    // correct if material is isotropic
+    float σt = (mat.σt_prime.x + mat.σt_prime.y + mat.σt_prime.z) / 3;
+    float3 σs = mat.σs_prime;
 
     float sPrimeIn = scatter.distance * estimateRefractedInefficiency(mat, scatter.lightDir, hit.normal);
     float σtc = σt * (1 + abs(dot(surfaceHit.normal, hit.inRay.direction)) / abs(dot(hit.normal, surfaceHit.inRay.direction)));

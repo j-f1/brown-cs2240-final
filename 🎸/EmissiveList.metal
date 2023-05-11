@@ -1,6 +1,6 @@
 #import "common.h"
 #import "EmissiveList.h"
-#import "tri.h"
+#import "Tri.h"
 
 tri EmissiveList::Iterator::operator*() const {
     return {emissives[i], scene};

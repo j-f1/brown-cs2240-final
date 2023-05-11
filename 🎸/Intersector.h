@@ -48,11 +48,4 @@ public:
     Intersection operator()(const thread ray &ray) const {
         return {ray, i.intersect(ray, accelerationStructure)};
     }
-
-    //    Intersection test(const thread ray &ray) {
-    //        // Get the first intersection, not the closest intersection.
-    //        i.accept_any_intersection(true);
-    //
-    //        return i.intersect(ray, accelerationStructure);
-    //    }
 };

@@ -68,23 +68,21 @@ inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLe
     return result;
 }
 
-kernel void raytracingKernel(
-                             uint3                               tid                       [[thread_position_in_grid]],
-                             
-                             constant Uniforms &                 uniforms                  [[buffer(BufferIndexUniforms)]],
-                             texture2d<unsigned int>             randomTex                 [[texture(TextureIndexRandom)]],
-                             texture3d<float, access::write>     dstTex                    [[texture(TextureIndexDst)]],
-                             constant float                     *positions                 [[buffer(BufferIndexVertexPositions)]],
-                             constant float                     *vertexNormals             [[buffer(BufferIndexVertexNormalAngles)]],
-                             constant ushort                    *vertices                  [[buffer(BufferIndexFaceVertices)]],
-                             constant ushort                    *faceVertexNormals         [[buffer(BufferIndexFaceVertexNormals)]],
-                             constant float                     *normals                   [[buffer(BufferIndexFaceNormals)]],
-                             constant ushort                    *materialIds               [[buffer(BufferIndexFaceMaterials)]],
-                             constant ushort                    *emissives                 [[buffer(BufferIndexEmissiveFaces)]],
-                             constant Material                  *materials                 [[buffer(BufferIndexMaterials)]],
-                             primitive_acceleration_structure    accelerationStructure     [[buffer(BufferIndexIntersector)]]
-                             )
-{
+kernel void pathTraceKernel(
+    uint3                               tid                       [[thread_position_in_grid]],
+    constant Uniforms &                 uniforms                  [[buffer(BufferIndexUniforms)]],
+    texture2d<unsigned int>             randomTex                 [[texture(TextureIndexRandom)]],
+    texture3d<float, access::write>     dstTex                    [[texture(TextureIndexDst)]],
+    constant float                     *positions                 [[buffer(BufferIndexVertexPositions)]],
+    constant float                     *vertexNormals             [[buffer(BufferIndexVertexNormalAngles)]],
+    constant ushort                    *vertices                  [[buffer(BufferIndexFaceVertices)]],
+    constant ushort                    *faceVertexNormals         [[buffer(BufferIndexFaceVertexNormals)]],
+    constant float                     *normals                   [[buffer(BufferIndexFaceNormals)]],
+    constant ushort                    *materialIds               [[buffer(BufferIndexFaceMaterials)]],
+    constant ushort                    *emissives                 [[buffer(BufferIndexEmissiveFaces)]],
+    constant Material                  *materials                 [[buffer(BufferIndexMaterials)]],
+    primitive_acceleration_structure    accelerationStructure     [[buffer(BufferIndexIntersector)]]
+) {
     constant RenderSettings &settings = uniforms.settings;
     RandomGenerator rng{randomTex, tid, settings.frameIndex};
     EmissiveList emissiveList{emissives, uniforms.emissivesCount};
@@ -148,31 +146,4 @@ kernel void raytracingKernel(
     Color color = totalIllumination / pow(settings.russianRoulette, totalDepth - 1);
 
     dstTex.write(float4(color, 1), tid);
-}
-
-kernel void flattenKernel(
-    uint2                               tid                       [[thread_position_in_grid]],
-    constant Uniforms &                 uniforms                  [[buffer(BufferIndexUniforms)]],
-    texture3d<float, access::read>      srcTex                    [[texture(TextureIndexSrc)]],
-    texture2d<uint, access::write>      dstTex                    [[texture(TextureIndexDst)]]
-) {
-    Color result = 0.f;
-    for (uint z = 0; z < srcTex.get_depth(); z++) {
-        Color sample = srcTex.read(uint3(tid, z)).rgb;
-        if (any(isnan(sample))) {
-            /* \\\\ = nan */
-            sample = abs(int(tid.x) % 6 - int(tid.y) % 6) < 2 ? Colors::pink() : Colors::purple();
-        } else if (any(sample < 0)) {
-            /* //// = < 0 */
-            sample = abs(int(uniforms.settings.imageWidth - tid.x) % 6 - int(tid.y) % 6) < 2 ? Colors::pink() : Colors::purple();
-        }
-        result += sample;
-    }
-    result /= srcTex.get_depth();
-
-    float3 toneMapped = tone_map(result, uniforms.settings.toneMap, uniforms.settings.gammaCorrection);
-    // TODO: make this an optional color mode
-    // float3 toneMapped = aces_approx(result)
-    uint3 crunched = uint3(toneMapped * 255);
-    dstTex.write(uint4(crunched, 255), tid);
 }

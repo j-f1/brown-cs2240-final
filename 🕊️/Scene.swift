@@ -15,36 +15,32 @@ class Scene {
     let emissivesCount: Int32
 
     init?(contentsOf url: URL, for device: MTLDevice, commandQueue: MTLCommandQueue) async {
+        var start = Date()
         guard let loader = await runBlocking({ TinyObjLoader(contentsOf: url) }) else { return nil }
+        print("Ran TinyObjLoader in \(Int(Date().timeIntervalSince(start) * 1000))ms")
 
         let materials = loader.materials.map(RawMaterial.init)
         guard
-            let vertexBuffer = device.makeBuffer(array: loader.vertices, count: loader.vertexCount),
-            let normalAnglesBuffer = device.makeBuffer(array: loader.normals, count: loader.normalCount),
-            let materialIdBuffer = device.makeBuffer(array: loader.materialIds, count: loader.materialIdCount),
-            let faceVertexBuffer = device.makeBuffer(array: loader.faceVertices, count: loader.faceCount * 3),
-            let vertexNormalIndexBuffer = device.makeBuffer(array: loader.vertexNormals, count: loader.faceCount * 3),
+            let vertexBuffer = device.makeBuffer("Vertex Positions", array: loader.vertices, count: loader.vertexCount),
+            let normalAnglesBuffer = device.makeBuffer("Vertex Normals", array: loader.normals, count: loader.normalCount),
+            let materialIdBuffer = device.makeBuffer("Face Material IDs", array: loader.materialIds, count: loader.materialIdCount),
+            let faceVertexBuffer = device.makeBuffer("Face Vertices", array: loader.faceVertices, count: loader.faceCount * 3),
+            let vertexNormalIndexBuffer = device.makeBuffer("Vertex Normal IDs", array: loader.vertexNormals, count: loader.faceCount * 3),
             let materialBuffer = materials.withUnsafeBytes({ ptr in
                 device.makeBuffer(bytes: ptr.baseAddress!, length: ptr.count, options: [])
             }),
-            let emissivesBuffer = device.makeBuffer(array: loader.emissiveFaces, count: loader.emissiveFaceCount)
+            let emissivesBuffer = device.makeBuffer("Emissive Faces", array: loader.emissiveFaces, count: loader.emissiveFaceCount)
         else { return nil }
 
         self.emissivesCount = Int32(loader.emissiveFaceCount)
 
-        vertexBuffer.label = "Vertex Positions"
         self.vertexPositionsBuffer = vertexBuffer
-        normalAnglesBuffer.label = "Vertex Normals"
         self.normalAnglesBuffer = normalAnglesBuffer
-        materialIdBuffer.label = "Face Material IDs"
         self.materialIndexBuffer = materialIdBuffer
-        faceVertexBuffer.label = "Face Vertices"
         self.faceVertexIndexBuffer = faceVertexBuffer
-        vertexNormalIndexBuffer.label = "Vertex Normal IDs"
         self.vertexNormalIndexBuffer = vertexNormalIndexBuffer
         materialBuffer.label = "Materials"
         self.materialBuffer = materialBuffer
-        emissivesBuffer.label = "Emissive Faces"
         self.emissivesBuffer = emissivesBuffer
 
         let geometryDescriptor = MTLAccelerationStructureTriangleGeometryDescriptor()
@@ -54,6 +50,7 @@ class Scene {
         geometryDescriptor.opaque = true
         geometryDescriptor.triangleCount = loader.faceCount
 
+        start = Date()
         let faces = loader.faceCount
         guard
             let normalBuffer = device.makeBuffer(length: MemoryLayout<Float>.stride * faces * 3, options: [])
@@ -66,7 +63,9 @@ class Scene {
                 return [normal.x, normal.y, normal.z]
             })
         assert(result.unwritten.next() == nil)
+        print("Computed face normals in \(Int(Date().timeIntervalSince(start) * 1000))ms")
 
+        start = Date()
         let descriptor = MTLPrimitiveAccelerationStructureDescriptor()
         descriptor.geometryDescriptors = [geometryDescriptor]
 
@@ -134,8 +133,11 @@ class Scene {
             commandBuffer.waitUntilCompleted()
         }
 
-        let compactedSize = compactedSizeBuffer.contents().assumingMemoryBound(to: UInt32.self).pointee
+        print("Built acceleration structure in \(Int(Date().timeIntervalSince(start) * 1000))ms")
 
+        start = Date()
+
+        let compactedSize = compactedSizeBuffer.contents().assumingMemoryBound(to: UInt32.self).pointee
         guard
             // Allocate a smaller acceleration structure based on the returned size.
             let compactedAccelerationStructure = device.makeAccelerationStructure(size: Int(compactedSize)),
@@ -161,16 +163,26 @@ class Scene {
         // compacted acceleration structure.
         commandEncoder2.endEncoding()
         commandBuffer2.commit()
+
+        await runBlocking {
+            commandBuffer2.waitUntilCompleted()
+        }
+
+        print("Compacted acceleration structure in \(Int(Date().timeIntervalSince(start) * 1000))ms")
     }
 }
 
 extension MTLDevice {
-    func makeBuffer<T>(array bytes: UnsafePointer<T>, count: Int) -> MTLBuffer? {
+    func makeBuffer<T>(_ label: String, array bytes: UnsafePointer<T>, count: Int) -> MTLBuffer? {
+        let start = Date()
         let length = MemoryLayout<T>.size * max(count, 1)
         if count == 0 {
             return makeBuffer(length: length, options: [])
         }
-        return makeBuffer(bytes: bytes, length: length)
+        let buffer = makeBuffer(bytes: bytes, length: length)
+        buffer?.label = label
+        print("Built \(label) buffer in \(Int(Date().timeIntervalSince(start) * 1000))ms")
+        return buffer
     }
 }
 

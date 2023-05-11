@@ -1,5 +1,5 @@
 #import "Intersector.h"
-#import "tri.h"
+#import "Tri.h"
 
 const constant Material &Intersector::Intersection::material(const thread SceneState &scene) const {
     return scene.materials[scene.materialIds[index()]];

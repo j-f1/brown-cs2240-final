@@ -91,7 +91,10 @@ struct GUIView: View {
             LabeledContent {
                 HStack(spacing: 0) {
                     label.frame(width: 100, alignment: .trailing)
-                    content.textFieldStyle(.squareBorder)
+                    content
+                        #if os(macOS)
+                        .textFieldStyle(.squareBorder)
+                        #endif
                 }.padding(.leading, -48)
             } label: {}
         }

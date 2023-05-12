@@ -57,12 +57,13 @@ inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLe
     
     result.ray.direction = sample.hit.inRay.direction;
     result.ray.origin = sample.hit.location + 0.001*sample.hit.normal;
+    result.brdf /= sample.pdf;
     if (floatEpsEqual(sample.hit.inRay.direction, 0)) {
         result.illumination = result.brdf;
         result.brdf = Colors::white();
-    } else {
+    } else if (floatEpsEqual(sample.hit.location, hit.location)) {
         float lightProjection = abs(dot(sample.hit.inRay.direction, hit.normal));
-        result.brdf *= lightProjection / sample.pdf;
+        result.brdf *= lightProjection;
     }
     
     result.sampleDirectLighting = sample.sampleDirectLighting;

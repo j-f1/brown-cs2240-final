@@ -50,7 +50,7 @@ Color diffuseApproximation(const thread Hit &fromCamera, const thread Hit &toInf
 
     Color R_d = diffuseReflectance(fromCamera, mat, toInfinity);
     float fresnelIn = fresnel(mat.ior, fromCamera.normal, fromCamera.inRay.direction);
-    float fresnelOut = fresnel(mat.ior, toInfinity.normal, toInfinity.inRay.direction); //todo should there be negatives here
+    float fresnelOut = fresnel(mat.ior, toInfinity.normal, toInfinity.inRay.direction);
 
 //    fresnelIn = 1;
 //    fresnelOut = 1;

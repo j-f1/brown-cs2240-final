@@ -52,13 +52,13 @@ Color diffuseApproximation(const thread Hit &fromCamera, const thread Hit &toInf
     float fresnelIn = fresnel(mat.ior, fromCamera.normal, fromCamera.inRay.direction);
     float fresnelOut = fresnel(mat.ior, toInfinity.normal, toInfinity.inRay.direction);
 
-    fresnelIn = 1;
-    fresnelOut = 1;
-    R_d = 1;
+//    fresnelIn = 1;
+//    fresnelOut = 1;
+//    R_d = 1;
     if (fresnelIn > 1 || fresnelOut > 1) return {1, 0, 0};
     if (fresnelIn < 0 || fresnelOut < 0) return {1, 1, 0};
 
-    return  M_1_PI_F * fresnelIn * R_d * fresnelOut;
+    return  M_1_PI_F * fresnelIn * R_d * fresnelOut * 100;
 }
 
 

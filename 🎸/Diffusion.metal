@@ -52,22 +52,24 @@ Color diffuseApproximation(const thread Hit &fromCamera, const thread Hit &toInf
     float fresnelIn = fresnel(mat.ior, fromCamera.normal, fromCamera.inRay.direction);
     float fresnelOut = fresnel(mat.ior, toInfinity.normal, toInfinity.inRay.direction); //todo should there be negatives here
 
-//    fresnelIn = 1;
-//    fresnelOut = 1;
+    fresnelIn = 1;
+    fresnelOut = 1;
+    R_d = 1;
     if (fresnelIn > 1 || fresnelOut > 1) return {1, 0, 0};
+    if (fresnelIn < 0 || fresnelOut < 0) return {1, 1, 0};
 
-    return M_1_PI_F * fresnelIn * R_d * fresnelOut;
+    return  M_1_PI_F * fresnelIn * R_d * fresnelOut;
 }
 
 
-Sample getNextDiffusionDirection(const thread Hit &outHit, thread SceneState &scene) {
-    ScatterMaterial mat {scene.settings, outHit.tri.material};
+Sample getNextDiffusionDirection(const thread Hit &fromCamera, thread SceneState &scene) {
+    ScatterMaterial mat {scene.settings, fromCamera.tri.material};
     int tries = 0;
-    auto intersection = densityBasedSample(outHit, mat, scene);
-    while ((!intersection || scene.materialIds[intersection.index()] != outHit.tri.materialIdx) && tries < 5) {
-        intersection = densityBasedSample(outHit, mat, scene);
+    auto intersection = densityBasedSample(fromCamera, mat, scene);
+    while ((!intersection || scene.materialIds[intersection.index()] != fromCamera.tri.materialIdx) && tries < 5) {
+        intersection = densityBasedSample(fromCamera, mat, scene);
         tries++;
     }
-    Hit inHit{intersection, scene};
-    return Sample{.hit = inHit, .pdf = 1, .sampleDirectLighting = false};
+    Hit toInfinity{intersection, scene};
+    return Sample{.hit = toInfinity, .pdf = 1.f, .sampleDirectLighting = false};
 }

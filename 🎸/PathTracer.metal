@@ -56,6 +56,7 @@ inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLe
     result.brdf = brdf;
     
     result.ray.direction = sample.hit.inRay.direction;
+    result.ray.origin = sample.hit.location + 0.001*sample.hit.normal;
     if (floatEpsEqual(sample.hit.inRay.direction, 0)) {
         result.illumination = result.brdf;
         result.brdf = Colors::white();

@@ -19,6 +19,7 @@ Color getBRDF(const thread Hit &fromCamera, const thread Hit &toInfinity, thread
                 if (scene.settings.singleSSOn) {
                     return singleScatter(fromCamera, mat, scene);
                 } else if (scene.settings.diffusionSSOn) {
+                    return float3(0,1,0);
                     return diffuseApproximation(fromCamera, toInfinity, mat, scene);
                 } else {
                     return float3(0.f,0.f,0.f);
@@ -27,7 +28,6 @@ Color getBRDF(const thread Hit &fromCamera, const thread Hit &toInfinity, thread
                 //if both subsurface scattering options are checked, monte carlo the two types of scattering
                 ScatterMaterial mat {scene.settings, fromCamera.tri.material};
                 return singleScatter(fromCamera, mat, scene) + diffuseApproximation(fromCamera,toInfinity, mat, scene);
-
             }
         }
         case Illum::refract_fresnel:

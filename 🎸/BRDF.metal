@@ -187,17 +187,17 @@ Sample getNextDirection(const thread Hit &hit, thread SceneState &scene) {
                     }
                 }
             } else {
-                // diffuse
-                if (scene.settings.importanceSamplingOn) {
-                    float phi = 2.0 * M_PI_F * e1;
-                    float theta = asin(e2);
-                    Direction objSpaceRand = normalize(float3(1.*sin(theta)*cos(phi), 1.*cos(theta), 1.*sin(theta)*sin(phi)));
-                    result.hit.inRay.direction = normalize(alignHemisphereWithNormal(objSpaceRand, hit.normal));
-                    result.pdf = max(0.f, dot(hit.normal,result.direction));
-                    return result;
-                } else {
+                // diffuse [importance sampling does not work :(]
+//                if (scene.settings.importanceSamplingOn) {
+//                    float phi = 2.0 * M_PI_F * e1;
+//                    float theta = asin(e2);
+//                    Direction objSpaceRand = normalize(float3(1.*sin(theta)*cos(phi), 1.*cos(theta), 1.*sin(theta)*sin(phi)));
+//                    result.hit.inRay.direction = normalize(alignHemisphereWithNormal(objSpaceRand, hit.normal));
+//                    result.pdf = max(0.f, dot(hit.normal,result.hit.inRay.direction));
+//                    return result;
+//                } else {
                     return generateRandomOnHemi(hit, float2(e1, e2));
-                }
+//                }
             }
             break;
         default:

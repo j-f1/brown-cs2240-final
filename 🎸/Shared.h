@@ -56,7 +56,7 @@ typedef struct RenderSettings {
     bool diffuseOn;
     bool mirrorOn;
     // bool refractionOn;
-    // bool glossyOn;
+    bool glossyOn;
     bool subsurfaceScatteringOn;
     bool singleSSOn;
     bool diffusionSSOn;

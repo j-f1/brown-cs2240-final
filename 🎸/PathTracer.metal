@@ -13,7 +13,7 @@ struct RayTraceResult {
     Color illumination;
     
     //if a reflection event happened
-    bool reflection;
+    bool sampleDirectLighting;
 };
 
 inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLength, thread SceneState &scene) {
@@ -22,7 +22,7 @@ inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLe
     
     RayTraceResult result{
         .ray = ray{intersection.location(), 0.f, inRay.min_distance, inRay.max_distance},
-        .reflection = false,
+        .sampleDirectLighting = false,
         // .brdf = [uninitialized],
         // .illumination = [uninitialized]
     };
@@ -45,7 +45,6 @@ inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLe
     }
     
     Sample sample = getNextDirection(hit, scene);
-    result.reflection = sample.reflection;
     
     if (scene.settings.directLightingOn) {
         result.illumination = directLighting(hit, scene);
@@ -65,6 +64,7 @@ inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLe
         result.brdf *= lightProjection / sample.pdf;
     }
     
+    result.sampleDirectLighting = sample.sampleDirectLighting;
     return result;
 }
 
@@ -140,7 +140,7 @@ kernel void pathTraceKernel(
         ray = result.ray;
         depth++;
         totalDepth++;
-        if (result.reflection) depth = 0; //if it's a reflection event, count the illumination
+        if (result.sampleDirectLighting) depth = 0; //if it's a reflection event, count the illumination
     } while (rng() < settings.russianRoulette);
     
     Color color = totalIllumination / pow(settings.russianRoulette, totalDepth - 1);

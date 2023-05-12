@@ -46,21 +46,28 @@ Color diffuseReflectance(const thread Hit &inHit, const thread ScatterMaterial &
     return reflectance;
 }
 
-Color diffuseApproximation(const thread Hit &outHit, const thread ScatterMaterial &mat, const thread SceneState &scene) {
+Color diffuseApproximation(const thread Hit &fromCamera, const thread Hit &toInfinity, const thread ScatterMaterial &mat, const thread SceneState &scene) {
+
+    Color R_d = diffuseReflectance(fromCamera, mat, toInfinity);
+    float fresnelIn = fresnel(mat.ior, fromCamera.normal, fromCamera.inRay.direction);
+    float fresnelOut = fresnel(mat.ior, toInfinity.normal, toInfinity.inRay.direction); //todo should there be negatives here
+
+//    fresnelIn = 1;
+//    fresnelOut = 1;
+    if (fresnelIn > 1 || fresnelOut > 1) return {1, 0, 0};
+
+    return M_1_PI_F * fresnelIn * R_d * fresnelOut;
+}
+
+
+Sample getNextDiffusionDirection(const thread Hit &outHit, thread SceneState &scene) {
+    ScatterMaterial mat {scene.settings, outHit.tri.material};
     int tries = 0;
     auto intersection = densityBasedSample(outHit, mat, scene);
     while ((!intersection || scene.materialIds[intersection.index()] != outHit.tri.materialIdx) && tries < 5) {
         intersection = densityBasedSample(outHit, mat, scene);
         tries++;
     }
-    if (!intersection) return Colors::pink();
     Hit inHit{intersection, scene};
-
-    Color R_d = diffuseReflectance(inHit, mat, outHit);
-    float fresnelIn = fresnel(mat.ior, inHit.normal, inHit.inRay.direction);
-    float fresnelOut = fresnel(mat.ior, outHit.normal, -outHit.inRay.direction);
-
-    if (fresnelIn > 1 || fresnelOut > 1) return {1, 0, 0};
-
-    return M_1_PI_F * fresnelIn * R_d * fresnelOut;
+    return Sample{.hit = inHit, .pdf = 1, .sampleDirectLighting = false};
 }

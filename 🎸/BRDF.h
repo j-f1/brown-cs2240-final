@@ -1,11 +1,6 @@
 #import "common.h"
 #import "Hit.h"
-
-struct Sample {
-    Hit hit;
-    float pdf;
-    bool reflection;
-};
+#import "Sample.h"
 
 Color getBRDF(const thread Hit &hit, const thread Hit &outHit, thread SceneState &scene);
 

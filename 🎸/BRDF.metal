@@ -4,41 +4,37 @@
 #import "SingleScattering.h"
 #import "Diffusion.h"
 
-Color getBRDF(const thread Hit &hit, const thread Hit &outHit, thread SceneState &scene) {
-    const thread Direction &inDir = hit.inRay.direction;
-    const thread Direction normal = normalize(hit.normal);
-    const constant Material &mat = hit.tri.material;
-    switch (hit.tri.material.illum) {
+Color getBRDF(const thread Hit &fromCamera, const thread Hit &toInfinity, thread SceneState &scene) {
+    const thread Direction &inDir = fromCamera.inRay.direction;
+    const thread Direction normal = normalize(fromCamera.normal);
+    const constant Material &mat = fromCamera.tri.material;
+    switch (fromCamera.tri.material.illum) {
         case Illum::diffuse: {
             if (!scene.settings.subsurfaceScatteringOn) {
                 return float3(0.f,0.f,0.f);
             } else if (!scene.settings.singleSSOn || !scene.settings.diffusionSSOn) {
-                ScatterMaterial mat {scene.settings, hit.tri.material};
+                ScatterMaterial mat {scene.settings, fromCamera.tri.material};
 
                 //if only one or neither option is checked
                 if (scene.settings.singleSSOn) {
-                    return singleScatter(hit, mat, scene);
+                    return singleScatter(fromCamera, mat, scene);
                 } else if (scene.settings.diffusionSSOn) {
-                    return diffuseApproximation(hit, mat, scene);
+                    return diffuseApproximation(fromCamera, toInfinity, mat, scene);
                 } else {
                     return float3(0.f,0.f,0.f);
                 }
             } else {
                 //if both subsurface scattering options are checked, monte carlo the two types of scattering
-                ScatterMaterial mat {scene.settings, hit.tri.material};
-                float random = scene.rng();
-                if (random>0.5) {
-                    return singleScatter(hit, mat, scene)/0.5f;
-                } else {
-                    return diffuseApproximation(hit, mat, scene)/0.5f;
-                }
+                ScatterMaterial mat {scene.settings, fromCamera.tri.material};
+                return singleScatter(fromCamera, mat, scene) + diffuseApproximation(fromCamera,toInfinity, mat, scene);
+                
             }
         }
         case Illum::refract_fresnel:
         case Illum::glass:
-            if (floatEpsEqual(refract(inDir, -normal, mat.ior), outHit.inRay.direction)
-                || floatEpsEqual(refract(inDir, normal, 1/mat.ior), outHit.inRay.direction)
-                || floatEpsEqual(reflect(inDir, normal), outHit.inRay.direction)) {
+            if (floatEpsEqual(refract(inDir, -normal, mat.ior), toInfinity.inRay.direction)
+                || floatEpsEqual(refract(inDir, normal, 1/mat.ior), toInfinity.inRay.direction)
+                || floatEpsEqual(reflect(inDir, normal), toInfinity.inRay.direction)) {
                 return 1 / abs(dot(inDir, normal));
             }
             return Colors::black();
@@ -46,7 +42,7 @@ Color getBRDF(const thread Hit &hit, const thread Hit &outHit, thread SceneState
         case Illum::diffuse_specular:
             if (any(mat.specular > 0)) {
                 if (mat.shininess > 100) {
-                    if (floatEpsEqual(reflect(inDir, normal), outHit.inRay.direction)) {
+                    if (floatEpsEqual(reflect(inDir, normal), toInfinity.inRay.direction)) {
                         return mat.specular / abs(dot(inDir, normal));
                     } else {
                         return Colors::black();
@@ -58,7 +54,7 @@ Color getBRDF(const thread Hit &hit, const thread Hit &outHit, thread SceneState
                     float3 normalized_color = ((n+2.f)/(2.f*M_PI_F))*s;
                     Direction norm = normalize(normal);
                     Direction reflectedVector = normalize(inDir) - 2.f*dot(normalize(inDir), norm)*norm;
-                    float dotProd = dot(reflectedVector, normalize(outHit.inRay.direction));
+                    float dotProd = dot(reflectedVector, normalize(toInfinity.inRay.direction));
                     if (dotProd < 0) {return float3(0.f, 0.f, 0.f);}
                     float reflectiveIntensity = pow(dotProd, n);
 
@@ -83,15 +79,20 @@ Sample getNextDirection(const thread Hit &hit, thread SceneState &scene) {
     float e1 = scene.rng(); //random number
     float e2 = scene.rng(); //random number
 
-    //TODO COCO
-    Sample result = {.hit = hit, .pdf = 1.f, .reflection = false,};
+    Sample result = {.hit = hit, .pdf = 1.f, .sampleDirectLighting = false,};
     switch (hit.tri.material.illum) {
-        case Illum::diffuse:
-            // subsurface scattering
-            // TODO: something here?
-            result.hit.inRay.direction = 0;
-            result.pdf = 1;
-            return result;
+        case Illum::diffuse: {
+            if (!scene.settings.subsurfaceScatteringOn) {
+                return generateRandomOnHemi(hit, float2(e1, e2));
+            } else if (scene.settings.singleSSOn && !scene.settings.diffusionSSOn) {
+                result.hit.inRay.direction = 0.f;
+                return result;
+//                return generateRandomOnHemi(hit, float2(e1, e2));
+            } else {
+                //if both subsurface scattering options are checked, monte carlo the two types of scattering
+                return getNextDiffusionDirection(hit, scene);
+            }
+        }
         case Illum::refract_fresnel:
         case Illum::glass:
             // glass
@@ -132,7 +133,7 @@ Sample getNextDirection(const thread Hit &hit, thread SceneState &scene) {
                     Direction reflectedVector = incomingDir - 2.f*dot(incomingDir,norm)*norm;
                     result.hit.inRay.direction = reflectedVector;
                     result.pdf = 1.f;
-                    result.reflection = true;
+                    result.sampleDirectLighting = true;
                 } else {
                     //refract
                     float cosTheta_t = sqrt(sqdCos_t);
@@ -143,7 +144,7 @@ Sample getNextDirection(const thread Hit &hit, thread SceneState &scene) {
                     //accumulate the radiance of the next path!
                     result.hit.inRay.direction = refractedDir;
                     result.pdf = 1.f;
-                    result.reflection = true;
+                    result.sampleDirectLighting = true;
 
                 }
                 return result;
@@ -158,7 +159,7 @@ Sample getNextDirection(const thread Hit &hit, thread SceneState &scene) {
                         Direction reflectedVector = hit.inRay.direction - 2.f*dot(hit.inRay.direction, hit.normal)*hit.normal;
                         result.hit.inRay.direction = reflectedVector;
                         result.pdf = 1.f;
-                        result.reflection = true;
+                        result.sampleDirectLighting = true;
                         return result;
                     } else {
                         return generateRandomOnHemi(hit, float2(e1, e2));

@@ -57,7 +57,7 @@ Color getBRDF(const thread Hit &fromCamera, const thread Hit &toInfinity, thread
                     if (dotProd < 0) { return Colors::purple(); }
                     float reflectiveIntensity = pow(dotProd, n);
 
-                    return normalized_color*reflectiveIntensity;
+                    return normalized_color*reflectiveIntensity/clamp(dot(inDir, norm), 0.001, 1.f);
                 }
             } else {
                 // [diffuse BRDF];
@@ -191,11 +191,11 @@ Sample getNextDirection(const thread Hit &hit, thread SceneState &scene) {
 //                    float phi = 2.0 * M_PI_F * e1;
 //                    float theta = asin(e2);
 //                    Direction objSpaceRand = normalize(float3(1.*sin(theta)*cos(phi), 1.*cos(theta), 1.*sin(theta)*sin(phi)));
-//                    result.hit.inRay.direction = normalize(alignHemisphereWithNormal(objSpaceRand, hit.normal));
-//                    result.pdf = max(0.f, dot(hit.normal,result.hit.inRay.direction));
+//                    result.direction = normalize(alignHemisphereWithNormal(objSpaceRand, hit.normal));
+//                    result.pdf = max(0.f, dot(hit.normal,result.direction));
 //                    return result;
 //                } else {
-                    return generateRandomOnHemi(hit, float2(e1, e2));
+                return generateRandomOnHemi(hit, float2(e1, e2));
 //                }
             }
             break;

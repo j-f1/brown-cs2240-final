@@ -27,7 +27,7 @@ Color getBRDF(const thread Hit &fromCamera, const thread Hit &toInfinity, thread
                 //if both subsurface scattering options are checked, monte carlo the two types of scattering
                 ScatterMaterial mat {scene.settings, fromCamera.tri.material};
                 return singleScatter(fromCamera, mat, scene) + diffuseApproximation(fromCamera,toInfinity, mat, scene);
-                
+
             }
         }
         case Illum::refract_fresnel:
@@ -40,7 +40,7 @@ Color getBRDF(const thread Hit &fromCamera, const thread Hit &toInfinity, thread
             return Colors::black();
         case Illum::diffuse_specular_fresnel:
         case Illum::diffuse_specular:
-            if (any(mat.specular > 0)) {
+            if (any(mat.specular > 0.01)) {
                 if (mat.shininess > 100) {
                     if (floatEpsEqual(reflect(inDir, normal), toInfinity.inRay.direction)) {
                         return mat.specular / abs(dot(inDir, normal));
@@ -53,9 +53,9 @@ Color getBRDF(const thread Hit &fromCamera, const thread Hit &toInfinity, thread
                     float3 s = mat.specular;
                     float3 normalized_color = ((n+2.f)/(2.f*M_PI_F))*s;
                     Direction norm = normalize(normal);
-                    Direction reflectedVector = normalize(inDir) - 2.f*dot(normalize(inDir), norm)*norm;
-                    float dotProd = dot(reflectedVector, normalize(toInfinity.inRay.direction));
-                    if (dotProd < 0) {return float3(0.f, 0.f, 0.f);}
+                    Direction reflectedVector = reflect(inDir, norm);
+                    float dotProd = abs(dot(reflectedVector, normalize(toInfinity.inRay.direction)));
+                    if (dotProd < 0) { return Colors::purple(); }
                     float reflectiveIntensity = pow(dotProd, n);
 
                     return normalized_color*reflectiveIntensity;
@@ -152,7 +152,7 @@ Sample getNextDirection(const thread Hit &hit, thread SceneState &scene) {
             break;
         case Illum::diffuse_specular_fresnel:
         case Illum::diffuse_specular:
-            if (any(hit.tri.material.specular>0)) {
+            if (any(hit.tri.material.specular>0.01)) {
                 if (hit.tri.material.shininess > 100) {
                     // mirror
                     if (scene.settings.mirrorOn) {
@@ -193,7 +193,7 @@ Sample getNextDirection(const thread Hit &hit, thread SceneState &scene) {
                     float theta = asin(e2);
                     Direction objSpaceRand = normalize(float3(1.*sin(theta)*cos(phi), 1.*cos(theta), 1.*sin(theta)*sin(phi)));
                     result.hit.inRay.direction = normalize(alignHemisphereWithNormal(objSpaceRand, hit.normal));
-                    result.pdf = dot(hit.normal, result.hit.inRay.direction);
+                    result.pdf = max(0.f, dot(hit.normal,result.direction));
                     return result;
                 } else {
                     return generateRandomOnHemi(hit, float2(e1, e2));

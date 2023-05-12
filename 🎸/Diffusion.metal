@@ -35,14 +35,14 @@ Color diffuseReflectance(const thread Hit &inHit, const thread ScatterMaterial &
 
     Location virtualLight = normalize(inHit.normal)*z_v + inHit.location; //put the virtual light z_v above the surface
     Location realLight = -normalize(inHit.normal)*z_r + inHit.location; //put the real light z_r under the surface
-    
+
     float d_v = length(outHit.location-virtualLight);
     float d_r = length(outHit.location-realLight);
-    
+
     float3 leftTerm = (σ_tr*d_r+1.f)*(exp(-σ_tr*d_r)/(mat.σt_prime*pow(d_r,3)));
     float3 rightTerm = z_v3*(σ_tr*d_v+1.f)*(exp(-σ_tr*d_v)/(mat.σt_prime*pow(d_v,3)));
     float3 reflectance = (albedo_prime/(4.f*M_PI_F))*(leftTerm + rightTerm);
-    
+
     return reflectance;
 }
 

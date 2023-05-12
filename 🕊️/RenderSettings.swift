@@ -5,7 +5,7 @@ extension RenderSettings: Equatable {
         diffuseOn: true,
         mirrorOn: true,
         // refractionOn: true,
-        // glossyOn: true,
+        glossyOn: true,
         subsurfaceScatteringOn: true,
         singleSSOn: true,
         diffusionSSOn: true,

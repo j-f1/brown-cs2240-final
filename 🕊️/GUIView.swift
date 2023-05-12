@@ -135,7 +135,7 @@ struct GUIView: View {
                     Toggle("Diffuse", isOn: $nextSettings.diffuseOn)
                     Toggle("Mirror", isOn: $nextSettings.mirrorOn)
                     // Toggle("Refract", isOn: $nextSettings.refractionOn)
-                    // Toggle("Glossy", isOn: $nextSettings.glossyOn)
+                     Toggle("Glossy", isOn: $nextSettings.glossyOn)
                     Toggle("Subsurface Scattering", isOn: $nextSettings.subsurfaceScatteringOn)
                     Toggle("Single Scattering", isOn: $nextSettings.singleSSOn)
                         .padding(.leading)

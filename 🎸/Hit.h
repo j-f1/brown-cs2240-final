@@ -7,7 +7,7 @@ struct Hit {
     tri tri;
     Location location;
     Direction normal;
-    const thread ray &inRay;
+    ray inRay;
     const thread Intersector::Intersection &intersection;
 };
 

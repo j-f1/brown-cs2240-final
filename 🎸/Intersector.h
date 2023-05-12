@@ -12,10 +12,10 @@ public:
     struct Intersection {
         friend struct Intersector;
     protected:
-        Intersection(ray inRay, intersector<triangle_data>::result_type i) : inRay(inRay), i(i) {}
-        ray inRay;
+        Intersection(ray inRay, intersector<triangle_data>::result_type i) : ray(inRay), i(i) {}
         intersector<triangle_data>::result_type i;
     public:
+        ray ray;
         inline operator bool() const {
             return i.type != intersection_type::none;
         }
@@ -28,9 +28,8 @@ public:
             return i.distance;
         }
         inline Location location() const {
-            return inRay.origin + inRay.direction * distance();
+            return ray.origin + ray.direction * distance();
         }
-        inline const thread ray &ray() const { return inRay; };
     };
 
     Intersector(const thread primitive_acceleration_structure &accelerationStructure)

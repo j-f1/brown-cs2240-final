@@ -53,15 +53,15 @@ inline RayTraceResult traceRay(const thread ray &inRay, const thread int &pathLe
         result.illumination = Colors::black();
     }
     
-    Color brdf = getBRDF(hit, sample.direction, scene);
+    Color brdf = getBRDF(hit, sample.hit, scene);
     result.brdf = brdf;
     
-    result.ray.direction = sample.direction;
-    if (floatEpsEqual(sample.direction, 0)) {
+    result.ray.direction = sample.hit.inRay.direction;
+    if (floatEpsEqual(sample.hit.inRay.direction, 0)) {
         result.illumination = result.brdf;
         result.brdf = Colors::white();
     } else {
-        float lightProjection = abs(dot(sample.direction, hit.normal));
+        float lightProjection = abs(dot(sample.hit.inRay.direction, hit.normal));
         result.brdf *= lightProjection / sample.pdf;
     }
     

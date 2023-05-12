@@ -4,7 +4,7 @@
 #import "SingleScattering.h"
 #import "Diffusion.h"
 
-Color getBRDF(const thread Hit &hit, const thread Direction &outDir, thread SceneState &scene) {
+Color getBRDF(const thread Hit &hit, const thread Hit &outHit, thread SceneState &scene) {
     const thread Direction &inDir = hit.inRay.direction;
     const thread Direction normal = normalize(hit.normal);
     const constant Material &mat = hit.tri.material;
@@ -36,9 +36,9 @@ Color getBRDF(const thread Hit &hit, const thread Direction &outDir, thread Scen
         }
         case Illum::refract_fresnel:
         case Illum::glass:
-            if (floatEpsEqual(refract(inDir, -normal, mat.ior), outDir)
-                || floatEpsEqual(refract(inDir, normal, 1/mat.ior), outDir)
-                || floatEpsEqual(reflect(inDir, normal), outDir)) {
+            if (floatEpsEqual(refract(inDir, -normal, mat.ior), outHit.inRay.direction)
+                || floatEpsEqual(refract(inDir, normal, 1/mat.ior), outHit.inRay.direction)
+                || floatEpsEqual(reflect(inDir, normal), outHit.inRay.direction)) {
                 return 1 / abs(dot(inDir, normal));
             }
             return Colors::black();
@@ -46,7 +46,7 @@ Color getBRDF(const thread Hit &hit, const thread Direction &outDir, thread Scen
         case Illum::diffuse_specular:
             if (any(mat.specular > 0)) {
                 if (mat.shininess > 100) {
-                    if (floatEpsEqual(reflect(inDir, normal), outDir)) {
+                    if (floatEpsEqual(reflect(inDir, normal), outHit.inRay.direction)) {
                         return mat.specular / abs(dot(inDir, normal));
                     } else {
                         return Colors::black();
@@ -58,7 +58,7 @@ Color getBRDF(const thread Hit &hit, const thread Direction &outDir, thread Scen
                     float3 normalized_color = ((n+2.f)/(2.f*M_PI_F))*s;
                     Direction norm = normalize(normal);
                     Direction reflectedVector = normalize(inDir) - 2.f*dot(normalize(inDir), norm)*norm;
-                    float dotProd = dot(reflectedVector, normalize(outDir));
+                    float dotProd = dot(reflectedVector, normalize(outHit.inRay.direction));
                     if (dotProd < 0) {return float3(0.f, 0.f, 0.f);}
                     float reflectiveIntensity = pow(dotProd, n);
 
@@ -84,12 +84,12 @@ Sample getNextDirection(const thread Hit &hit, thread SceneState &scene) {
     float e2 = scene.rng(); //random number
 
     //TODO COCO
-    Sample result = {.direction = Direction(0,0,0), .location = hit.location, .pdf = 1.f, .reflection = false,};
+    Sample result = {.hit = hit, .pdf = 1.f, .reflection = false,};
     switch (hit.tri.material.illum) {
         case Illum::diffuse:
             // subsurface scattering
             // TODO: something here?
-            result.direction = Direction(0, 0, 0);
+            result.hit.inRay.direction = 0;
             result.pdf = 1;
             return result;
         case Illum::refract_fresnel:
@@ -130,7 +130,7 @@ Sample getNextDirection(const thread Hit &hit, thread SceneState &scene) {
                     //reflect
                     Direction incomingDir = normalize(hit.inRay.direction);
                     Direction reflectedVector = incomingDir - 2.f*dot(incomingDir,norm)*norm;
-                    result.direction = reflectedVector;
+                    result.hit.inRay.direction = reflectedVector;
                     result.pdf = 1.f;
                     result.reflection = true;
                 } else {
@@ -141,7 +141,7 @@ Sample getNextDirection(const thread Hit &hit, thread SceneState &scene) {
                     Direction refractedDir = ratioIT * hit.inRay.direction + (ratioIT * cos_theta_i - cosTheta_t)*norm;
 
                     //accumulate the radiance of the next path!
-                    result.direction = refractedDir;
+                    result.hit.inRay.direction = refractedDir;
                     result.pdf = 1.f;
                     result.reflection = true;
 
@@ -156,12 +156,12 @@ Sample getNextDirection(const thread Hit &hit, thread SceneState &scene) {
                     // mirror
                     if (scene.settings.mirrorOn) {
                         Direction reflectedVector = hit.inRay.direction - 2.f*dot(hit.inRay.direction, hit.normal)*hit.normal;
-                        result.direction = reflectedVector;
+                        result.hit.inRay.direction = reflectedVector;
                         result.pdf = 1.f;
                         result.reflection = true;
                         return result;
                     } else {
-                        return generateRandomOnHemi(hit.normal, float2(e1, e2));
+                        return generateRandomOnHemi(hit, float2(e1, e2));
                     }
                 } else {
                     // specular BRDF;
@@ -178,11 +178,11 @@ Sample getNextDirection(const thread Hit &hit, thread SceneState &scene) {
 
                         Direction reflectedVector = hit.inRay.direction - 2.f*(dot(hit.inRay.direction,hit.normal))*hit.normal;
 
-                        result.direction = alignHemisphereWithNormal(objSpaceRand, reflectedVector);
+                        result.hit.inRay.direction = alignHemisphereWithNormal(objSpaceRand, reflectedVector);
 
                         return result;
                     } else {
-                        return generateRandomOnHemi(hit.normal, float2(e1, e2));
+                        return generateRandomOnHemi(hit, float2(e1, e2));
                     }
                 }
             } else {
@@ -191,25 +191,24 @@ Sample getNextDirection(const thread Hit &hit, thread SceneState &scene) {
                     float phi = 2.0 * M_PI_F * e1;
                     float theta = asin(e2);
                     Direction objSpaceRand = normalize(float3(1.*sin(theta)*cos(phi), 1.*cos(theta), 1.*sin(theta)*sin(phi)));
-                    result.direction = normalize(alignHemisphereWithNormal(objSpaceRand, hit.normal));
-                    result.pdf = dot(hit.normal,result.direction);
+                    result.hit.inRay.direction = normalize(alignHemisphereWithNormal(objSpaceRand, hit.normal));
+                    result.pdf = dot(hit.normal, result.hit.inRay.direction);
                     return result;
                 } else {
-                    return generateRandomOnHemi(hit.normal, float2(e1, e2));
+                    return generateRandomOnHemi(hit, float2(e1, e2));
                 }
             }
             break;
         default:
-            result.direction = Direction(0, 0, 0);
+            result.hit.inRay.direction = 0;
             result.pdf = 1;
             return result;
     }
 }
 
-Sample generateRandomOnHemi(Direction normal, float2 uv) {
-    Sample result = {.direction = Direction(0,0,0), .pdf = 1.f,};
+Sample generateRandomOnHemi(const thread Hit &hit, float2 uv) {
+    Sample result{.hit = hit, .pdf = 1.f/(2.f*M_PI_F)};
     float3 randomHemi = sampleCosineWeightedHemisphere(uv); //pick a random direction on the hemisphere
-    result.direction = alignHemisphereWithNormal(randomHemi, normal); //align the random direction with the normal
-    result.pdf = 1.f/(2.f*M_PI_F);
+    result.hit.inRay.direction = alignHemisphereWithNormal(randomHemi, hit.normal); //align the random direction with the normal
     return result;
 }

@@ -1,15 +1,17 @@
 # Swift Phone-ton Rendering
 
 Authors: Jed Fox, Coco Kaleel\
-Course: [CSCI 2240: Advanced Computer Graphics](https://cs2240.graphics), Spring 2023
+Course: Brown University [CSCI 2240: Advanced Computer Graphics](https://cs2240.graphics), Spring 2023
 
 ## Overview
 
-This is a path tracer written in Metal, including support for realistic subsurface scattering.
+This is a path tracer written in Metal (so it runs on Mac GPUs), including support for realistic subsurface scattering. We implemented 4 BRDFs/BSSDFs: diffuse reflectance, ideal specular (mirror), Fresnel dielectric materials (e.g. glass) that take index of refraction into account, and an approximation of subsurface scattering.
+
+Additionally, we have a GUI (graphical user interface) that allows users to modify parameters related to tone mapping, modify render settings, and pick from subsurface-scattering parameter presets.
 
 ## Building
 
-Open the .xcodeproj file in Xcode. Build and run. The app will run on macOS as well as iOS/iPadOS.
+Open the .xcodeproj file in Xcode. Build and run. The app will run on macOS as well as iOS/iPadOS. It runs on both Intel and M1 Macs, but we've noticed significantly faster runtimes in M1 Macs. Additionally, to run, the application will request access to your Documents folder.
 
 ## Usage
 
